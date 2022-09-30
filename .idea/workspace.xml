@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="This is the first commit message" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2EXNm0tHAVGHulen1mD2uk7YFyR" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "full.screen.before.presentation.mode": "false",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/Documents/MTS/Iteration01/pythonProject" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="MasterThesis_Iteration01" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="MasterThesis_Iteration01" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="MasterThesis_Iteration01" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="" />
+      <created>1662738123857</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1662738123857</updated>
+      <workItem from="1662738125050" duration="792000" />
+      <workItem from="1663047606799" duration="784000" />
+      <workItem from="1663050435695" duration="598000" />
+      <workItem from="1663059803092" duration="9255000" />
+      <workItem from="1663229845249" duration="2062000" />
+      <workItem from="1663233921553" duration="3776000" />
+      <workItem from="1663245320743" duration="21900000" />
+      <workItem from="1663492324953" duration="1588000" />
+      <workItem from="1663494575410" duration="2226000" />
+      <workItem from="1663497785318" duration="12098000" />
+      <workItem from="1663515422977" duration="5201000" />
+      <workItem from="1663524286639" duration="9248000" />
+      <workItem from="1663534289714" duration="5040000" />
+      <workItem from="1663539411507" duration="12300000" />
+      <workItem from="1663621501340" duration="4143000" />
+      <workItem from="1663675479738" duration="1850000" />
+      <workItem from="1663694414602" duration="3157000" />
+      <workItem from="1663745178779" duration="881000" />
+      <workItem from="1663746079440" duration="2304000" />
+      <workItem from="1663748495564" duration="5878000" />
+      <workItem from="1663755341321" duration="20000" />
+      <workItem from="1663755386408" duration="2153000" />
+      <workItem from="1663759655389" duration="5839000" />
+      <workItem from="1663767636169" duration="6298000" />
+      <workItem from="1663854180624" duration="13998000" />
+      <workItem from="1663938046641" duration="54000" />
+      <workItem from="1663938114928" duration="1128000" />
+      <workItem from="1663939250116" duration="818000" />
+      <workItem from="1663940172987" duration="4277000" />
+      <workItem from="1663956468960" duration="1626000" />
+      <workItem from="1664525105071" duration="3799000" />
+      <workItem from="1664548068662" duration="69000" />
+      <workItem from="1664548161470" duration="155000" />
+    </task>
+    <task id="LOCAL-00001" summary="This is the first commit message">
+      <created>1664546704490</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1664546704490</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$USER_HOME$/Documents/MTS" />
+      <path value="$PROJECT_DIR$" />
+      <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
+    </ignored-roots>
+    <MESSAGE value="This is the first commit message" />
+    <option name="LAST_COMMIT_MESSAGE" value="This is the first commit message" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/main.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>663</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>603</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>854</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>2</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/02_DataExploration.py</url>
+          <line>43</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/MasterThesis_Iteration01$main.coverage" NAME="main Coverage Results" MODIFIED="1663233905406" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
