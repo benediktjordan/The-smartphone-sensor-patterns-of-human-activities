@@ -43,7 +43,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "full.screen.before.presentation.mode": "false",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -137,7 +137,7 @@
       <workItem from="1663956468960" duration="1626000" />
       <workItem from="1664525105071" duration="3799000" />
       <workItem from="1664548068662" duration="69000" />
-      <workItem from="1664548161470" duration="155000" />
+      <workItem from="1664548161470" duration="588000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
