@@ -12,6 +12,9 @@ from pandas import read_sql_query, read_sql_table
 
 #endregion
 
+
+# This is a change comment
+
 # user and sensor database
 users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88"],
                       ["Simone_2","4c4e5063-1b23-4dfc-886d-c6a202225ed6"],
