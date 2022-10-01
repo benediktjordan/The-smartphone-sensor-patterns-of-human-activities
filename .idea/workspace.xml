@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="This is the first commit message">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Data Analysis/LSTM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataExploration.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +46,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "full.screen.before.presentation.mode": "false",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PythonContentEntriesConfigurable"
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -140,7 +141,7 @@
       <workItem from="1664525105071" duration="3799000" />
       <workItem from="1664548068662" duration="69000" />
       <workItem from="1664548161470" duration="902000" />
-      <workItem from="1664549112380" duration="1414000" />
+      <workItem from="1664549112380" duration="4495000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -170,7 +171,21 @@
       <option name="project" value="LOCAL" />
       <updated>1664549928317</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="This is the first commit message">
+      <created>1664550802811</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1664550802811</updated>
+    </task>
+    <task id="LOCAL-00006" summary="This is the first commit message">
+      <created>1664550838261</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1664550838261</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

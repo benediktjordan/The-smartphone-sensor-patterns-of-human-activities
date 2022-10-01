@@ -11,9 +11,6 @@ import json
 
 # endregion
 
-# changed it commment 4
-# changed it commment 3
-
 #region visualizations
 
 # region visualize summary of ESM data for every question
