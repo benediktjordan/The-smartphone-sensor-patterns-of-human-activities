@@ -1086,38 +1086,68 @@ df_final.to_csv(dir_databases + "/" + sensor + "_esm_timeperiod_" + str(time_per
 
 #endregion
 
-#region convert JSON column into multiple columns
+#region convert JSON column into multiple columns & add sensor identifier
+
+def convert_json_to_columns(path_df, sensor, json_column_name):
+    df = pd.read_csv(path_df, dtype={"0": 'int64', "1": 'int64', "2": object, "3": object, "ESM_timestamp": 'float64',
+                                                    "ESM_location": object, "ESM_location_time": "float64",
+                                                    "ESM_bodyposition": object, "ESM_bodyposition_time": "float64",
+                                                    "ESM_activity": object, "ESM_activity_time": "float64",
+                                                    "ESM_smartphonelocation": object, "ESM_smartphonelocation_time": "float64",
+                                                    "ESM_aligned": object, "ESM_aligned_time": "float64",})
+    df[json_column_name] = df[json_column_name].apply(lambda x: json.loads(x))
+    # add sensor identifier to every JSON column
+    df = pd.concat([df, df[json_column_name].apply(pd.Series).add_prefix(sensor + "_") ], axis=1)
+
+    return df
+
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 file_list = [i for i in os.listdir(dir_sensorfiles) if not i.startswith(".")]  # for Mac
+
 
 for file in file_list:
     if file.endswith(".csv"):
         time_start = time.time()
-        df = pd.read_csv(dir_sensorfiles + file, dtype={"0": 'int64', "1": 'int64', "2": object, "3": object, "ESM_timestamp": 'float64',
-                                                        "ESM_location": object, "ESM_location_time": "float64",
-                                                        "ESM_bodyposition": object, "ESM_bodyposition_time": "float64",
-                                                        "ESM_activity": object, "ESM_activity_time": "float64",
-                                                        "ESM_smartphonelocation": object, "ESM_smartphonelocation_time": "float64",
-                                                        "ESM_aligned": object, "ESM_aligned_time": "float64",})
-        df["3"] = df["3"].apply(lambda x: json.loads(x))
-        df = pd.concat([df, df['3'].apply(pd.Series)], axis=1)
+        path_df = dir_sensorfiles + file
+        file = file[6:]
+        df = convert_json_to_columns(path_df, sensor = file[0:3] ,json_column_name="3")
         df.to_csv(dir_sensorfiles + file + "_JSONconverted.csv", index=False)
         time_end = time.time()
-        print("finished " + file + " in " + str((time_end - time_start)/60) + " minutes")
+        print("finished " + file + " in " + str((time_end - time_start) / 60) + " minutes")
 
 # double check
 file = file_list[0]
 df_old = pd.read_csv(dir_sensorfiles + file)
 df = pd.read_csv(dir_sensorfiles + file + "_JSONconverted.csv")
 
-
-    # transform JSON data into columns
-    esm_event_df = esm_event_df.reset_index(drop=True)
-    stdf = esm_event_df["3"].apply(json.loads)
-    df_transformed = pd.DataFrame(stdf.tolist())  # or stdf.apply(pd.Series)
-    df_transformed = pd.concat([esm_event_df, df_transformed], axis=1)
 #endregion
 
+#region transform unix timestamp into datetime
+def convert_unix_to_datetime(df, column_name):
+    df[column_name] = pd.to_datetime(df[column_name], unit='ms')
+    return df
+
+dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
+file_list = [i for i in os.listdir(dir_sensorfiles) if not i.startswith(".")]  # for Mac
+
+column_names = ["1","ESM_timestamp", "ESM_location_time", "ESM_bodyposition_time", "ESM_activity_time",
+                "ESM_smartphonelocation_time", "ESM_aligned_time"]
+
+for file in file_list:
+    if file.endswith(".csv"):
+        time_start = time.time()
+        path_df = dir_sensorfiles + file
+        df = pd.read_csv(path_df)
+        for column_name in column_names: # column_names are defined in the beginning
+            df = convert_unix_to_datetime(df, column_name)
+
+        # convert also the sensor specific timestamp column (with the sensor identifier as a prefix)
+        column_name = file[0:3] + "_timestamp"
+        df = convert_unix_to_datetime(df, column_name)
+
+        df.to_csv(dir_sensorfiles + file.csv", index=False)
+        time_end = time.time()
+        print("finished " + file + " in " + str((time_end - time_start) / 60) + " minutes")
 
 #endregion
 
