@@ -1101,20 +1101,7 @@ def convert_json_to_columns(path_df, sensor, json_column_name):
 
     return df
 
-dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
-file_list = [i for i in os.listdir(dir_sensorfiles) if not i.startswith(".")]  # for Mac
-
-
-for file in file_list:
-    if file.endswith(".csv"):
-        time_start = time.time()
-        path_df = dir_sensorfiles + file
-        file = file[6:]
-        df = convert_json_to_columns(path_df, sensor = file[0:3] ,json_column_name="3")
-        df.to_csv(dir_sensorfiles + file + "_JSONconverted.csv", index=False)
-        time_end = time.time()
-        print("finished " + file + " in " + str((time_end - time_start) / 60) + " minutes")
-
+# NOTE: function is applied in next section
 # double check
 file = file_list[0]
 df_old = pd.read_csv(dir_sensorfiles + file)
@@ -1130,28 +1117,35 @@ def convert_unix_to_datetime(df, column_name):
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 file_list = [i for i in os.listdir(dir_sensorfiles) if not i.startswith(".")]  # for Mac
 
+# define names of columns which should be converted from unix to datetime
 column_names = ["1","ESM_timestamp", "ESM_location_time", "ESM_bodyposition_time", "ESM_activity_time",
-                "ESM_smartphonelocation_time", "ESM_aligned_time"]
+                "ESM_smartphonelocation_time", "ESM_aligned_time", "timestamp"]
 
+# iterate through sensor files and a) convert JSON columns into multiple columns and
+# b) convert unix timestamp into datetime
 for file in file_list:
     if file.endswith(".csv"):
         time_start = time.time()
         path_df = dir_sensorfiles + file
-        df = pd.read_csv(path_df)
+        file = file[6:] # remove "FINAL_" from file name
+
+        # convert JSON column into multiple columns
+        df = convert_json_to_columns(path_df, sensor = file[0:3] ,json_column_name="3")
+
+        # rename sensor specific timestamp column into "timestamp"
+        column_name = file[0:3] + "_timestamp"
+        df = df.rename(columns={column_name: "timestamp"})
+
+        # convert unix timestamp into datetime
         for column_name in column_names: # column_names are defined in the beginning
             df = convert_unix_to_datetime(df, column_name)
 
-        # convert also the sensor specific timestamp column (with the sensor identifier as a prefix)
-        column_name = file[0:3] + "_timestamp"
-        df = convert_unix_to_datetime(df, column_name)
-
-        df.to_csv(dir_sensorfiles + file.csv", index=False)
+        df.to_csv(dir_sensorfiles + file + "_JSONconverted.csv", index=False)
         time_end = time.time()
         print("finished " + file + " in " + str((time_end - time_start) / 60) + " minutes")
 
+
 #endregion
-
-
 
 #endregion
 

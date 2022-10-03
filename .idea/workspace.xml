@@ -4,6 +4,7 @@
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="This is the first commit message">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Analysis/LSTM.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -143,7 +144,8 @@
       <workItem from="1664548068662" duration="69000" />
       <workItem from="1664548161470" duration="902000" />
       <workItem from="1664549112380" duration="15960000" />
-      <workItem from="1664655000695" duration="304000" />
+      <workItem from="1664655000695" duration="7659000" />
+      <workItem from="1664748840166" duration="6913000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -201,7 +203,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664650204401</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="This is the first commit message">
+      <created>1664655560547</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1664655560547</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
