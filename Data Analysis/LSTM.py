@@ -1,4 +1,4 @@
-#region import libraries
+# region import libraries
 ## for Keras LSTM
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,46 +10,52 @@ from tensorflow.keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 import time
-#endregion
 
-#region data preparation
+import seaborn as sns
+from scipy import stats
+
+# endregion
+
+# region data preparation: create merged timeseries
 ## import data
 base_sensor = "linear_accelerometer"
-sensors = ["gravity",
+sensors = ["accelerometer", "gravity",
            "gyroscope", "magnetometer", "rotation"]
-#sensors = ["accelerometer", "gravity",
-#           "gyroscope", "magnetometer", "rotation"]
 
 ## merging function
 def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
     df_final = pd.DataFrame()
+    user_count = 0
 
     # iterate through devices and ESM_timestamps
     for user in df_base['2'].unique():
+        time_a = time.time()
         print("Current user is: ", user)
-        for event in df_base['ESM_timestamp'].unique():
-            print("Current event is: ", event)
+
+        df_base_user = df_base[df_base['2'] == user]
+        for event in df_base_user['ESM_timestamp'].unique():
+            #print("Current event is: ", event)
             # get data for specific user and ESM event
-            df_base_user_event = df_base[(df_base['2'] == user) & (df_base['ESM_timestamp'] == event)]
-            df_sensor_user_event= df_tomerge[(df_tomerge['2'] == user) & (df_tomerge['ESM_timestamp'] == event)]
+            df_base_user_event = df_base_user[(df_base['2'] == user) & (df_base_user['ESM_timestamp'] == event)]
+            df_sensor_user_event = df_tomerge[(df_tomerge['2'] == user) & (df_tomerge['ESM_timestamp'] == event)]
 
             # sort dataframes by timestamp
             df_base_user_event = df_base_user_event.sort_values(by='timestamp')
             df_sensor_user_event = df_sensor_user_event.sort_values(by='timestamp')
 
             # duplicate timestamp column for test purposes
-            df_sensor_user_event['timestamp_'+str(merge_sensor)] = df_sensor_user_event['timestamp']
+            df_sensor_user_event['timestamp_' + str(merge_sensor)] = df_sensor_user_event['timestamp']
 
             # delete all ESM-related columns in df_sensor_user_event (otherwise they would be duplicated)
-            df_sensor_user_event = df_sensor_user_event.drop(columns=['ESM_timestamp', "ESM_location", "ESM_location_time",
-                                                                      "ESM_bodyposition", "ESM_bodyposition_time",
-                                                                      "ESM_activity", "ESM_activity_time",
-                                                                      "ESM_smartphonelocation", "ESM_smartphonelocation_time",
-                                                                      "ESM_aligned", "ESM_aligned_time"])
+            df_sensor_user_event = df_sensor_user_event.drop(
+                columns=['ESM_timestamp', "ESM_location", "ESM_location_time",
+                         "ESM_bodyposition", "ESM_bodyposition_time",
+                         "ESM_activity", "ESM_activity_time",
+                         "ESM_smartphonelocation", "ESM_smartphonelocation_time",
+                         "ESM_aligned", "ESM_aligned_time"])
             # delete columns "Unnamed: 0", "0", "1" and "2" from df_sensor_user_event: all the information of these
             # columns is already contained in the JSON data
             df_sensor_user_event = df_sensor_user_event.drop(columns=['Unnamed: 0', '0', '1', '2'])
-
 
             # merge dataframes
             df_merged = pd.merge_asof(df_base_user_event, df_sensor_user_event, on='timestamp',
@@ -58,51 +64,186 @@ def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
             # add merged data to general dataframe
             df_final = df_final.append(df_merged)
 
+        time_b = time.time()
+        print("User " + str(user_count) + "/" + str(len(df_base['2'].unique())))
+        print("Time for user: ", time_b - time_a)
+        user_count += 1
+
     return df_final
 
 
 ## iterate through sensors
-df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/"+str(base_sensor) + "_esm_timeperiod_5 min.csv_JSONconverted.csv",
+df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + str(
+    base_sensor) + "_esm_timeperiod_5 min.csv_JSONconverted.csv",
                       parse_dates=['timestamp'], infer_datetime_format=True)
 
-#region temporary
-df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/accelerometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
-                      parse_dates=['timestamp', "1_x", "timestamp_accelerometer", "1_y"], infer_datetime_format=True)
+# region temporary
+df_base = pd.read_csv(
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/accelerometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', "1_x", "timestamp_accelerometer", "1_y"], infer_datetime_format=True)
 
-test = df_base["1_x"]-df_base["timestamp"]
-test2 = df_base["1_y"]-df_base["timestamp_accelerometer"]
+test = df_base["1_x"] - df_base["timestamp"]
+test2 = df_base["1_y"] - df_base["timestamp_accelerometer"]
 test.describe()
 test2.describe()
 
 df_base = df_base.drop(columns=['ESM_timestamp_y', "ESM_location_y", "ESM_location_time_y",
-                                                          "ESM_bodyposition_y", "ESM_bodyposition_time_y",
-                                                          "ESM_activity_y", "ESM_activity_time_y",
-                                                          "ESM_smartphonelocation_y", "ESM_smartphonelocation_time_y",
-                                                          "ESM_aligned_y", "ESM_aligned_time_y",
+                                "ESM_bodyposition_y", "ESM_bodyposition_time_y",
+                                "ESM_activity_y", "ESM_activity_time_y",
+                                "ESM_smartphonelocation_y", "ESM_smartphonelocation_time_y",
+                                "ESM_aligned_y", "ESM_aligned_time_y",
                                 "Unnamed: 0_y", "0_y", "1_y", "2_y", "3_y"])
 df_base = df_base.rename(columns={"Unnamed: 0_x": "Unnamed: 0", "0_x": "0", "1_x": "1", "2_x": "2", "3_x": "3",
                                   "ESM_timestamp_x": "ESM_timestamp", "ESM_location_x": "ESM_location",
                                   "ESM_location_time_x": "ESM_location_time", "ESM_bodyposition_x": "ESM_bodyposition",
                                   "ESM_bodyposition_time_x": "ESM_bodyposition_time", "ESM_activity_x": "ESM_activity",
-                                  "ESM_activity_time_x": "ESM_activity_time", "ESM_smartphonelocation_x": "ESM_smartphonelocation",
-                                  "ESM_smartphonelocation_time_x": "ESM_smartphonelocation_time", "ESM_aligned_x": "ESM_aligned",
+                                  "ESM_activity_time_x": "ESM_activity_time",
+                                  "ESM_smartphonelocation_x": "ESM_smartphonelocation",
+                                  "ESM_smartphonelocation_time_x": "ESM_smartphonelocation_time",
+                                  "ESM_aligned_x": "ESM_aligned",
                                   "ESM_aligned_time_x": "ESM_aligned_time"})
 
-#endregion temporary
+# endregion temporary
 
 for sensor in sensors:
     time_begin = time.time()
     print("Current sensor is: ", sensor)
-    df_sensor = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.csv",
-                            parse_dates=['timestamp'], infer_datetime_format=True)
+    df_sensor = pd.read_csv(
+        "/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.csv",
+        parse_dates=['timestamp'], infer_datetime_format=True)
     df_base = merge_unaligned_timeseries(df_base, df_tomerge=df_sensor, merge_sensor=sensor)
-    df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + str(sensor) + "_esm_timeperiod_5 min_TimeseriesMerged.csv", index=False)
+    df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + str(
+        sensor) + "_esm_timeperiod_5 min_TimeseriesMerged.csv", index=False)
     time_end = time.time()
     print("Time for sensor ", sensor, " is: ", time_end - time_begin)
 # save merged data
-df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeperiod_5 min_TimeseriesMerged.csv", index=False)
+df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeperiod_5 min_TimeseriesMerged.csv",
+               index=False)
+
+# endregion
+
+# load test data
+df = pd.read_csv(
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/gravity_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
+
+# region Human Activity Recognition
+
+# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
+label_segment = 30 # in seconds
+## iterate through ESM events and keep only data that is within the label segment
 
 
-#region Keras
+
+
+# data visualization: how much data per label level & participant
+## how many labels per label level
+sns.countplot(x='ESM_bodyposition', data=df, order=df['ESM_bodyposition'].value_counts().index)
+plt.title("Records per activity")
+plt.show()
+
+## how much data per participant
+sns.countplot(x='2', data=df, order=df['2'].value_counts().iloc[:10].index)
+plt.title("Records per user")
+plt.show()
+
+
+## plot some sensor data for different activities
+def plot_activity(activity, df):
+    data = df[df['activity'] == activity][['x_axis', 'y_axis', 'z_axis']][:200]
+    axis = data.plot(subplots=True, figsize=(16, 12),
+                     title=activity)
+    for ax in axis:
+        ax.legend(loc='lower left', bbox_to_anchor=(1.0, 0.5))
+
+
+plot_activity("Sitting", df);
+
+# balance dataset based on the data exploration
+# TODO: IMPROVE BALANCING
+## only keep activities with at least 50.000 records
+df = df[df['ESM_bodyposition'].isin(df['ESM_bodyposition'].value_counts()[df['ESM_bodyposition'].value_counts() > 50000].index)]
+df['ESM_bodyposition'].value_counts()
+
+## only keep data from participants with at least 50.000 records
+df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
+df['2'].value_counts()
+
+# scale the data
+
+# convert labels into numeric data
+
+# split train & test data (leave two users out for testing)
+
+## randomly choose one user for testing
+test_user = df['2'].sample(1).values[0]
+df_test = df[df['2'] == test_user]
+df_train = df[df['2'] != test_user]
+
+## create the dataset
+
+def create_dataset(X, y, time_steps=1, step=1):
+    Xs, ys = [], []
+    for i in range(0, len(X) - time_steps, step):
+        v = X.iloc[i:(i + time_steps)].values
+        labels = y.iloc[i: i + time_steps]
+        Xs.append(v)
+        ys.append(stats.mode(labels)[0][0])
+    return np.array(Xs), np.array(ys).reshape(-1, 1)
+
+TIME_STEPS = 200
+STEP = 40
+
+X_train, y_train = create_dataset(
+    df_train[['x_axis', 'y_axis', 'z_axis']],
+    df_train.activity,
+    TIME_STEPS,
+    STEP
+)
+
+X_test, y_test = create_dataset(
+    df_test[['x_axis', 'y_axis', 'z_axis']],
+    df_test.activity,
+    TIME_STEPS,
+    STEP
+)
+
+print(X_train.shape, y_train.shape)
+
+## encode it
+from sklearn.preprocessing import OneHotEncoder
+
+enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+
+enc = enc.fit(y_train)
+
+y_train = enc.transform(y_train)
+y_test = enc.transform(y_test)
+
+print(X_train.shape, y_train.shape)
+
+## build model (based on: https://towardsdatascience.com/time-series-classification-for-human-activity-recognition-with-lstms-using-tensorflow-2-and-keras-b816431afdff)
+model = keras.Sequential()
+model.add(
+    keras.layers.Bidirectional(
+      keras.layers.LSTM(
+          units=128,
+          input_shape=[X_train.shape[1], X_train.shape[2]]
+      )
+    )
+)
+model.add(keras.layers.Dropout(rate=0.5))
+model.add(keras.layers.Dense(units=128, activation='relu'))
+model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+
+history = model.fit(
+    X_train, y_train,
+    epochs=20,
+    batch_size=64,
+    validation_split=0.1,
+    shuffle=True
+)
+
 # fix random seed for reproducibility
 tf.random.set_seed(7)
