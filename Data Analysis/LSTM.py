@@ -1,26 +1,35 @@
 # region import libraries
 ## for Keras LSTM
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
+from tensorflow import keras
+import pandas as pd
+import seaborn as sns
+from pylab import rcParams
+import matplotlib.pyplot as plt
+from matplotlib import rc
+from pandas.plotting import register_matplotlib_converters
+
+%matplotlib inline
+%config InlineBackend.figure_format='retina'
 import time
 
 import seaborn as sns
 from scipy import stats
+from sklearn.preprocessing import OneHotEncoder
+
 
 # endregion
 
 # region data preparation: create merged timeseries
 ## import data
 base_sensor = "linear_accelerometer"
-sensors = ["accelerometer", "gravity",
-           "gyroscope", "magnetometer", "rotation"]
+sensors = [ "rotation"]
+
+#sensors = ["accelerometer", "gravity",
+#           "gyroscope", "magnetometer", "rotation"]
+
+
 
 ## merging function
 def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
@@ -79,11 +88,11 @@ df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + 
 
 # region temporary
 df_base = pd.read_csv(
-    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/accelerometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', "1_x", "timestamp_accelerometer", "1_y"], infer_datetime_format=True)
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/magnetometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', "1", "timestamp_accelerometer"], infer_datetime_format=True)
 
-test = df_base["1_x"] - df_base["timestamp"]
-test2 = df_base["1_y"] - df_base["timestamp_accelerometer"]
+test = df_base["1"] - df_base["timestamp"]
+test2 = df_base["1"] - df_base["timestamp_accelerometer"]
 test.describe()
 test2.describe()
 
@@ -124,7 +133,7 @@ df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeper
 
 # load test data
 df = pd.read_csv(
-    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/gravity_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeperiod_5 min_TimeseriesMerged.csv",
     parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
 
 # region Human Activity Recognition
@@ -195,26 +204,30 @@ TIME_STEPS = 200
 STEP = 40
 
 X_train, y_train = create_dataset(
-    df_train[['x_axis', 'y_axis', 'z_axis']],
-    df_train.activity,
-    TIME_STEPS,
-    STEP
-)
+    df_train[['lin_double_values_0', 'lin_double_values_1', 'lin_double_values_2',
+              'acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2',
+              "gra_double_values_0", "gra_double_values_1", "gra_double_values_2",
+              'gyr_double_values_0', 'gyr_double_values_1', 'gyr_double_values_2',
+              'mag_double_values_0', 'mag_double_values_1', 'mag_double_values_2',
+              'rot_double_values_0', 'rot_double_values_1', 'rot_double_values_2']],
+    df_train.ESM_bodyposition,
+    TIME_STEPS, STEP)
 
 X_test, y_test = create_dataset(
-    df_test[['x_axis', 'y_axis', 'z_axis']],
-    df_test.activity,
-    TIME_STEPS,
-    STEP
-)
+    df_test[['lin_double_values_0', 'lin_double_values_1', 'lin_double_values_2',
+              'acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2',
+              "gra_double_values_0", "gra_double_values_1", "gra_double_values_2",
+              'gyr_double_values_0', 'gyr_double_values_1', 'gyr_double_values_2',
+              'mag_double_values_0', 'mag_double_values_1', 'mag_double_values_2',
+              'rot_double_values_0', 'rot_double_values_1', 'rot_double_values_2']],
+    df_test.ESM_bodyposition,
+    TIME_STEPS,STEP)
 
 print(X_train.shape, y_train.shape)
 
-## encode it
-from sklearn.preprocessing import OneHotEncoder
+## encode categorical labels into numeric values
 
 enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
-
 enc = enc.fit(y_train)
 
 y_train = enc.transform(y_train)
@@ -223,6 +236,10 @@ y_test = enc.transform(y_test)
 print(X_train.shape, y_train.shape)
 
 ## build model (based on: https://towardsdatascience.com/time-series-classification-for-human-activity-recognition-with-lstms-using-tensorflow-2-and-keras-b816431afdff)
+### check if GPU is available
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+
+### build model
 model = keras.Sequential()
 model.add(
     keras.layers.Bidirectional(
@@ -237,13 +254,52 @@ model.add(keras.layers.Dense(units=128, activation='relu'))
 model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
 
+### train model
 history = model.fit(
     X_train, y_train,
-    epochs=20,
+    epochs=5, #initially: 20
     batch_size=64,
     validation_split=0.1,
     shuffle=True
 )
 
-# fix random seed for reproducibility
-tf.random.set_seed(7)
+plt.plot(history.history['loss'], label='train')
+plt.plot(history.history['val_loss'], label='test')
+plt.legend()
+plt.show()
+
+### evaluate model
+#### show accuracy
+y_pred = model.predict(X_test)
+
+#### plot confusion matrix
+from sklearn.metrics import confusion_matrix
+
+def plot_cm(y_true, y_pred, class_names):
+  cm = confusion_matrix(y_true, y_pred)
+  fig, ax = plt.subplots(figsize=(18, 16))
+  ax = sns.heatmap(
+      cm,
+      annot=True,
+      fmt="d",
+      cmap=sns.diverging_palette(220, 20, n=7),
+      ax=ax
+  )
+
+  plt.ylabel('Actual')
+  plt.xlabel('Predicted')
+  ax.set_xticklabels(class_names)
+  ax.set_yticklabels(class_names)
+  b, t = plt.ylim() # discover the values for bottom and top
+  b += 0.5 # Add 0.5 to the bottom
+  t -= 0.5 # Subtract 0.5 from the top
+  plt.ylim(b, t) # update the ylim(bottom, top) values
+  plt.show() # ta-da!
+
+plot_cm(
+  enc.inverse_transform(y_test),
+  enc.inverse_transform(y_pred),
+  enc.categories_[0]
+)
+
+
