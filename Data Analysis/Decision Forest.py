@@ -1,6 +1,8 @@
 ## Note: I could use Tensorflow or Sklearn for Decision Forests. I will use Tensorflow for this example.
 ## Seems that in Sklearn there are more decision forests, customization methods & documentation.
 
+#region import
+import pickle
 
 
 #region Tensorflow Decision Forests
@@ -94,6 +96,14 @@ tfdf.model_plotter.plot_feature_importances(feature_importance)
 
 #region Sklearn Decision Forests
 ## The Sklearn DF implementation is based on this tutorial: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+
+#region temporary: checking AGENDER 2.0 methods
+def load_agender(path):
+with open(path, 'rb') as f:
+	return pickle.load(f)
+path = "/Users/benediktjordan/Downloads/Agender 2.0 Code temporary/wetransfer_02_transform_mne-py_2022-10-03_1431/df_ecg_cleaned"
+df = load_agender(path)
+
 
 #region Pipeline 1: "traditional" CV & traditional feature interpretation
 # define model
