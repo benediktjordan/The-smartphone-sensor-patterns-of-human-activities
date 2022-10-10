@@ -69,6 +69,8 @@ def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
             # merge dataframes
             df_merged = pd.merge_asof(df_base_user_event, df_sensor_user_event, on='timestamp',
                                       tolerance=pd.Timedelta("100ms"))
+            # TODO: include functionality so that also sensors with lesser frequency can be merged (i.e.
+            #  locations, open_wheather etc.)
 
             # add merged data to general dataframe
             df_final = df_final.append(df_merged)
@@ -113,6 +115,7 @@ df_base = df_base.rename(columns={"Unnamed: 0_x": "Unnamed: 0", "0_x": "0", "1_x
                                   "ESM_aligned_time_x": "ESM_aligned_time"})
 
 # endregion temporary
+#TODO: also merge sensors with lesser frequency (i.e. locations, open_weather etc.)
 
 for sensor in sensors:
     time_begin = time.time()
@@ -125,6 +128,7 @@ for sensor in sensors:
         sensor) + "_esm_timeperiod_5 min_TimeseriesMerged.csv", index=False)
     time_end = time.time()
     print("Time for sensor ", sensor, " is: ", time_end - time_begin)
+
 # save merged data
 df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeperiod_5 min_TimeseriesMerged.csv",
                index=False)

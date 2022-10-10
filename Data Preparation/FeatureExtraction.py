@@ -2,7 +2,34 @@
 import pandas as pd
 import tsfresh
 from tsfresh import extract_features
+from tsfresh import select_features
+from tsfresh.utilities.dataframe_functions import impute
+import os
+import numpy as np
+import time
+from tqdm import tqdm
 
+
+class computeFeatures:
+    # Class Variable
+    animal = 'dog'
+
+    # The init method or constructor
+    def __init__(self, breed, color):
+        # Instance Variable
+        self.breed = breed
+        self.color = color
+
+
+    # for battery_charges
+    ## calculate difference between "before bed" event/"after bed" event timestamps and "charge battery" event timestamp/"charge
+    ## battery double_end_timestamp" timestamp
+
+    def battery_charges_features(self, df):
+        # calculate difference between "before bed" event/"after bed" event timestamps and "charge battery" event timestamp/"charge
+        # battery double_end_timestamp" timestamp
+
+        return df
 
 #region feature extraction function
 def feature_extraction(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name):
@@ -17,47 +44,136 @@ def feature_extraction(df, sensor_column_names, segment_size, time_column_name, 
     '''
 
     df_final = pd.DataFrame()
+    counter = 1
+
+    sensor_column_names.append(time_column_name)
+    sensor_column_names.append("ID")
     # iterate through ESM events
     for event in df[ESM_event_column_name].unique():
+        # print the portion of events that have been processed
+        if counter % 10 == 0:
+            print(f"Processed experimental {counter} of {len(df[ESM_event_column_name].unique())} events")
+        print(f"Processing {counter} of {len(df[ESM_event_column_name].unique())} events")
+
         # select data for event
         df_event = df[df[ESM_event_column_name] == event]
 
         # reset index
-        df_event = df_event.reset_index(drop=True)
+        df_event_t = df_event.reset_index(drop=True)
 
         # create ID column for tsfresh (ID column contains the segment number)
-        df_event['ID'] = df_event.index // segment_size
+        df_event_t['ID'] = df_event_t.index // segment_size
 
         # sort by timestamp
-        df_event = df_event.sort_values(by=time_column_name)
+        df_event_t = df_event_t.sort_values(by=time_column_name)
 
         # get only sensor columns
-        df_event = df_event[sensor_column_names, 'ID', time_column_name]
+        df_event_t = df_event_t[sensor_column_names]
+
+        # count number of rows with nan value
+        nan_rows = df_event_t.isnull().sum(axis=1)
+        nan_rows = nan_rows[nan_rows > 0]
+        print(f"Number of rows with nan values: {len(nan_rows)}")
+
+        # remove rows with NaN values
+        df_event_t = df_event_t.dropna()
 
         #extract features
-        extracted_features = extract_features(df_event, column_id='ID', column_sort=time_column_name)
+        extracted_features = extract_features(df_event_t, column_id='ID', column_sort=time_column_name, )
+
+        # impute missing values
+        #impute(extracted_features)
 
         # apply feature selection
-        features_filtered = select_features(extracted_features, y)
+        #features_filtered = select_features(extracted_features, y)
 
         # add ESM event columns (all ESM event columns)
-        features_filtered["ESM_timestamp"] = df_event["ESM_timestamp"][0]
-        features_filtered["ESM_location"] = df_event["ESM_location"][0]
-        features_filtered["ESM_location_time"] = df_event["ESM_location_time"][0]
-        features_filtered["ESM_bodyposition"] = df_event["ESM_bodyposition"][0]
-        features_filtered["ESM_bodyposition_time"] = df_event["ESM_bodyposition_time"][0]
-        features_filtered["ESM_activity"] = df_event["ESM_activity"][0]
-        features_filtered["ESM_activity_time"] = df_event["ESM_activity_time"][0]
-        features_filtered["ESM_smartphonelocation"] = df_event["ESM_smartphonelocation"][0]
-        features_filtered["ESM_smartphonelocation_time"] = df_event["ESM_smartphonelocation_time"][0]
-        features_filtered["ESM_aligned"] = df_event["ESM_aligned"][0]
-        features_filtered["ESM_aligned_time"] = df_event["ESM_aligned_time"][0]
+        extracted_features["ESM_timestamp"] = df_event["ESM_timestamp"].iloc[0]
+        extracted_features["ESM_location"] = df_event["ESM_location"].iloc[0]
+        extracted_features["ESM_location_time"] = df_event["ESM_location_time"].iloc[0]
+        extracted_features["ESM_bodyposition"] = df_event["ESM_bodyposition"].iloc[0]
+        extracted_features["ESM_bodyposition_time"] = df_event["ESM_bodyposition_time"].iloc[0]
+        extracted_features["ESM_activity"] = df_event["ESM_activity"].iloc[0]
+        extracted_features["ESM_activity_time"] = df_event["ESM_activity_time"].iloc[0]
+        extracted_features["ESM_smartphonelocation"] = df_event["ESM_smartphonelocation"].iloc[0]
+        extracted_features["ESM_smartphonelocation_time"] = df_event["ESM_smartphonelocation_time"].iloc[0]
+        extracted_features["ESM_aligned"] = df_event["ESM_aligned"].iloc[0]
+        extracted_features["ESM_aligned_time"] = df_event["ESM_aligned_time"].iloc[0]
+        extracted_features["User ID"] = df_event["2"].iloc[0]
 
         # add to final dataframe
-        df_final = df_final.append(features_filtered)
+        df_final = df_final.append(extracted_features)
 
+        counter += 1
+
+    #reset index
+    df_final = df_final.reset_index(drop=True)
     return df_final
 
+#intermediate: extract features for merged high-frequency sensors
+# TODO: extract features also for low-frequency sensors (before, they have to be merged, off course)
+
+merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
+# get sensor_columns for merged sensors
+sensor_columns_merged_sensors = []
+for sensor in merged_sensors:
+    sensor_columns_merged_sensors.append(sensor_columns[sensor])
+# combine list elements into one element
+sensor_columns_merged_sensors = [item for sublist in sensor_columns_merged_sensors for item in sublist]
+
+#load data
+path_merged_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/features/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv"
+df_merged = pd.read_csv(path_merged_sensorfile)
+
+# extract features for different time periods
+time_periods = [2, 1, 5, 10] #in seconds
+frequency = 10 #in Hz
+for seconds in tqdm(time_periods):
+    time.start = time.time()
+    segment_size = seconds * frequency
+    df_merged_features = feature_extraction(df_merged, sensor_columns_merged_sensors, segment_size, "timestamp", "ESM_timestamp")
+
+    # save features
+    dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
+    df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+
+    print("Time for " + str(seconds) + " seconds: " + str(time.time() - time.start))
+
+
+
+
+
+
+
+
+
+
+
+# testcase
+df = pd.read_csv(
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/features/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp'], infer_datetime_format=True, nrows= 10000)
+sensor_column_names = ['acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2']
+segment_size = 100
+time_column_name = 'timestamp'
+ESM_event_column_name = 'ESM_timestamp'
+df_final = feature_extraction(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name)
+
+if __name__ == '__main__':
+    # create object of class
+    obj = computeFeatures('German Shepherd', 'Black')
+
+    # call the instance method using the object obj
+    print(obj.battery_charges_features('df'))
+
+    # call the class method using the class name
+    print(computeFeatures.animal)
+
+    # call the static method using the class name
+    print(computeFeatures.battery_charges_features('df'))
+
+    # call the feature extraction function
+    print(feature_extraction('df', 'sensor_column_names', 'segment_size', 'time_column_name', 'ESM_event_column_name'))
 #impute missing values
 extracted_features = extracted_features.fillna(extracted_features.mean())
 return extracted_features
@@ -88,28 +204,10 @@ features_filtered = select_features(extracted_features, y)
 # IMPORTANT: tsfresh seemed once to not  work with apple silicon; use rosetta 2 to run this code; but finally it now works with Apple Silicon
 # here a guide how to create x86 environment: https://towardsdatascience.com/how-to-manage-conda-environments-on-an-apple-silicon-m1-mac-1e29cb3bad12
 
-
-class computeFeatures:
-    # Class Variable
-    animal = 'dog'
-
-    # The init method or constructor
-    def __init__(self, breed, color):
-        # Instance Variable
-        self.breed = breed
-        self.color = color
-
-
-    # for battery_charges
-    ## calculate difference between "before bed" event/"after bed" event timestamps and "charge battery" event timestamp/"charge
-    ## battery double_end_timestamp" timestamp
-
-    def battery_charges_features(self, df):
-        # calculate difference between "before bed" event/"after bed" event timestamps and "charge battery" event timestamp/"charge
-        # battery double_end_timestamp" timestamp
-
-        return df
-
+from tsfresh.examples.robot_execution_failures import download_robot_execution_failures, \
+    load_robot_execution_failures
+download_robot_execution_failures()
+timeseries, y = load_robot_execution_failures()
 
 
 #region TSFEL: alternative library for feature extraction

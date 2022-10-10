@@ -2,11 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="This is the first commit message">
+      <change afterPath="$PROJECT_DIR$/Data Preparation/label_selection.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/general/databases.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Exploration/02_DataExploration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Preparation/FeatureExtraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Analysis/Decision Forest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mixpanel.py" beforeDir="false" afterPath="$PROJECT_DIR$/mixpanel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Analysis/LSTM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Preparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data Preparation/FeatureExtraction.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -199,7 +200,7 @@
       <workItem from="1664973623682" duration="265000" />
       <workItem from="1664973892771" duration="5100000" />
       <workItem from="1665318685626" duration="329000" />
-      <workItem from="1665319707887" duration="5730000" />
+      <workItem from="1665319707887" duration="19687000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -292,7 +293,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664897999976</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="This is the first commit message">
+      <created>1665327708847</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1665327708847</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -350,6 +358,11 @@
           <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/02_DataExploration.py</url>
           <line>43</line>
           <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Data Analysis/LSTM.py</url>
+          <line>25</line>
+          <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

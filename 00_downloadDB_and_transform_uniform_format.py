@@ -15,67 +15,6 @@ from pandas import read_sql_query, read_sql_table
 
 # This is a change comment
 
-# user and sensor database
-users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88"],
-                      ["Simone_2","4c4e5063-1b23-4dfc-886d-c6a202225ed6"],
-                      ["Simone_3","53c73807-3756-4303-b4dc-5e7e232e528c"],
-                      ["Simone_4", "f83ed117-9279-4ef8-ab74-83d7b8b268b8"],
-                      ["Tina", "0d620b8a-c2d4-48fc-9c75-80ce80aeea3e"],
-                      ["Tina_2", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0"],
-                      ["Lea","590f0faf-d932-4a57-998d-e3da667a91dc"],
-                      ["Lotte","410df445-af3d-4cf7-8bf1-f92160f1c41f"],
-                      ["Bella","ad064def-9d72-44ff-96b2-f3b3d90d1079"],
-                      ["Madleine","36cf6eb2-9d88-46db-a90c-3f24cb4b7228"],
-                      ["Miranda","cf2dfa9b-596b-4a72-a4da-cb3777a31cc7"],
-                      ["Lena", "212a5ebe-0714-47ac-a887-964c24e0ae43"],
-                      ["Paul", "15cdbd7c-132e-4bb8-9dab-192cf909daec"],
-                      ["Selcuk", "2294d0b0-67ef-4af2-8ffb-69db607920c9"],
-                      ["Selcuk_2", "c838b909-f782-4441-aa3c-10c6c7765ba3"],
-                      ["Rosa", "84afe4cb-3572-46bc-bc29-d982ac375341"],
-                      ["Rosa_2", "e6c1d093-148e-47f8-8054-6663dc5c366a"],
-                      ["Bini", "6388b5d9-367b-427e-a2f5-912014c69a5e"],
-                      ["Tanzi", "e9d3ed5e-1d52-445c-82ac-8bbe8066b3d7"],
-                      ["Pauli", "6ab9716e-e6d8-4492-ad86-f051a9a4b62a"],
-                      ["Margherita ?", "b23b3f4e-7fc1-452f-be16-b9388451f3f6"],
-                      ["Margherita_2", "25f1657f-5a39-4dba-8a3b-e6efbfec0e4d"],
-                      ["Unknown", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0"],
-                      ["Felix", "b7b013b7-f78c-4325-a7ab-2dfc128fba27"],
-                      ["Benedikt_1", "8206b501-20e7-4851-8b79-601af9e4485f"],
-                      ["Benedikt_2", "f1dc0e69-a548-4771-85f9-28db9060d4c6"],
-                      ["Benedikt_3", "eab5ef78-8eb2-4587-801f-834fc1f86f31"],
-                      ["Benedikt_4", "f1db4f27-2e1c-4558-85a1-b43ef2c5af59"],
-                      ["Benedikt_5 (vorher Unknown_2)", "57fc9641-9f4d-409b-bffd-f333b01c33c9"],
-                      ["Benedikt_secondiPhone", "4c1db32b-48fc-4fa6-a4fe-c44f079b7ca4"],
-                      ["Benedikt_tablet","0960f02f-8c67-486c-b8db-7850d4a7070b"]], columns = ["Name", "ID"])
-
-sensors_and_frequencies = pd.DataFrame([["barometer",0.1],
-                                        ["accelerometer",10],
-                                          ["battery",0], #event based
-                                          ["battery_charges",0], #event based
-                                          ["battery_discharges",0], #event based
-                                          ["bluetooth", 0.0333333],
-                                          ["esm", 0.00055555555], #12 times a day while every time I get 4 events
-                                          ["gravity", 10],
-                                          ["gyroscope", 10],
-                                          ["ios_status_monitor", 0.01666666666],
-                                          ["linear_accelerometer", 10],
-                                          ["locations", 1],
-                                          ["magnetometer", 10],
-                                          ["network", 0], #event based
-                                          ["plugin_ambient_noise", 0.01666666666], #once per minute
-                                          ["plugin_device_usage", 0], #event based
-                                          ["plugin_ios_activity_recognition", 0.1],
-                                          ["plugin_ios_esm", 0.00055555555], #12 times a day while every time I get 4 events
-                                          ["plugin_openweather", 0.00055555555], #every 30 minutes
-                                          ["plugin_studentlife_audio", 0.00055555555], #every 4 minutes
-                                          ["push_notification", 0.00013888888], #18 times a day
-                                          ["screen", 0], #event based
-                                          ["rotation", 10],
-                                          ["sensor_wifi", 1],
-                                          ["significant_motion", 0],
-                                          ["timezone", 0.00027777777] #once per hour
-                                          ], columns = ["Sensor", "Frequency (in Hz)"])
-
 
 
 
@@ -854,6 +793,7 @@ for timestamp in esm_all_final["timestamp"]:
 #endregion
 
 #region filter/select only data in x minute range around ES events
+# TODO: check why I still have the file "gravity_from_S3" and solve the problem
 
 dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
 #sensor = "barometer"
@@ -912,7 +852,6 @@ def filter_sensordata_by_esm(dir_databases, path_esm, sensor, frequency, time_pe
                 for index, esm_entry in esm_all_transformed.iterrows():
 
                     #find all sensor data in time period around esm_entry filtered by the user
-
                     sensor_data_in_time_period = sensor_all[(sensor_all["2"] == esm_entry["device_id"]) & (sensor_all["1"] >= esm_entry["timestamp"] - time_period_unix) & (sensor_all["1"] <= esm_entry["timestamp"] + time_period_unix)].copy()
 
                     #check if empty
@@ -1098,7 +1037,7 @@ def convert_json_to_columns(path_df, sensor, json_column_name):
     df[json_column_name] = df[json_column_name].apply(lambda x: json.loads(x))
     # add sensor identifier to every JSON column
     df = pd.concat([df, df[json_column_name].apply(pd.Series).add_prefix(sensor + "_") ], axis=1)
-
+    # TODO: add specidal identifier to be able to differentiate "battery" vs. "battery_charges" vs. "battery_discharges"
     return df
 
 # NOTE: function is applied in next section
