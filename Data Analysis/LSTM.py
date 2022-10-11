@@ -137,17 +137,14 @@ df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeper
 
 # load test data
 df = pd.read_csv(
-    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
+    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True, nrows= 600000)
 
 # region Human Activity Recognition
 
 # decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
 label_segment = 30 # in seconds
 ## iterate through ESM events and keep only data that is within the label segment
-
-
-
 
 # data visualization: how much data per label level & participant
 ## how many labels per label level
@@ -162,21 +159,21 @@ plt.show()
 
 
 ## plot some sensor data for different activities
-def plot_activity(activity, df):
-    data = df[df['activity'] == activity][['x_axis', 'y_axis', 'z_axis']][:200]
+def plot_activity(ESM_category, activity, df):
+    data = df[df[ESM_category] == activity][['acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2']][:200]
     axis = data.plot(subplots=True, figsize=(16, 12),
                      title=activity)
     for ax in axis:
         ax.legend(loc='lower left', bbox_to_anchor=(1.0, 0.5))
 
+plot_activity("ESM_bodyposition", "Sitting", df)
 
-plot_activity("Sitting", df);
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
 ## only keep activities with at least 50.000 records
 df = df[df['ESM_bodyposition'].isin(df['ESM_bodyposition'].value_counts()[df['ESM_bodyposition'].value_counts() > 50000].index)]
-df['ESM_bodyposition'].value_counts()
+df['ESM_bodyposition'].value_counts().sum()
 
 ## only keep data from participants with at least 50.000 records
 df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
@@ -276,6 +273,12 @@ plt.show()
 #### show accuracy
 y_pred = model.predict(X_test)
 
+# compute accuracy of LSTM
+#import accuracy score for LSTM
+from sklearn.metrics import accuracy_score
+acc = accuracy_score(y_test, y_pred.round())
+print("Accuracy of LSTM: ", accuracy_score(y_test, y_pred.round()))
+
 #### plot confusion matrix
 from sklearn.metrics import confusion_matrix
 
@@ -298,14 +301,16 @@ def plot_cm(y_true, y_pred, class_names):
   b += 0.5 # Add 0.5 to the bottom
   t -= 0.5 # Subtract 0.5 from the top
   plt.ylim(b, t) # update the ylim(bottom, top) values
-  plt.show() # ta-da!
+  return plt # ta-da!
 
-plot_cm(
+
+
+figure = plot_cm(
   enc.inverse_transform(y_test),
   enc.inverse_transform(y_pred),
   enc.categories_[0]
 )
-
+figure.show()  # ta-da!
 
 import datetime
 now = datetime.datetime.now()

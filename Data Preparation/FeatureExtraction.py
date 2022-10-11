@@ -32,7 +32,7 @@ class computeFeatures:
         return df
 
 #region feature extraction event-wise
-def feature_extraction_elementwise(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name, path_intermediate_results, last_esm_timestamp=None):
+def feature_extraction_eventwise(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name, path_intermediate_results, last_esm_timestamp=None):
     '''
     :param df: dataframe with sensor data
     :param df:
@@ -130,10 +130,10 @@ def feature_extraction_elementwise(df, sensor_column_names, segment_size, time_c
         # add to final dataframe
         df_final = df_final.append(extracted_features)
 
-        # save intermediate results
-        with open(path_intermediate_results + "INTERMEDIATE_df_final_" + str(event) + '.pkl', 'wb') as f:
-            pickle.dump(df_final, f, pickle.HIGHEST_PROTOCOL)
-        #df_final.to_csv(path_intermediate_results + "INTERMEDIATE_df_final_" + str(event) + ".csv")
+        # save intermediate results for every 10 events
+        if counter % 10 == 0:
+            with open(path_intermediate_results + "INTERMEDIATE_df_final_" + str(event) + '.pkl', 'wb') as f:
+                pickle.dump(df_final, f, pickle.HIGHEST_PROTOCOL)
         print("Event with following timestamp has been processed: " + str(event))
         counter += 1
 
@@ -167,7 +167,7 @@ path_intermediate_results = dir_sensorfiles + "data_preparation/features/interme
 for seconds in tqdm(time_periods):
     time.start = time.time()
     segment_size = seconds * frequency
-    df_features, df_some_sensors_only = feature_extraction(df_merged, sensor_columns_merged_sensors, segment_size, "timestamp", "ESM_timestamp", path_intermediate_results = path_intermediate_results)
+    df_features, df_some_sensors_only = feature_extraction_eventwise(df_merged, sensor_columns_merged_sensors, segment_size, "timestamp", "ESM_timestamp", path_intermediate_results = path_intermediate_results)
 
     # save features
     df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
@@ -182,12 +182,12 @@ time_periods = [2, 1, 5, 10] #in seconds
 frequency = 10 #in Hz
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 path_intermediate_results = dir_sensorfiles + "/data_preparation/features/intermediate/"
-last_esm_timestamp = "2022-06-22 10:00:03.668"
+last_esm_timestamp = "2022-06-23 07:15:28.816999936"
 
 for seconds in time_periods:
     time.start = time.time()
     segment_size = seconds * frequency
-    df_features, df_some_sensors_only = feature_extraction(df_merged, sensor_columns_merged_sensors, segment_size, "timestamp", "ESM_timestamp", path_intermediate_results = path_intermediate_results,
+    df_features, df_some_sensors_only = feature_extraction_eventwise(df_merged, sensor_columns_merged_sensors, segment_size, "timestamp", "ESM_timestamp", path_intermediate_results = path_intermediate_results,
                                                            last_esm_timestamp = last_esm_timestamp)
 
     # save features
@@ -198,34 +198,46 @@ for seconds in time_periods:
 #endregion
 
 #region feature extraction (not element-wise)
+
+#testcase
+df = df_merged
+sensor_column_names = sensor_columns_merged_sensors
+segment_size = 20
+timestamp_column = "timestamp"
+esm_timestamp_column = "ESM_timestamp"
+
+
 def feature_extraction(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name):
 
-    df_final = pd.DataFrame()
-    df_some_sensors_only = pd.DataFrame()
-    counter = 1
-
-    sensor_column_names.append(time_column_name)
-    sensor_column_names.append("ID")
+    # reset index
+    # TODO: check if this is necessary and maybe event dangerous; is df_merged ordered by event and timestamp?
+    df = df.reset_index(drop=True)
 
     # create ID column for tsfresh (ID column contains the segment number)
     df['ID'] = df.index // segment_size
+    #sensor_column_names.append(time_column_name)
+    sensor_column_names.append("ID")
 
     # get only sensor columns
     df = df[sensor_column_names]
 
     # count number of rows with nan value
     nan_rows = df.isnull().sum(axis=1)
-    nan_rows = df[nan_rows > 0]
-    print(f"Number of rows with nan values: {len(nan_rows)}")
+    nan_rows = nan_rows > 0
+    print(f"Number of rows with nan values: {len(nan_rows[nan_rows == True])}")
 
     # remove rows with NaN values
     df = df.dropna()
+    df = df.reset_index(drop=True)
 
     # check if all segments have <1 elements; if not, delete them
-    #df = df.groupby('ID').filter(lambda x: len(x) > 1)
+    df = df.groupby('ID').filter(lambda x: len(x) > 1)
 
     #extract features
     extracted_features = extract_features(df, column_id='ID')
+
+    # save intermediate result
+    extracted_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/features/intermediate/extracted_features.csv")
 
     # impute missing values
     #impute(extracted_features)
@@ -235,7 +247,6 @@ def feature_extraction(df, sensor_column_names, segment_size, time_column_name, 
 
     # add ESM event columns (all ESM event columns)
     df_esms = df.iloc[::segment_size, :]
-
     extracted_features["ESM_timestamp"] = df_esms["ESM_timestamp"]
     extracted_features["ESM_location"] = df_esms["ESM_location"]
     extracted_features["ESM_location_time"] = df_esms["ESM_location_time"]
@@ -246,7 +257,7 @@ def feature_extraction(df, sensor_column_names, segment_size, time_column_name, 
     extracted_features["ESM_smartphonelocation"] = df_esms["ESM_smartphonelocation"]
     extracted_features["ESM_smartphonelocation_time"] = df_esms["ESM_smartphonelocation_time"]
     extracted_features["ESM_aligned"] = df_esms["ESM_aligned"].iloc[0]
-    extracted_features["ESM_aligned_time"] = v["ESM_aligned_time"]
+    extracted_features["ESM_aligned_time"] = df_esms["ESM_aligned_time"]
     extracted_features["User ID"] = df_esms["2"]
 
     return extracted_features
@@ -284,7 +295,7 @@ for seconds in tqdm(time_periods):
 
 
 
-# testcase
+#region testcase
 df = pd.read_csv(
     "/Users/benediktjordan/Documents/MTS/Iteration01/Data/features/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
     parse_dates=['timestamp'], infer_datetime_format=True, nrows= 10000)
@@ -343,7 +354,8 @@ from tsfresh.examples.robot_execution_failures import download_robot_execution_f
     load_robot_execution_failures
 download_robot_execution_failures()
 timeseries, y = load_robot_execution_failures()
-
+#endregion
+#endregion
 
 #region TSFEL: alternative library for feature extraction
 import tsfel
