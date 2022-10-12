@@ -72,7 +72,7 @@ def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
             # TODO: include functionality so that also sensors with lesser frequency can be merged (i.e.
             #  locations, open_wheather etc.)
 
-            # add merged data to general dataframe
+            # add merged data to 00_general dataframe
             df_final = df_final.append(df_merged)
 
         time_b = time.time()

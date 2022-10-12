@@ -2,7 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="This is the first commit message">
+      <change afterPath="$PROJECT_DIR$/01_Data Collection/monitor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Exploration/02_DataExploration.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Preparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Preparation/label_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_selection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/download.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,16 +41,15 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/00_downloadDB_and_transform_uniform_format.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/01_Data Exploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/04_Data Analysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/04_Transform.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/Classification_LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/Classification_Stacking.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/main_changed.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Data Analysis/Decision Forest.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Data Analysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Data Preparation/FeatureExtraction.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/mixpanel.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -63,11 +72,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/00_Data Collection" />
       <recent name="$PROJECT_DIR$/AGENDER2.0" />
       <recent name="$PROJECT_DIR$/Data Exploration" />
       <recent name="$PROJECT_DIR$/Data Preparation" />
       <recent name="$PROJECT_DIR$/Data Analysis" />
-      <recent name="$USER_HOME$/Documents/MTS/Iteration01/pythonProject" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -207,7 +216,7 @@
       <workItem from="1665468699306" duration="55000" />
       <workItem from="1665468766415" duration="3441000" />
       <workItem from="1665472242777" duration="11000" />
-      <workItem from="1665472297311" duration="6304000" />
+      <workItem from="1665472297311" duration="6872000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -328,7 +337,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665481012050</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="This is the first commit message">
+      <created>1665576569753</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1665576569753</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -388,9 +404,19 @@
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Data Analysis/LSTM.py</url>
+          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
           <line>25</line>
           <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>386</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
+          <line>387</line>
+          <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
