@@ -10,6 +10,7 @@ import matplotlib
 #matplotlib.use('TkAgg') # for mac
 import matplotlib.pyplot as plt
 #matplotlib.use('TkAgg') # for mac
+import pickle
 
 from matplotlib import rc
 from pandas.plotting import register_matplotlib_converters
@@ -142,33 +143,36 @@ df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeper
 # load test data
 df = pd.read_csv(
     "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True, nrows= 600000)
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
+
+# define some things
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl", 'rb') as f:
+    dict_label = pickle.load(f)
+label_column_name = "label_human motion - general"
+
+
 
 # select only relevant columns
 merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
 # get sensor_columns for merged sensors
-sensor_columns_merged_sensors = []
+sensor_columns_list = []
 for sensor in merged_sensors:
-    sensor_columns_merged_sensors.append(sensor_columns[sensor])
+    sensor_columns_list.append(sensor_columns[sensor])
 # combine list elements into one element
-sensor_columns_merged_sensors = [item for sublist in sensor_columns_merged_sensors for item in sublist]
-
+sensor_columns_list = [item for sublist in sensor_columns_list for item in sublist]
 
 # add to sensor columns other columns which are necessary for LSTM
-feature_extraction_columns = sensor_column_names.copy()
-feature_extraction_columns.append(time_column_name)
-feature_extraction_columns.append(ESM_event_column_name)
-feature_extraction_columns.append("2")  # the device ID
-feature_extraction_columns.append("1")  # timestamp of the sensor collection
+sensor_columns_plus_others = sensor_columns_list.copy()
+sensor_columns_plus_others.append("timestamp")
+sensor_columns_plus_others.append("ESM_timestamp")
+sensor_columns_plus_others.append("2")  # the device ID
+sensor_columns_plus_others.append("1")  # timestamp of the sensor collection
 
-# get only sensor columns and also label Series
-df_sensor = df_sensor[feature_extraction_columns]
+# get only sensor columns
+df = df[sensor_columns_plus_others]
 
-# add label column to df_sensor (for feature selection)
-df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
-
-# add label to dataframe
-
+# add label column to sensor data
+df = labeling_sensor_df(df, dict_label, label_column_name)
 
 
 # region Human Activity Recognition
@@ -179,10 +183,10 @@ label_segment = 30 # in seconds
 
 # data visualization: how much data per label level & participant
 ## visualize how many labels per label level
-df["ESM_activity"].value_counts().plot(kind='bar')
+df[label_column_name].value_counts().plot(kind='bar')
 plt.show()
 
-sns.countplot(x='ESM_bodyposition', data=df, order=df['ESM_bodyposition'].value_counts().index)
+sns.countplot(x=label_column_name, data=df, order=df[label_column_name].value_counts().index)
 plt.title("Records per activity")
 plt.show()
 
@@ -202,15 +206,15 @@ def plot_activity(ESM_category, activity, df):
                      title=activity)
     for ax in axis:
         ax.legend(loc='lower left', bbox_to_anchor=(1.0, 0.5))
+    plt.show()
 
-plot_activity("ESM_bodyposition", "Sitting", df)
-
+plot_activity(label_column_name, "Sitting", df)
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
 ## only keep activities with at least 50.000 records
-df = df[df['ESM_bodyposition'].isin(df['ESM_bodyposition'].value_counts()[df['ESM_bodyposition'].value_counts() > 50000].index)]
-df['ESM_bodyposition'].value_counts().sum()
+df = df[df[label_column_name].isin(df[label_column_name].value_counts()[df[label_column_name].value_counts() > 50000].index)]
+df[label_column_name].value_counts()
 
 ## only keep data from participants with at least 50.000 records
 df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
@@ -242,35 +246,22 @@ TIME_STEPS = 200
 STEP = 40
 
 X_train, y_train = create_dataset(
-    df_train[['lin_double_values_0', 'lin_double_values_1', 'lin_double_values_2',
-              'acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2',
-              "gra_double_values_0", "gra_double_values_1", "gra_double_values_2",
-              'gyr_double_values_0', 'gyr_double_values_1', 'gyr_double_values_2',
-              'mag_double_values_0', 'mag_double_values_1', 'mag_double_values_2',
-              'rot_double_values_0', 'rot_double_values_1', 'rot_double_values_2']],
-    df_train.ESM_bodyposition,
+    df_train[sensor_columns_list],
+    df_train[label_column_name],
     TIME_STEPS, STEP)
 
 X_test, y_test = create_dataset(
-    df_test[['lin_double_values_0', 'lin_double_values_1', 'lin_double_values_2',
-              'acc_double_values_0', 'acc_double_values_1', 'acc_double_values_2',
-              "gra_double_values_0", "gra_double_values_1", "gra_double_values_2",
-              'gyr_double_values_0', 'gyr_double_values_1', 'gyr_double_values_2',
-              'mag_double_values_0', 'mag_double_values_1', 'mag_double_values_2',
-              'rot_double_values_0', 'rot_double_values_1', 'rot_double_values_2']],
-    df_test.ESM_bodyposition,
+    df_test[sensor_columns_list],
+    df_test[label_column_name],
     TIME_STEPS,STEP)
 
 print(X_train.shape, y_train.shape)
 
 ## encode categorical labels into numeric values
-
 enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
 enc = enc.fit(y_train)
-
 y_train = enc.transform(y_train)
 y_test = enc.transform(y_test)
-
 print(X_train.shape, y_train.shape)
 
 ## build model (based on: https://towardsdatascience.com/time-series-classification-for-human-activity-recognition-with-lstms-using-tensorflow-2-and-keras-b816431afdff)

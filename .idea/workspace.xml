@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="restructured the folder &amp; files">
-      <change afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
     </list>
@@ -220,7 +216,7 @@
       <workItem from="1666099410991" duration="611000" />
       <workItem from="1666157714662" duration="10000" />
       <workItem from="1666157731875" duration="620000" />
-      <workItem from="1666204814999" duration="1354000" />
+      <workItem from="1666204814999" duration="6122000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -362,7 +358,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665585876447</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="restructured the folder &amp; files">
+      <created>1666206182254</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1666206182254</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -424,7 +427,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
-          <line>29</line>
+          <line>30</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
