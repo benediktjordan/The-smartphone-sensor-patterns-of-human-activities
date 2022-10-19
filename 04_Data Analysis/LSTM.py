@@ -6,12 +6,16 @@ from tensorflow import keras
 import pandas as pd
 import seaborn as sns
 from pylab import rcParams
+import matplotlib
+#matplotlib.use('TkAgg') # for mac
 import matplotlib.pyplot as plt
+#matplotlib.use('TkAgg') # for mac
+
 from matplotlib import rc
 from pandas.plotting import register_matplotlib_converters
 
-%matplotlib inline
-%config InlineBackend.figure_format='retina'
+#%matplotlib inline
+#%config InlineBackend.figure_format='retina'
 import time
 
 import seaborn as sns
@@ -140,6 +144,33 @@ df = pd.read_csv(
     "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
     parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True, nrows= 600000)
 
+# select only relevant columns
+merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
+# get sensor_columns for merged sensors
+sensor_columns_merged_sensors = []
+for sensor in merged_sensors:
+    sensor_columns_merged_sensors.append(sensor_columns[sensor])
+# combine list elements into one element
+sensor_columns_merged_sensors = [item for sublist in sensor_columns_merged_sensors for item in sublist]
+
+
+# add to sensor columns other columns which are necessary for LSTM
+feature_extraction_columns = sensor_column_names.copy()
+feature_extraction_columns.append(time_column_name)
+feature_extraction_columns.append(ESM_event_column_name)
+feature_extraction_columns.append("2")  # the device ID
+feature_extraction_columns.append("1")  # timestamp of the sensor collection
+
+# get only sensor columns and also label Series
+df_sensor = df_sensor[feature_extraction_columns]
+
+# add label column to df_sensor (for feature selection)
+df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
+
+# add label to dataframe
+
+
+
 # region Human Activity Recognition
 
 # decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
@@ -147,10 +178,16 @@ label_segment = 30 # in seconds
 ## iterate through ESM events and keep only data that is within the label segment
 
 # data visualization: how much data per label level & participant
-## how many labels per label level
+## visualize how many labels per label level
+df["ESM_activity"].value_counts().plot(kind='bar')
+plt.show()
+
 sns.countplot(x='ESM_bodyposition', data=df, order=df['ESM_bodyposition'].value_counts().index)
 plt.title("Records per activity")
 plt.show()
+
+# update matplotlib package
+# https://stackoverflow.com/questions/56942670/matplotlib-seaborn-first-and-last-bar-are-truncated-in-a-histogram
 
 ## how much data per participant
 sns.countplot(x='2', data=df, order=df['2'].value_counts().iloc[:10].index)

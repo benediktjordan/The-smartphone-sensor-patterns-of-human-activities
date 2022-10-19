@@ -421,6 +421,7 @@ for timestamp in esm_all_final["timestamp"]:
 
 #region filter/select only data in x minute range around ES events
 # TODO: check why I still have the file "gravity_from_S3" and solve the problem
+# TODO: make sure that only ESM_timestamps (as the identifier) remain in sensordata
 
 dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
 #sensor = "barometer"
@@ -676,9 +677,7 @@ df = pd.read_csv(dir_sensorfiles + file + "_JSONconverted.csv")
 #endregion
 
 #region transform unix timestamp into datetime
-def convert_unix_to_datetime(df, column_name):
-    df[column_name] = pd.to_datetime(df[column_name], unit='ms')
-    return df
+## the function can be found in "general_functions"
 
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 file_list = [i for i in os.listdir(dir_sensorfiles) if not i.startswith(".")]  # for Mac
@@ -712,3 +711,4 @@ for file in file_list:
 
 
 #endregion
+

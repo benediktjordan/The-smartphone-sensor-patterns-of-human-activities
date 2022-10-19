@@ -1,7 +1,10 @@
-# import libraries
+# region import libraries
 import numpy as np
 import pandas as pd
 import numpy as np
+import pickle
+import tsfresh
+#endregion
 
 # load ESM file
 path_esm ="/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_all_transformed.csv"
@@ -12,9 +15,10 @@ df_esm["bodyposition"].value_counts().sum()
 
 
 
-# transform labels for my activity classification
-# region: human motion
-# create dictionary which maps activities to bodyposition levels
+#region transform labels for my activity classification
+# create dictionary which maps activities to different activity levels
+
+# region human motion
 humanmotion_general = {
     "sitting: in car\/bus\/tram\/train": ["sitting"],
     "sitting: somewhere else": ["sitting"],
@@ -59,21 +63,31 @@ humanmotion_specific = {
     "cycling": ["cycling"],
 
 }
+#endregion
 
+# region public transport
+activity_list = df_esm["bodyposition"].value_counts()
+location_list = df_esm["location"].value_counts()
 
+publictransport = {
+    "on the way: in public transport": ["public transport"],
 
-# create new column with general human motion
-## create new column "humanmotion_general" which contains values of "bodyposition" if they are in the dictionary
-df_esm["humanmotion_general"] = df_esm.apply(lambda x : x["bodyposition"] if (x["bodyposition"] in  humanmotion_general) else np.nan, axis = 1)
-df_esm["humanmotion_general"] = df_esm["humanmotion_general"].replace(humanmotion_general)
-df_esm["humanmotion_general"].value_counts()
-df_esm["humanmotion_general"].isna().sum()
+    "on the way: in train": ["train"],
 
-## create new column with specific human motion and leave every cell which is not in the dictionary as NaN
-df_esm["humanmotion_specific"] = df_esm.apply(lambda x : x["bodyposition"] if x["bodyposition"] in  humanmotion_specific.keys() else np.nan, axis = 1)
-df_esm["humanmotion_specific"] = df_esm["humanmotion_specific"].replace(humanmotion_specific)
-df_esm["humanmotion_specific"].value_counts()
-df_esm["humanmotion_specific"].isna().sum()
+    "on the way: in car": ["car"],
+
+    "on the way: walking\/cycling": ["walking/cycling"],
+
+    "on the way: other means of transport": ["other means of transport"],
+
+    "at home": ["somewhere else (home, office, other workplace, etc.)"],
+    "in home-office": ["somewhere else (home, office, other workplace, etc.)"],
+    "in the office": ["somewhere else (home, office, other workplace, etc.)"],
+    "at another workplace": ["somewhere else (home, office, other workplace, etc.)"],
+    "on the way: standing": ["somewhere else (home, office, other workplace, etc.)"],
+    "in restaurant": ["somewhere else (home, office, other workplace, etc.)"]
+}
+
 #endregion
 
 #region before & after sleep
@@ -101,12 +115,58 @@ on_the_toilet = {
 }
 #endregion
 
+#region during work
+df_esm["activity"].value_counts()
+location = {
+    "in the office": ["in the office"],
+
+    "at another workplace": ["at another workplace"],
+
+    "in home-office": ["at home"],
+    "at home": ["at home"],
+
+    "at a friends place": ["at a friends place"],
+    "in restaurant": ["in restaurant"],
+
+    "on the way: in train": ["on the way"],
+    "on the way: walking/\cycling": ["on the way"],
+    "on the way: in car": ["on the way"],
+    "on the way: standing": ["on the way"],
+    "on the way: in public transport": ["on the way"],
+
+    "with friends outside": ["with friends outside"]
+}
+#endregion
+
+# region smartphonelocation
+df_esm["smartphonelocation"].value_counts()
+smartphonelocation = {
+    "in one hand": ["in one hand"],
+    "in two hands": ["in two hands"],
+    "on a flat surface in front of me (i.e. table, bed, etc.)": ["on flat surface"],
+    "in smartphone mount (i.e. on bicycle, in car, etc.)" : ["in smartphone mount"]
+}
+#endregion
+
+# region aligned
+df_esm["aligned"].value_counts()
+aligned = {
+    "Aligned with my intentions": ["aligned"],
+    "Not aligned with my intentions": ["not aligned"]
+}
+#endregion
+
+
 # create dataframe with details of new columns
-new_columns = [["human motion - general", "humanmotion_general", "bodyposition"],
-               ["human motion - specific", "humanmotion_specific", "bodyposition"],
-               ["before & after sleep", "before_after_sleep", "activity"],
-               ["on the toilet", "on_the_toilet_sittingsomewhereelse", "bodyposition"],
-               ["on the toilet", "on_the_toilet", "activity"]]
+new_columns = [["label_human motion - general", "humanmotion_general", "bodyposition"],
+               ["label_human motion - specific", "humanmotion_specific", "bodyposition"],
+               ["label_before and after sleep", "before_after_sleep", "activity"],
+               ["label_on the toilet", "on_the_toilet_sittingsomewhereelse", "bodyposition"],
+               ["label_on the toilet", "on_the_toilet", "activity"],
+               ["label_public transport", "publictransport", "location"],
+               ["label_location", "location", "location"],
+               ["label_smartphone location", "smartphonelocation", "smartphonelocation"],
+               ["label_aligned", "aligned", "aligned"]]
 
 df_new_columns = pd.DataFrame(new_columns, columns = ["column name", "column dictionary", "column to map"])
 
@@ -126,3 +186,18 @@ for index, row in df_new_columns.iterrows():
         print("column already exists: " + row["column name"])
 
 
+df_esm.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_all_transformed_labeled.csv")
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_all_transformed_labeled.csv")
+
+# create timestamp_datetime column
+df_esm["timestamp_datetime"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+
+# convert df_esm into dict (set timestamp as keys) and save it
+df_esm = df_esm.set_index("timestamp_datetime")
+df_esm_dict = df_esm.to_dict(orient = "index")
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl", 'wb') as f:
+    pickle.dump(df_esm_dict, f, pickle.HIGHEST_PROTOCOL)
+
+# check if there are duplicates in timestamp
+test = df_esm["timestamp"].value_counts()
+test.describe()

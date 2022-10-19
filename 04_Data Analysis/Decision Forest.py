@@ -3,12 +3,6 @@
 
 #region import
 import pickle
-
-
-#region Tensorflow Decision Forests
-## The Tensorflow DF implementation is based on this tutorial: https://towardsdatascience.com/tensorflow-decision-forests-train-your-favorite-tree-based-models-using-keras-875d05a441f
-
-#region import
 import tensorflow_decision_forests as tfdf
 
 import os
@@ -17,6 +11,10 @@ import pandas as pd
 import tensorflow as tf
 import math
 #endregion
+
+
+#region Tensorflow Decision Forests
+## The Tensorflow DF implementation is based on this tutorial: https://towardsdatascience.com/tensorflow-decision-forests-train-your-favorite-tree-based-models-using-keras-875d05a441f
 
 #todo: split data into training and testing (by participants)
 

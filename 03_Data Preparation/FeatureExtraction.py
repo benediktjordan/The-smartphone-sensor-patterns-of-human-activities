@@ -32,21 +32,13 @@ class computeFeatures:
         return df
 
 #region feature extraction event-wise
-def feature_extraction_eventwise(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name, path_intermediate_results, last_esm_timestamp=None):
-    '''
-    :param df: dataframe with sensor data
-    :param df:
-    :param sensor_column_names:
-    :param segment_size:
-    :param time_column_name:
-    :param ESM_event_column_name:
-    :return:
-    '''
+def feature_extraction_eventwise(df_sensor, dict_label, sensor_column_names, segment_size, label_column_name, path_intermediate_results, last_esm_timestamp=None, time_column_name = "timestamp", ESM_event_column_name = "ESM_timestamp"):
 
     df_final = pd.DataFrame()
     df_some_sensors_only = pd.DataFrame()
     counter = 1
 
+    # create list of columns which are used for feature extraction
     sensor_column_names.append(time_column_name)
     sensor_column_names.append("ID")
 
@@ -62,6 +54,9 @@ def feature_extraction_eventwise(df, sensor_column_names, segment_size, time_col
         #df_final = pd.read_csv(path_intermediate_results + "INTERMEDIATE_df_final_" +str(last_esm_timestamp) + ".csv")
         with open(path_intermediate_results + "INTERMEDIATE_df_final_" +str(last_esm_timestamp) + ".pkl", 'rb') as f:
             df_final = pickle.load(f)
+
+    # add label column to df_sensor (for feature selection)
+    df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
 
     # iterate through ESM events
     for event in list_of_events:
@@ -102,30 +97,33 @@ def feature_extraction_eventwise(df, sensor_column_names, segment_size, time_col
             continue
 
         # check if all segments have <1 elements; if not, delete them
+        # explanation: this is necessary for tsfresh; otherwise it will throw an error
         df_event_t = df_event_t.groupby('ID').filter(lambda x: len(x) > 1)
 
         #extract features
-        extracted_features = extract_features(df_event_t, column_id='ID', column_sort=time_column_name, disable_progressbar= True)
+        extracted_features = extract_features(df_event_t, column_id='ID', column_sort=time_column_name)
 
         # impute missing values
         #impute(extracted_features)
 
         # apply feature selection
-        #features_filtered = select_features(extracted_features, y)
+        # create label pd.Series from df_event[label_column_name].iloc[0] with length of extracted_features
+        label = pd.Series([df_event[label_column_name].iloc[0]] * len(extracted_features))
+        features_filtered = select_features(extracted_features, df_event[label_column_name])
 
         # add ESM event columns (all ESM event columns)
         extracted_features["ESM_timestamp"] = df_event["ESM_timestamp"].iloc[0]
-        extracted_features["ESM_location"] = df_event["ESM_location"].iloc[0]
-        extracted_features["ESM_location_time"] = df_event["ESM_location_time"].iloc[0]
-        extracted_features["ESM_bodyposition"] = df_event["ESM_bodyposition"].iloc[0]
-        extracted_features["ESM_bodyposition_time"] = df_event["ESM_bodyposition_time"].iloc[0]
-        extracted_features["ESM_activity"] = df_event["ESM_activity"].iloc[0]
-        extracted_features["ESM_activity_time"] = df_event["ESM_activity_time"].iloc[0]
-        extracted_features["ESM_smartphonelocation"] = df_event["ESM_smartphonelocation"].iloc[0]
-        extracted_features["ESM_smartphonelocation_time"] = df_event["ESM_smartphonelocation_time"].iloc[0]
-        extracted_features["ESM_aligned"] = df_event["ESM_aligned"].iloc[0]
-        extracted_features["ESM_aligned_time"] = df_event["ESM_aligned_time"].iloc[0]
-        extracted_features["User ID"] = df_event["2"].iloc[0]
+        #extracted_features["ESM_location"] = df_event["ESM_location"].iloc[0]
+        #extracted_features["ESM_location_time"] = df_event["ESM_location_time"].iloc[0]
+        #extracted_features["ESM_bodyposition"] = df_event["ESM_bodyposition"].iloc[0]
+        #extracted_features["ESM_bodyposition_time"] = df_event["ESM_bodyposition_time"].iloc[0]
+        #extracted_features["ESM_activity"] = df_event["ESM_activity"].iloc[0]
+        #extracted_features["ESM_activity_time"] = df_event["ESM_activity_time"].iloc[0]
+        #extracted_features["ESM_smartphonelocation"] = df_event["ESM_smartphonelocation"].iloc[0]
+        #extracted_features["ESM_smartphonelocation_time"] = df_event["ESM_smartphonelocation_time"].iloc[0]
+        #extracted_features["ESM_aligned"] = df_event["ESM_aligned"].iloc[0]
+        #extracted_features["ESM_aligned_time"] = df_event["ESM_aligned_time"].iloc[0]
+        #extracted_features["User ID"] = df_event["2"].iloc[0]
 
         # add to final dataframe
         df_final = df_final.append(extracted_features)
@@ -207,7 +205,9 @@ timestamp_column = "timestamp"
 esm_timestamp_column = "ESM_timestamp"
 
 
-def feature_extraction(df, sensor_column_names, segment_size, time_column_name, ESM_event_column_name):
+#function to extract and select features based on the tsfresh algorithms
+# note: label-column is needed since for tsfresh feature selection
+def feature_extraction(df, sensor_column_names, segment_size,  time_column_name = "timestamp", ESM_event_column_name = "ESM_timestamp"):
 
     # reset index
     # TODO: check if this is necessary and maybe event dangerous; is df_merged ordered by event and timestamp?
@@ -262,6 +262,8 @@ def feature_extraction(df, sensor_column_names, segment_size, time_column_name, 
 
     return extracted_features
 
+
+# create list of sensor column names
 merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
 # get sensor_columns for merged sensors
 sensor_columns_merged_sensors = []
@@ -272,7 +274,7 @@ sensor_columns_merged_sensors = [item for sublist in sensor_columns_merged_senso
 
 #load data
 path_merged_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv"
-df_merged = pd.read_csv(path_merged_sensorfile)
+df_merged = pd.read_csv(path_merged_sensorfile, nrows = 100000)
 
 # extract features for different time periods
 
