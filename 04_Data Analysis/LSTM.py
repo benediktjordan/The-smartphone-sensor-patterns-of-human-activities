@@ -23,6 +23,64 @@ import seaborn as sns
 from scipy import stats
 from sklearn.preprocessing import OneHotEncoder
 
+# for LSTM
+from sklearn.metrics import accuracy_score
+
+#Classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import validation_curve
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+
+#nested CV
+from numpy import mean
+from numpy import std
+from sklearn.datasets import make_classification
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import confusion_matrix
+
+#Feature Importance
+import shap
+
+#Statistical Testing
+from scipy.stats import binom_test
+from sklearn.model_selection import permutation_test_score
+
+#Tune Hyperparameters
+import keras_tuner
+
+# note: to get keras_tuner working, I had to:
+# downgrade protobuf to a version 3.20.x (I used_ pip install protobuf==3.20.1
+# set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+# because the following error message occured
+# TypeError: Descriptors cannot not be created directly.
+#If this call came from a _pb2.py file, your generated code is out of date and must be regenerated with protoc >= 3.19.0.
+#If you cannot immediately regenerate your protos, some other possible workarounds are:
+# 1. Downgrade the protobuf package to 3.20.x or lower.
+# 2. Set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python (but this will use pure-Python parsing and will be much slower).
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import save_model
+from tensorflow.keras.models import model_from_json
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import Dropout
+from kerastuner.tuners import RandomSearch
+from kerastuner.engine.hyperparameters import HyperParameters
+
+
 
 # endregion
 
@@ -140,7 +198,380 @@ df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeper
 
 # endregion
 
-# load test data
+
+
+
+
+#region old Keras model
+# build model (based on: https://towardsdatascience.com/time-series-classification-for-human-activity-recognition-with-lstms-using-tensorflow-2-and-keras-b816431afdff)
+    ### check if GPU is available
+    #print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# build model
+    model = keras.Sequential()
+    model.add(
+        keras.layers.Bidirectional(
+          keras.layers.LSTM(
+              units=128,
+              input_shape=[X_train.shape[1], X_train.shape[2]]
+          )
+        )
+    )
+    model.add(keras.layers.Dropout(rate=0.5))
+    model.add(keras.layers.Dense(units=128, activation='relu'))
+    model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+
+    ### train model
+    history = model.fit(
+        X_train, y_train,
+        epochs=5, #initially: 20
+        batch_size=64,
+        validation_split=0.1,
+        shuffle=True
+    )
+#### show accuracy
+yhat = model.predict(X_test)
+
+
+#endregion
+
+
+
+#region implement LOSOCV
+
+# load test data only 100000 entries
+df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True, nrows=500000)
+
+label_column_name = "label_human motion - general"
+sensors_included = "all"
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl", 'rb') as f:
+    dict_label = pickle.load(f)
+
+# Set time steps and window-shifting size for LSTM
+TIME_STEPS = 200
+STEP = 40
+
+# select only relevant columns
+merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
+# get sensor_columns for merged sensors
+sensor_columns_list = []
+for sensor in merged_sensors:
+    sensor_columns_list.append(sensor_columns[sensor])
+# combine list elements into one element
+sensor_columns_list = [item for sublist in sensor_columns_list for item in sublist]
+
+# set parameters
+# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
+label_segment = 30 # in seconds
+
+# add to sensor columns other columns which are necessary for LSTM
+sensor_columns_plus_others = sensor_columns_list.copy()
+sensor_columns_plus_others.append("timestamp")
+sensor_columns_plus_others.append("ESM_timestamp")
+sensor_columns_plus_others.append("2")  # the device ID
+sensor_columns_plus_others.append("1")  # timestamp of the sensor collection
+
+# get only sensor columns
+df = df[sensor_columns_plus_others]
+
+# add label column to sensor data
+df = labeling_sensor_df(df, dict_label, label_column_name)
+
+# balance dataset based on the data exploration
+# TODO: IMPROVE BALANCING
+## only keep activities with at least 50.000 records
+df[label_column_name].value_counts()
+df = df[df[label_column_name].isin(df[label_column_name].value_counts()[df[label_column_name].value_counts() > 20000].index)]
+df[label_column_name].value_counts()
+
+## only keep data from participants with at least 50.000 records
+df['2'].value_counts()
+df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
+df['2'].value_counts()
+
+
+# Make list of all ID's in idcolumn
+IDlist = set(df["2"])
+
+
+## create the dataset-creation function
+
+def create_dataset(X, y, time_steps=1, step=1):
+    Xs, ys = [], []
+    for i in range(0, len(X) - time_steps, step):
+        v = X.iloc[i:(i + time_steps)].values
+        labels = y.iloc[i: i + time_steps]
+        Xs.append(v)
+        ys.append(stats.mode(labels)[0][0])
+    return np.array(Xs), np.array(ys).reshape(-1, 1)
+
+# create Confusion Matrix Plot Function
+def plot_cm(y_true, y_pred, class_names):
+  cm = confusion_matrix(y_true, y_pred)
+  fig, ax = plt.subplots(figsize=(18, 16))
+  ax = sns.heatmap(
+      cm,
+      annot=True,
+      fmt="d",
+      cmap=sns.diverging_palette(220, 20, n=7),
+      ax=ax
+  )
+
+  plt.ylabel('Actual')
+  plt.xlabel('Predicted')
+  plt.title('Confusion matrix with accuracy: {0:.4f}'.format(acc))
+  #ax.set_xticklabels(class_names)
+  #ax.set_yticklabels(class_names)
+  b, t = plt.ylim() # discover the values for bottom and top
+  b += 0.5 # Add 0.5 to the bottom
+  t -= 0.5 # Subtract 0.5 from the top
+  plt.ylim(b, t) # update the ylim(bottom, top) values
+  return plt # ta-da!
+
+
+
+#initialize
+test_proband = list()
+outer_results_acc = list()
+outer_results_f1 = list()
+outer_results_precision = list()
+outer_results_recall = list()
+
+#for loop to iterate through LOSOCV "rounds"
+t0 = time.time()
+for i in IDlist:
+    t0_inner = time.time()
+    LOOCV_O = str(i)
+
+    # select training and testing data for this LOSOCV round
+    df["2"] = df["2"].apply(str)
+    df_train = df[df["2"] != LOOCV_O].copy()
+    df_test = df[df["2"] == LOOCV_O].copy()
+
+    # create dataset structure needed for LSTM
+    X_train, y_train = create_dataset(
+    df_train[sensor_columns_list],
+    df_train[label_column_name],
+    TIME_STEPS, STEP)
+
+    X_test, y_test = create_dataset(
+    df_test[sensor_columns_list],
+    df_test[label_column_name],
+    TIME_STEPS,STEP)
+
+    ## encode categorical labels into numeric values
+    enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+    enc = enc.fit(y_train)
+    y_train = enc.transform(y_train)
+    y_test = enc.transform(y_test)
+    #print(X_train.shape, y_train.shape)
+
+    # this model & tuner implementation is based on the following tutorial: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
+
+    def build_model(hp):
+        model = Sequential()
+        model.add(LSTM(hp.Int('input_unit', min_value=32, max_value=512, step=32), return_sequences=True,
+                       input_shape=(X_train.shape[1], X_train.shape[2])))
+        for i in range(hp.Int('n_layers', 1, 4)):
+            model.add(LSTM(hp.Int(f'lstm_{i}_units', min_value=32, max_value=512, step=32), return_sequences=True))
+        model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
+        model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
+        model.add(Dense(y_train.shape[1],
+                        activation=hp.Choice('dense_activation', values=['relu', 'sigmoid'], default='relu')))
+        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
+        return model
+
+    tuner = RandomSearch(
+        build_model,
+        objective='mse',
+        max_trials=2,
+        executions_per_trial=1,
+        overwrite=True
+    )
+
+    tuner.search(
+        x=X_train,
+        y=y_train,
+        epochs=20,
+        batch_size=128,
+        validation_data=(X_test, y_test),
+    )
+
+    best_model = tuner.get_best_models(num_models=1)[0]
+
+    ### evaluate model
+    yhat = best_model.predict(X_test)
+
+    ### save model
+    save_model(best_model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_LSTM.h5")
+
+    # evaluate model
+    #import accuracy score for LSTM
+    acc = accuracy_score(y_test, yhat.round())
+    #print("Accuracy of LSTM: ", accuracy_score(y_test, y_pred.round()))
+    f1 = f1_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
+    precision = precision_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
+    recall = recall_score(y_true=y_test, y_pred=yhat.round(), pos_label=1, average='macro')
+
+    # store the result
+    test_proband.append(i)
+    outer_results_acc.append(acc)
+    outer_results_f1.append(f1)
+    outer_results_precision.append(precision)
+    outer_results_recall.append(recall)
+
+    # report progress
+	print('>acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f' % (acc, f1, precision, recall))
+    print("The proband taken as test-data for this iteration was " + str(i))
+
+    # Visualize Confusion Matrix
+    figure = plot_cm(enc.inverse_transform(y_test), enc.inverse_transform(yhat), enc.categories_[0])
+    figure.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
+    figure.show()  # ta-da!
+
+    t1_inner = time.time()
+print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
+
+#store all results in one dataframe:
+df_stats = pd.DataFrame(data=[test_proband, outer_results_acc, outer_results_f1, outer_results_precision, outer_results_recall]).transpose()
+df_stats.columns= ["test_proband","acc", "f1","precision", "recall"]
+outer_filename1 = "OuterProgrammingResult.csv"
+df_stats.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_results.csv")
+
+t1 = time.time()
+print("The whole process has taken so many seconds: " + str(t1 - t0))
+
+# summarize the estimated performance of the model
+print('Accuracy: %.3f (%.3f)' % (mean(outer_results_acc), std(outer_results_acc)))
+print('F1: %.3f (%.3f)' % (mean(outer_results_f1), std(outer_results_f1)))
+print('Precision: %.3f (%.3f)' % (mean(outer_results_precision), std(outer_results_precision)))
+print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_recall)))
+#os.system("shutdown /h") #hibernate
+#endregion
+
+#for loop to iterate through LOSOCV "rounds"
+t0 = time.time()
+for i in IDlist:
+    t0_inner = time.time()
+    LOOCV_O = str(i)
+
+    # select training and testing data for this LOSOCV round
+    df["2"] = df["2"].apply(str)
+    df_train = df[df["2"] != LOOCV_O].copy()
+    df_test = df[df["2"] == LOOCV_O].copy()
+
+    # create dataset structure needed for LSTM
+    X_train, y_train = create_dataset(
+    df_train[sensor_columns_list],
+    df_train[label_column_name],
+    TIME_STEPS, STEP)
+
+    X_test, y_test = create_dataset(
+    df_test[sensor_columns_list],
+    df_test[label_column_name],
+    TIME_STEPS,STEP)
+
+    ## encode categorical labels into numeric values
+    enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+    enc = enc.fit(y_train)
+    y_train = enc.transform(y_train)
+    y_test = enc.transform(y_test)
+    #print(X_train.shape, y_train.shape)
+
+    # this model & tuner implementation is based on the following tutorial: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
+
+    def build_model(hp):
+        model = Sequential()
+        model.add(LSTM(hp.Int('input_unit', min_value=32, max_value=512, step=32), return_sequences=True,
+                       input_shape=(X_train.shape[1], X_train.shape[2])))
+        for i in range(hp.Int('n_layers', 1, 4)):
+            model.add(LSTM(hp.Int(f'lstm_{i}_units', min_value=32, max_value=512, step=32), return_sequences=True))
+        model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
+        model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
+        model.add(Dense(y_train.shape[1],
+                        activation=hp.Choice('dense_activation', values=['relu', 'sigmoid'], default='relu')))
+        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
+        return model
+
+    tuner = RandomSearch(
+        build_model,
+        objective='mse',
+        max_trials=2,
+        executions_per_trial=1
+    )
+
+    tuner.search(
+        x=X_train,
+        y=y_train,
+        epochs=20,
+        batch_size=128,
+        validation_data=(X_test, y_test),
+    )
+
+    best_model = tuner.get_best_models(num_models=1)[0]
+
+    ### evaluate model
+    yhat = best_model.predict(X_test[0].reshape((1, X_test[0].shape[0], X_test[0].shape[1])))
+
+    ### save model
+    save_model(best_model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_LSTM.h5")
+
+    # evaluate model
+    #import accuracy score for LSTM
+    acc = accuracy_score(y_test, yhat.round())
+    #print("Accuracy of LSTM: ", accuracy_score(y_test, y_pred.round()))
+    f1 = f1_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
+    precision = precision_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
+    recall = recall_score(y_true=y_test, y_pred=yhat.round(), pos_label=1, average='macro')
+
+    # store the result
+    test_proband.append(i)
+    outer_results_acc.append(acc)
+    outer_results_f1.append(f1)
+    outer_results_precision.append(precision)
+    outer_results_recall.append(recall)
+
+    # report progress
+	print('>acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f' % (acc, f1, precision, recall))
+    print("The proband taken as test-data for this iteration was " + str(i))
+
+    # Visualize Confusion Matrix
+    figure = plot_cm(enc.inverse_transform(y_test), enc.inverse_transform(yhat), enc.categories_[0])
+    figure.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
+    figure.show()  # ta-da!
+
+    t1_inner = time.time()
+print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
+
+#store all results in one dataframe:
+df_stats = pd.DataFrame(data=[test_proband, outer_results_acc, outer_results_f1, outer_results_precision, outer_results_recall]).transpose()
+df_stats.columns= ["test_proband","acc", "f1","precision", "recall"]
+outer_filename1 = "OuterProgrammingResult.csv"
+df_stats.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_results.csv")
+
+t1 = time.time()
+print("The whole process has taken so many seconds: " + str(t1 - t0))
+
+# summarize the estimated performance of the model
+print('Accuracy: %.3f (%.3f)' % (mean(outer_results_acc), std(outer_results_acc)))
+print('F1: %.3f (%.3f)' % (mean(outer_results_f1), std(outer_results_f1)))
+print('Precision: %.3f (%.3f)' % (mean(outer_results_precision), std(outer_results_precision)))
+print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_recall)))
+#os.system("shutdown /h") #hibernate
+#endregion
+
+
+
+
+
+
+
+
+
+#region: first try of creating LSTM
+
+##load test data
 df = pd.read_csv(
     "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
     parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
@@ -161,6 +592,14 @@ for sensor in merged_sensors:
 # combine list elements into one element
 sensor_columns_list = [item for sublist in sensor_columns_list for item in sublist]
 
+# set parameters
+# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
+label_segment = 30 # in seconds
+
+
+# define LSTM function
+def lstm(df, dict_label, label_column_name, label_segment, sensor_colums_list):
+
 # add to sensor columns other columns which are necessary for LSTM
 sensor_columns_plus_others = sensor_columns_list.copy()
 sensor_columns_plus_others.append("timestamp")
@@ -176,9 +615,6 @@ df = labeling_sensor_df(df, dict_label, label_column_name)
 
 
 # region Human Activity Recognition
-
-# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
-label_segment = 30 # in seconds
 ## iterate through ESM events and keep only data that is within the label segment
 
 # data visualization: how much data per label level & participant
@@ -190,8 +626,6 @@ sns.countplot(x=label_column_name, data=df, order=df[label_column_name].value_co
 plt.title("Records per activity")
 plt.show()
 
-# update matplotlib package
-# https://stackoverflow.com/questions/56942670/matplotlib-seaborn-first-and-last-bar-are-truncated-in-a-histogram
 
 ## how much data per participant
 sns.countplot(x='2', data=df, order=df['2'].value_counts().iloc[:10].index)
@@ -308,7 +742,6 @@ acc = accuracy_score(y_test, y_pred.round())
 print("Accuracy of LSTM: ", accuracy_score(y_test, y_pred.round()))
 
 #### plot confusion matrix
-from sklearn.metrics import confusion_matrix
 
 def plot_cm(y_true, y_pred, class_names):
   cm = confusion_matrix(y_true, y_pred)
@@ -323,15 +756,14 @@ def plot_cm(y_true, y_pred, class_names):
 
   plt.ylabel('Actual')
   plt.xlabel('Predicted')
-  ax.set_xticklabels(class_names)
-  ax.set_yticklabels(class_names)
+  plt.title('Confusion matrix with accuracy: {0:.4f}'.format(acc))
+  #ax.set_xticklabels(class_names)
+  #ax.set_yticklabels(class_names)
   b, t = plt.ylim() # discover the values for bottom and top
   b += 0.5 # Add 0.5 to the bottom
   t -= 0.5 # Subtract 0.5 from the top
   plt.ylim(b, t) # update the ylim(bottom, top) values
   return plt # ta-da!
-
-
 
 figure = plot_cm(
   enc.inverse_transform(y_test),
@@ -340,11 +772,11 @@ figure = plot_cm(
 )
 figure.show()  # ta-da!
 
-import datetime
-now = datetime.datetime.now()
-print(now)
-for i in range(1000):
-    print(i)
-    time.sleep(600)
-    now = datetime.datetime.now()
-    print(now)
+
+
+
+
+
+fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name + "/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_SHAPFeatureImportance.png')
+
+#endregion

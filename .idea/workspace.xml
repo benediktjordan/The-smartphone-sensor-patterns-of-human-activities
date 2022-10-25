@@ -216,7 +216,19 @@
       <workItem from="1666099410991" duration="611000" />
       <workItem from="1666157714662" duration="10000" />
       <workItem from="1666157731875" duration="620000" />
-      <workItem from="1666204814999" duration="6122000" />
+      <workItem from="1666204814999" duration="19870000" />
+      <workItem from="1666267116951" duration="598000" />
+      <workItem from="1666267982138" duration="6193000" />
+      <workItem from="1666348241875" duration="463000" />
+      <workItem from="1666353808503" duration="89000" />
+      <workItem from="1666353930672" duration="78000" />
+      <workItem from="1666354181350" duration="2000" />
+      <workItem from="1666354197389" duration="5000" />
+      <workItem from="1666354210601" duration="14000" />
+      <workItem from="1666354256331" duration="2991000" />
+      <workItem from="1666627264847" duration="2788000" />
+      <workItem from="1666692724579" duration="444000" />
+      <workItem from="1666693294078" duration="3014000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -365,7 +377,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666206182254</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="restructured the folder &amp; files">
+      <created>1666215571791</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1666215571791</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -424,11 +443,6 @@
           <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/02_DataExploration.py</url>
           <line>43</line>
           <option name="timeStamp" value="14" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
-          <line>30</line>
-          <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>

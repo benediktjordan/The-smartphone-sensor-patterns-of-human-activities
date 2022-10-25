@@ -12,6 +12,37 @@ import tensorflow as tf
 import math
 import time
 
+#Classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import validation_curve
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+
+#nested CV
+from numpy import mean
+from numpy import std
+from sklearn.datasets import make_classification
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+
+#Feature Importance
+import shap
+
+#Statistical Testing
+from scipy.stats import binom_test
+from sklearn.model_selection import permutation_test_score
+
+
+
 
 try:
   from wurlitzer import sys_pipes
@@ -27,10 +58,10 @@ except:
 t0 = time.time()
 
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
-label_column_name = "humanmotion_general"
-sensors_included = "highfrequencysensors-without-rotation"
+
+sensors_included = "all"
 timeperiod_segments = 2 #seconds
-path_df_features = dir_sensorfiles + "data_preparation/features/" + label_column_name + sensors_included + "_timeperiod-" + timeperiod_segments + " s_chunknumber-1.pkl"
+path_df_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + sensors_included + "_timeperiod-" + str(timeperiod_segments) + " s.pkl"
 with open(path_df_features, "rb") as f:
     df = pickle.load(f)
 
@@ -167,7 +198,7 @@ for i in IDlist:
 	ax.text(0.14, 125, score_label, fontsize=12)
 	ax.set_xlabel("Accuracy score")
 	ax.set_ylabel("Probability")
-	plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_Permutation.png')
+	plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-" + str(i) + "_Permutation.png")
 	plt.show()
 
 
@@ -186,7 +217,7 @@ for i in IDlist:
 	plt.title('Confusion Matrix where Proband ' + str(i) + " was test-data" )
 	plt.xlabel('true label')
 	plt.ylabel('predicted label')
-	plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_ConfusionMatrix.png')
+	plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
 	plt.show()
 
 	#apply binomial test
@@ -200,7 +231,7 @@ for i in IDlist:
 	shap.summary_plot(shap_values[1], X_test_df, plot_type="bar", show=False)
 	#plt.savefig('02_Analysis/LOSOCV_statisticaltests/DF_withACC_probandsbelow50%_proband' + str(i) + 'astest_SHAPFeatureImportance_v2.png')
 	fig = plt.gcf()
-	fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_SHAPFeatureImportance.png')
+	fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-" + str(i) + '_SHAPFeatureImportance.png')
 	plt.show()
 
 	# store statistical test results (p-value permutation test, accuracy of that permutation iteration, pvalue binomial test) in list
@@ -225,7 +256,7 @@ for i in IDlist:
 	results["Recall"] = outer_results_recall
 	results["P-Value Permutation Test"] = permutation_pvalue
 	results["P-Value Binomial Test"] = pvalues_binomial
-	results.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_results_cumulated.csv.")
+	results.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-" + str(i) + "_results_cumulated.csv.")
 
 	# report progress
 	t1_inner = time.time()
@@ -246,7 +277,9 @@ print("Mean p-value of Permutation Test: %.3f (%.3f)" % (mean(permutation_pvalue
 print("Mean of p-value of Binomial Test: %.3f (%.3f)" % (mean(pvalues_binomial), std(pvalues_binomial)))
 
 
-os.system("shutdown /h") #hibernate
+
+# os.system("shutdown /h") #hibernate
+# endregion
 
 
 
