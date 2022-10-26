@@ -279,7 +279,7 @@ df = df[sensor_columns_plus_others]
 
 # add label column to sensor data
 df = labeling_sensor_df(df, dict_label, label_column_name)
-print("Current label is: ", label_column_name)
+print("Labelling done. Current label is: ", label_column_name)
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
