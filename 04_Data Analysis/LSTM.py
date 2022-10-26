@@ -1,4 +1,6 @@
 # region import libraries
+## visualizations
+import matplotlib.pyplot as plt
 ## for Keras LSTM
 import numpy as np
 import tensorflow as tf
@@ -241,7 +243,7 @@ yhat = model.predict(X_test)
 
 # load test data only 100000 entries
 df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True, nrows=500000)
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
 
 label_column_name = "label_human motion - general"
 sensors_included = "all"
@@ -263,7 +265,7 @@ sensor_columns_list = [item for sublist in sensor_columns_list for item in subli
 
 # set parameters
 # decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
-label_segment = 30 # in seconds
+label_segment = 10 # in seconds
 
 # add to sensor columns other columns which are necessary for LSTM
 sensor_columns_plus_others = sensor_columns_list.copy()
@@ -277,6 +279,7 @@ df = df[sensor_columns_plus_others]
 
 # add label column to sensor data
 df = labeling_sensor_df(df, dict_label, label_column_name)
+print("Current label is: ", label_column_name)
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
@@ -290,9 +293,14 @@ df['2'].value_counts()
 df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
 df['2'].value_counts()
 
+# delete all data which is not in ESM_event +- label_segment
+print("Shape before deleting data: ", df.shape)
+df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
+print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
 
 # Make list of all ID's in idcolumn
 IDlist = set(df["2"])
+print("Number of participants: ", len(IDlist))
 
 
 ## create the dataset-creation function
@@ -387,7 +395,7 @@ for i in IDlist:
         objective='mse',
         max_trials=2,
         executions_per_trial=1,
-        overwrite=True
+        directory='/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/models'
     )
 
     tuner.search(
@@ -397,6 +405,8 @@ for i in IDlist:
         batch_size=128,
         validation_data=(X_test, y_test),
     )
+
+    # get the best model from tuner
 
     best_model = tuner.get_best_models(num_models=1)[0]
 
@@ -426,9 +436,9 @@ for i in IDlist:
     print("The proband taken as test-data for this iteration was " + str(i))
 
     # Visualize Confusion Matrix
-    figure = plot_cm(enc.inverse_transform(y_test), enc.inverse_transform(yhat), enc.categories_[0])
-    figure.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
-    figure.show()  # ta-da!
+    #figure = plot_cm(enc.inverse_transform(y_test), enc.inverse_transform(yhat), enc.categories_[0])
+    #figure.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
+    #figure.show()  # ta-da!
 
     t1_inner = time.time()
 print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
@@ -449,6 +459,8 @@ print('Precision: %.3f (%.3f)' % (mean(outer_results_precision), std(outer_resul
 print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_recall)))
 #os.system("shutdown /h") #hibernate
 #endregion
+
+
 
 #for loop to iterate through LOSOCV "rounds"
 t0 = time.time()

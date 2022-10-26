@@ -1124,39 +1124,152 @@ os.system("shutdown /h") #hibernate
 
 # load data
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
-path_df_features = dir_sensorfiles + "data_preparation/features/humanmotion_generalhighfrequencysensors-without-rotation_timeperiod-2 s_chunknumber-1.pkl"
+sensors_included = "all"
+timeperiod = 2 #seconds
+path_df_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + sensors_included + "_timeperiod-" + str(timeperiod) + " s_featureselection.pkl"
 with open(path_df_features, "rb") as f:
     df = pickle.load(f)
-label_column_name = "humanmotion_general"
 
-time_column_name = "timestamp"
+label_column_name = "label_human motion - general"
+participant_column = "device_id"
 ESM_event_column_name = "ESM_timestamp"
+
+
+# balance dataset based on the data exploration
+# TODO: IMPROVE BALANCING
+## only keep activities with at least 50.000 records
+df[label_column_name].value_counts()
+df = df[df[label_column_name].isin(df[label_column_name].value_counts()[df[label_column_name].value_counts() > 800].index)]
+df[label_column_name].value_counts()
+
+## only keep data from participants with at least 50.000 records
+df[participant_column].value_counts()
+df = df[df[participant_column].isin(df[participant_column].value_counts()[df[participant_column].value_counts() > 1500].index)]
+df[participant_column].value_counts()
+
+
 #todo: split data into training and testing (by participants)
+# Make list of all ID's in idcolumn
+IDlist = set(df[participant_column])
 
-#region split data into training and testing (by participants)
-df["device_id"].value_counts()
-test_user = df['device_id'].sample(1).values[0]
-df_test = df[df['device_id'] == test_user]
-df_train = df[df['device_id'] != test_user]
+#initialize
+test_proband = list()
+outer_results_acc = list()
+outer_results_f1 = list()
+outer_results_precision = list()
+outer_results_recall = list()
 
-#endregion
 
-#region create tensorflow dataset
-# define the target column and create TensorFlow datasets
-train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_train, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
-test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_test, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
-#endregion
+#for loop to iterate through LOSOCV "rounds"
+t0 = time.time()
+for i in IDlist:
+    t0_inner = time.time()
+    LOOCV_O = str(i)
 
-#region choose the features for training
-# define the features
+	# select training and testing data for this LOSOCV round
+	df[participant_column] = df[participant_column].apply(str)
+	df_train = df[df[participant_column] != LOOCV_O].copy()
+	df_test = df[df[participant_column] == LOOCV_O].copy()
 
-#endregion
+	#delete the columns which are not needed in training
+	df_train = df_train.drop(columns=[participant_column, ESM_event_column_name])
+	df_test = df_test.drop(columns=[participant_column, ESM_event_column_name])
 
-#region define & train the model
-## it trains using all the features in the training dataset (except the target column)
+	#region create tensorflow dataset
+	# define the target column and create TensorFlow datasets
+	train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_train, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
+	test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_test, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
 
-# instantiate the model
-model_rf = tfdf.keras.RandomForestModel(task=tfdf.keras.Task.CLASSIFICATION)
+	# define the model
+	# the model & tuner definition are based on: https://www.kaggle.com/code/ekaterinadranitsyna/kerastuner-tf-decision-forest/notebook
+
+	def build_model(hp):
+		"""Function initializes the model and defines search space.
+        :param hp: Hyperparameters
+        :return: Compiled GradientBoostedTreesModel model
+        """
+		model = tfdf.keras.GradientBoostedTreesModel(
+			num_trees=hp.Int('num_trees', min_value=10, max_value=710, step=25),
+			growing_strategy=hp.Choice('growing_strategy', values=['BEST_FIRST_GLOBAL', 'LOCAL']),
+			max_depth=hp.Int('max_depth', min_value=3, max_value=16, step=1),
+			subsample=hp.Float('subsample', min_value=0.1, max_value=0.95, step=0.05),
+			num_threads=4,
+			missing_value_policy='GLOBAL_IMPUTATION')  # Default parameter,
+		# missing values are replaced by the mean or the most frequent value.
+
+		model.compile(metrics=['accuracy', tf.keras.metrics.AUC()])
+		return model
+
+	# build tuner
+	# Keras tuner
+	tuner = kt.BayesianOptimization(  # Or RandomSearch, or Hyperband
+		build_model,
+		objective=kt.Objective('val_auc', direction='max'),  # Or 'val_loss'
+		max_trials=20,
+		project_name='classifier')
+
+	# Select the best parameters using a small subset of the train data.
+	tuner.search(train_small_ds, epochs=1, validation_data=valid_small_ds)
+
+	# Display the results
+	tuner.results_summary()
+
+	# Best model trained on a small subset of the thain data
+	# (could be used for predictions as is).
+	best_model = tuner.get_best_models(num_models=1)[0]
+
+	# Instantiate untrained model with the best parameters
+	# and train on the larger training set.
+	best_hp = tuner.get_best_hyperparameters()[0]
+	model = tuner.hypermodel.build(best_hp)
+
+	history = model.fit(train_ds, validation_data=valid_ds,
+						shuffle=False,
+						workers=4, use_multiprocessing=True)
+
+	# Train metrics
+	inspect = model.make_inspector()
+	inspect.evaluation()
+
+	# Visualize training progress
+	logs = inspect.training_logs()
+
+	plt.figure(figsize=(12, 4))
+	plt.subplot(1, 2, 1)
+	plt.plot([log.num_trees for log in logs],
+			 [log.evaluation.accuracy for log in logs])
+	plt.xlabel('Number of trees')
+	plt.ylabel('Accuracy (out-of-bag)')
+	plt.subplot(1, 2, 2)
+	plt.plot([log.num_trees for log in logs],
+			 [log.evaluation.loss for log in logs])
+	plt.xlabel('Number of trees')
+	plt.ylabel('Logloss (out-of-bag)')
+	plt.show()
+
+
+	# Model accuracy on the validation set
+	evaluation = model.evaluate(valid_ds, return_dict=True)
+	for name, value in evaluation.items():
+		print(f'{name}: {value:.4f}')
+
+	# Prediction on the test set
+	test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(
+		test_data[features])
+	test_data['claim'] = model.predict(
+		test_ds, workers=4, use_multiprocessing=True)
+
+	# Save predicted values for the test set
+	test_data[['id', 'claim']].to_csv('submission.csv', index=False)
+	test_data[['id', 'claim']].head()
+
+
+
+
+	#region define & train the model
+	## it trains using all the features in the training dataset (except the target column)
+	# instantiate the model
+	model_rf = tfdf.keras.RandomForestModel(task=tfdf.keras.Task.CLASSIFICATION)
 
 # optional step - add evaluation metrics
 model_rf.compile(metrics=["mse", "mape"])
@@ -1165,6 +1278,47 @@ model_rf.compile(metrics=["mse", "mape"])
 # "sys_pipes" is optional and it enables the display of the training logs
 with sys_pipes():
   model_rf.fit(x=train_ds)
+
+
+def build_model(hp):
+	model = Sequential()
+	model.add(LSTM(hp.Int('input_unit', min_value=32, max_value=512, step=32), return_sequences=True,
+				   input_shape=(X_train.shape[1], X_train.shape[2])))
+	for i in range(hp.Int('n_layers', 1, 4)):
+		model.add(LSTM(hp.Int(f'lstm_{i}_units', min_value=32, max_value=512, step=32), return_sequences=True))
+	model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
+	model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
+	model.add(Dense(y_train.shape[1],
+					activation=hp.Choice('dense_activation', values=['relu', 'sigmoid'], default='relu')))
+	model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
+	return model
+
+
+tuner = RandomSearch(
+	build_model,
+	objective='mse',
+	max_trials=2,
+	executions_per_trial=1,
+	overwrite=True
+)
+
+tuner.search(
+	x=X_train,
+	y=y_train,
+	epochs=20,
+	batch_size=128,
+	validation_data=(X_test, y_test),
+)
+
+best_model = tuner.get_best_models(num_models=1)[0]
+
+### evaluate model
+yhat = best_model.predict(X_test)
+
+### save model
+save_model(best_model,
+		   "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(
+			   i) + "_LSTM.h5")
 
 #endregion
 

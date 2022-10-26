@@ -228,7 +228,7 @@
       <workItem from="1666354256331" duration="2991000" />
       <workItem from="1666627264847" duration="2788000" />
       <workItem from="1666692724579" duration="444000" />
-      <workItem from="1666693294078" duration="3014000" />
+      <workItem from="1666693294078" duration="10811000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -384,7 +384,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666215571791</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="restructured the folder &amp; files">
+      <created>1666709886873</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1666709886873</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
