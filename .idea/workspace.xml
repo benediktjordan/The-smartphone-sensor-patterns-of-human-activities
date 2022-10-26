@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="restructured the folder &amp; files">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="restructured the folder &amp; files; created new branch">
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -30,6 +28,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
@@ -228,7 +231,7 @@
       <workItem from="1666354256331" duration="2991000" />
       <workItem from="1666627264847" duration="2788000" />
       <workItem from="1666692724579" duration="444000" />
-      <workItem from="1666693294078" duration="3014000" />
+      <workItem from="1666693294078" duration="11447000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -384,7 +387,28 @@
       <option name="project" value="LOCAL" />
       <updated>1666215571791</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="restructured the folder &amp; files">
+      <created>1666709886873</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1666709886873</updated>
+    </task>
+    <task id="LOCAL-00024" summary="restructured the folder &amp; files; created new branch">
+      <created>1666768488969</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1666768488969</updated>
+    </task>
+    <task id="LOCAL-00025" summary="restructured the folder &amp; files; created new branch">
+      <created>1666768649598</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1666768649598</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -409,7 +433,8 @@
     </ignored-roots>
     <MESSAGE value="This is the first commit message" />
     <MESSAGE value="restructured the folder &amp; files" />
-    <option name="LAST_COMMIT_MESSAGE" value="restructured the folder &amp; files" />
+    <MESSAGE value="restructured the folder &amp; files; created new branch" />
+    <option name="LAST_COMMIT_MESSAGE" value="restructured the folder &amp; files; created new branch" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
