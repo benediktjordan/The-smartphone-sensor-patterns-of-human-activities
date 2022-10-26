@@ -41,6 +41,12 @@ import shap
 from scipy.stats import binom_test
 from sklearn.model_selection import permutation_test_score
 
+#Keras Tuner
+import keras
+import keras_tuner as kt
+from kerastuner.tuners import RandomSearch
+from kerastuner.tuners import BayesianOptimization
+from kerastuner.tuners import Hyperband
 
 
 
@@ -1125,15 +1131,25 @@ os.system("shutdown /h") #hibernate
 # load data
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 sensors_included = "all"
-timeperiod = 2 #seconds
-path_df_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + sensors_included + "_timeperiod-" + str(timeperiod) + " s_featureselection.pkl"
+timeperiod = 5 #seconds
+label_column_name = "label_human motion - general"
+path_df_features = dir_sensorfiles + "data_preparation/features/activity-" + label_column_name + "_highfrequencysensors-" + sensors_included + "_timeperiod-" + str(timeperiod) + " s_featureselection.pkl"
 with open(path_df_features, "rb") as f:
     df = pickle.load(f)
 
-label_column_name = "label_human motion - general"
 participant_column = "device_id"
 ESM_event_column_name = "ESM_timestamp"
 
+# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
+label_segment = 30 # in seconds
+
+# delete all data which is not in ESM_event +- label_segment
+print("Shape before deleting data: ", df.shape)
+df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
+print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
+
+
+# choose only records which are
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
@@ -1176,12 +1192,32 @@ for i in IDlist:
 	df_test = df_test.drop(columns=[participant_column, ESM_event_column_name])
 
 	#region create tensorflow dataset
+	# have to rename label column to "label" for tensorflow
+	df_train = df_train.rename(columns={label_column_name: "label"})
+	df_test = df_test.rename(columns={label_column_name: "label"})
+
+	# testsection: create dataset only for a few features
+	df_train_small = df_train[["label", "accelerometer_x", "accelerometer_y", "accelerometer_z"]]
+	#endtestsection
+
+	train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_train_small, label="label", task=tfdf.keras.Task.CLASSIFICATION).unbatch()
+	test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_test, label="label", task=tfdf.keras.Task.CLASSIFICATION).unbatch()
+
 	# define the target column and create TensorFlow datasets
-	train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_train, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
-	test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_test, label=label_column_name, task=tfdf.keras.Task.CLASSIFICATION)
+	train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_train, label="label", task=tfdf.keras.Task.CLASSIFICATION).unbatch()
+	test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(df_test, label="label", task=tfdf.keras.Task.CLASSIFICATION).unbatch()
+	# This method creates a batched Dataset with batch_size=64.
+	# We unbatch it to be able to split into smaller subsets and use other batch size
 
 	# define the model
 	# the model & tuner definition are based on: https://www.kaggle.com/code/ekaterinadranitsyna/kerastuner-tf-decision-forest/notebook
+
+	# Small subsets of data to use in quick search for optimal hyperparameters.
+	train_subset = 10_000  # Number of samples
+	valid_subset = 1_000
+	batch_size = 256
+	train_small_ds = train_ds.take(train_subset).batch(batch_size)
+	valid_small_ds = train_ds.skip(train_subset).take(valid_subset).batch(batch_size)
 
 	def build_model(hp):
 		"""Function initializes the model and defines search space.
@@ -1202,11 +1238,13 @@ for i in IDlist:
 
 	# build tuner
 	# Keras tuner
-	tuner = kt.BayesianOptimization(  # Or RandomSearch, or Hyperband
+	tuner = BayesianOptimization(  # Or RandomSearch, or Hyperband
 		build_model,
 		objective=kt.Objective('val_auc', direction='max'),  # Or 'val_loss'
 		max_trials=20,
-		project_name='classifier')
+		directory="/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name + "/models",
+		project_name="tuner_" + label_column_name + "_" + str(i)
+	)
 
 	# Select the best parameters using a small subset of the train data.
 	tuner.search(train_small_ds, epochs=1, validation_data=valid_small_ds)
@@ -1262,9 +1300,6 @@ for i in IDlist:
 	# Save predicted values for the test set
 	test_data[['id', 'claim']].to_csv('submission.csv', index=False)
 	test_data[['id', 'claim']].head()
-
-
-
 
 	#region define & train the model
 	## it trains using all the features in the training dataset (except the target column)

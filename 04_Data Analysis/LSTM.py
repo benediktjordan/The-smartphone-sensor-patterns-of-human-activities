@@ -58,6 +58,9 @@ import shap
 from scipy.stats import binom_test
 from sklearn.model_selection import permutation_test_score
 
+# for scaling
+from sklearn.preprocessing import MinMaxScaler
+
 #Tune Hyperparameters
 import keras_tuner
 
@@ -80,7 +83,11 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Dropout
 from kerastuner.tuners import RandomSearch
+from kerastuner.tuners import BayesianOptimization
+from kerastuner.tuners import Hyperband
+
 from kerastuner.engine.hyperparameters import HyperParameters
+from keras.layers import LeakyReLU
 
 
 
@@ -284,6 +291,12 @@ df = df[sensor_columns_plus_others]
 df = labeling_sensor_df(df, dict_label, label_column_name)
 print("Labelling done. Current label is: ", label_column_name)
 
+# delete all data which is not in ESM_event +- label_segment
+print("Shape before deleting data: ", df.shape)
+df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
+print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
+
+
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
 ## only keep activities with at least 50.000 records
@@ -296,10 +309,6 @@ df['2'].value_counts()
 df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
 df['2'].value_counts()
 
-# delete all data which is not in ESM_event +- label_segment
-print("Shape before deleting data: ", df.shape)
-df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
-print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
 
 # Make list of all ID's in idcolumn
 IDlist = set(df["2"])
@@ -340,6 +349,93 @@ def plot_cm(y_true, y_pred, class_names):
   plt.ylim(b, t) # update the ylim(bottom, top) values
   return plt # ta-da!
 
+# create ROC Curve Plot Function
+def plot_roc(y_true, y_pred, class_names):
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(0, len(class_names)):
+        fpr[i], tpr[i], _ = roc_curve(y_true, y_pred, pos_label=class_names[i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    plt.figure()
+    lw = 2
+    for i in range(0, len(class_names)):
+        plt.plot(fpr[i], tpr[i], color='darkorange',
+                lw=lw, label='ROC curve of class {0} (area = {1:0.2f})'
+                ''.format(class_names[i], roc_auc[i]))
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
+# create Precision-Recall Curve Plot Function
+def plot_pr(y_true, y_pred, class_names):
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    for i in range(0, len(class_names)):
+        precision[i], recall[i], _ = precision_recall_curve(y_true, y_pred, pos_label=class_names[i])
+        average_precision[i] = average_precision_score(y_true, y_pred, pos_label=class_names[i])
+
+    plt.figure()
+    lw = 2
+    for i in range(0, len(class_names)):
+        plt.plot(recall[i], precision[i], color='darkorange',
+                lw=lw, label='Precision-Recall curve of class {0} (area = {1:0.2f})'
+                ''.format(class_names[i], average_precision[i]))
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall curve')
+    plt.legend(loc="lower right")
+    plt.show()
+
+# create tuner_build function
+def build_tuner(tuner_choice):
+    if tuner_choice == "random":
+        tuner = RandomSearch(
+            build_model,
+            objective='val_accuracy',
+            max_trials=20, #number of hyperparameter combinations the tuner will try
+            executions_per_trial=1, #number of models that should be built and fit for each trial (due to its stochastic nature,
+            # the same model can be trained and still different results)
+            directory="/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/"+ label_column_name +"/models",
+            project_name="lstm_"+ label_column_name +"_random"
+        )
+    elif tuner_choice == "bayesian":
+        tuner = BayesianOptimization(
+            build_model,
+            objective='val_accuracy',
+            max_trials=10,
+            seed=42,
+            directory="/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/"+ label_column_name +"/models",
+            project_name="lstm_"+ label_column_name +"_bayesian"
+        )
+    elif tuner_choice == "hyperband":
+        tuner = Hyperband(
+            build_model,
+            objective='val_accuracy',
+            max_epochs=2,
+            executions_per_trial=1,
+            directory="/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/"+ label_column_name +"/models",
+            project_name="lstm_"+ label_column_name +"_hyperband"
+        )
+
+    return tuner
+
+
+
+
+    return tuner
+
+
+
 
 
 #initialize
@@ -359,6 +455,24 @@ for i in IDlist:
     df["2"] = df["2"].apply(str)
     df_train = df[df["2"] != LOOCV_O].copy()
     df_test = df[df["2"] == LOOCV_O].copy()
+
+    # scale data
+    # based on: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
+    # note: scaling should be done for training and testing data seperately
+    def scale_data(train_data, test_data, sensor_columns_list, label_column_name):
+        f_transformer = MinMaxScaler()
+        #t_transformer = MinMaxScaler()
+        f_transformer = f_transformer.fit(train_data[sensor_columns_list].to_numpy())
+        #t_transformer = t_transformer.fit(train_data[[label_column_name]])
+        train_data.loc[:, sensor_columns_list] = f_transformer.transform(train_data[sensor_columns_list].to_numpy())
+        #train_data[label_column_name] = t_transformer.transform(train_data[[label_column_name]])
+        test_data.loc[:, sensor_columns_list] = f_transformer.transform(test_data[sensor_columns_list].to_numpy())
+        #test_data[label_column_name] = t_transformer.transform(test_data[[label_column_name]])
+
+        return f_transformer, train_data, test_data, #t_transformer
+
+
+    f_trans, df_train, df_test = scale_data(df_train, df_test, sensor_columns_list, label_column_name)
 
     # create dataset structure needed for LSTM
     X_train, y_train = create_dataset(
@@ -389,18 +503,18 @@ for i in IDlist:
         model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
         model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
         model.add(Dense(y_train.shape[1],
-                        activation=hp.Choice('dense_activation', values=['relu', 'sigmoid'], default='relu')))
-        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
+                        activation=hp.Choice('dense_activation', values=['LeakyReLU', 'tanh'], default='LeakyReLU')))
+        #TODO insert into documentation: replaced the "ReLu" and "sigmoid" activation function by "LeakyReLU" and "tanh",
+        # since the other two lead to all-zero predictions
+        # replacement based on this forum answer: https://github.com/keras-team/keras/issues/3687
+
+        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+
         return model
 
-    tuner = RandomSearch(
-        build_model,
-        objective='mse',
-        max_trials=2,
-        executions_per_trial=1,
-        directory='/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/models'
-    )
+    tuner = build_tuner("bayesian")
 
+    print("Start tuning")
     tuner.search(
         x=X_train,
         y=y_train,
@@ -408,16 +522,19 @@ for i in IDlist:
         batch_size=128,
         validation_data=(X_test, y_test),
     )
+    print("Tuner search finished for proband " + LOOCV_O)
+    print(tuner.results_summary())
 
     # get the best model from tuner
-
     best_model = tuner.get_best_models(num_models=1)[0]
+    bestHP = tuner.get_best_hyperparameters(num_trials=1)[0]
+    print(bestHP.values)
 
     ### evaluate model
     yhat = best_model.predict(X_test)
 
     ### save model
-    save_model(best_model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_LSTM.h5")
+    save_model(best_model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_label_segment_around_ESMevent-" + str(label_segment) + "_test_proband-" + str(i) + "_LSTM.h5")
 
     # evaluate model
     #import accuracy score for LSTM
@@ -444,7 +561,7 @@ for i in IDlist:
     #figure.show()  # ta-da!
 
     t1_inner = time.time()
-print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
+    print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
 
 #store all results in one dataframe:
 df_stats = pd.DataFrame(data=[test_proband, outer_results_acc, outer_results_f1, outer_results_precision, outer_results_recall]).transpose()
@@ -462,6 +579,9 @@ print('Precision: %.3f (%.3f)' % (mean(outer_results_precision), std(outer_resul
 print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_recall)))
 #os.system("shutdown /h") #hibernate
 #endregion
+
+
+
 
 
 
