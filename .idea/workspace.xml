@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="added requirements.txt">
-      <change afterPath="$PROJECT_DIR$/00_general/how_to_add_conda_environment.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
@@ -68,15 +68,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "full.screen.before.presentation.mode": "false",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/00_Data Collection" />
@@ -244,6 +244,11 @@
       <workItem from="1666627264847" duration="2788000" />
       <workItem from="1666692724579" duration="444000" />
       <workItem from="1666693294078" duration="27709000" />
+      <workItem from="1666795001980" duration="326000" />
+      <workItem from="1666798135412" duration="23423000" />
+      <workItem from="1666905497431" duration="1262000" />
+      <workItem from="1666959365278" duration="444000" />
+      <workItem from="1666959866986" duration="12080000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -505,6 +510,11 @@
           <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
           <line>387</line>
           <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_Data Preparation/label_transformation.py</url>
+          <line>21</line>
+          <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
