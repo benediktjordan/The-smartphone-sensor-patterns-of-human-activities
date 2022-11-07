@@ -1,3 +1,9 @@
+#region import
+import pandas as pd
+
+#endregion
+
+
 # region data preparation: create merged timeseries
 ## import data
 base_sensor = "linear_accelerometer"
@@ -60,12 +66,13 @@ def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
     return df_final
 
 
+
 ## iterate through sensors
 df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/" + str(
     base_sensor) + "_esm_timeperiod_5 min.csv_JSONconverted.csv",
                       parse_dates=['timestamp'], infer_datetime_format=True)
 
-# region temporary
+#region temporary
 df_base = pd.read_csv(
     "/Users/benediktjordan/Documents/MTS/Iteration01/Data/magnetometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
     parse_dates=['timestamp', "1", "timestamp_accelerometer"], infer_datetime_format=True)
@@ -111,3 +118,12 @@ df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_timeper
                index=False)
 
 # endregion
+
+#region visualize results of merging
+# import merged dataframe
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_all_transformed_labeled.csv")
+label_columns = [col for col in df_esm.columns if "label" in col]
+
+
+
+#endregion
