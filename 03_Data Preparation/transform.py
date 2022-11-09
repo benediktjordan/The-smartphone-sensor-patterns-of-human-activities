@@ -229,41 +229,10 @@ df_all2 = pd.read_csv(toomany_columns[4])
 
 #endregion
 
-#region ESM: join all ESM files and transform them so that I have one row per ESM event
-
-# region main functions
-def join_sensor_files(dir_databases, sensor):
-    counter = 0
-    for root, dirs, files in os.walk(dir_databases):  # iterate through different subfolders
-        for subfolder in dirs:
-            path_sensor = dir_databases + "/" + subfolder + "/" + sensor + ".csv"
-            if os.path.exists(path_sensor):
-                if counter == 0:
-                    sensor_all = pd.read_csv(path_sensor)
-                    counter += 1
-                    print("This file was used as the base: " + str(path_sensor))
-                else:
-                    sensor_all = sensor_all.append(pd.read_csv(path_sensor))
-                    print("len of sensor_all is : " + str(len(sensor_all)))
-                    print("This files was added: " + str(path_sensor))
-                    counter += 1
-            else:
-                continue
-
-    return sensor_all
-
-# endregion
-
 # region manipulate ESM
 # region labels: join all ESM files
 
-dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
-sensor = "esm"
-esm_all = join_sensor_files(dir_databases, sensor)
-
-esm_all.to_csv("/Volumes/INTENSO/In Usage new/Databases/esm_all.csv")
-
-# endregion
+#endregion
 
 #region create ESM file with one row per ESM_timestamp and one column per ESM_question
 def esm_transform(path_esm_all):
@@ -416,8 +385,6 @@ for timestamp in esm_all_final["timestamp"]:
     esm_all_final_single = esm_all_final_single.append(esm_all_final[esm_all_final["timestamp"] == timestamp])
     esm_all_final_single = esm_all_final_single.reset_index(drop=True)
 # endregion
-
-#endregion
 
 #region filter/select only data in x minute range around ES events
 # TODO: check why I still have the file "gravity_from_S3" and solve the problem
@@ -650,29 +617,6 @@ for path_intermediate in paths_intermediate:
         print("Error for file: " + path_intermediate)
         continue
 df_final.to_csv(dir_databases + "/" + sensor + "_esm_timeperiod_" + str(time_period) + " min.csv", index=False)
-
-#endregion
-
-#region convert JSON column into multiple columns & add sensor identifier
-
-def convert_json_to_columns(path_df, sensor, json_column_name):
-    df = pd.read_csv(path_df, dtype={"0": 'int64', "1": 'int64', "2": object, "3": object, "ESM_timestamp": 'float64',
-                                                    "ESM_location": object, "ESM_location_time": "float64",
-                                                    "ESM_bodyposition": object, "ESM_bodyposition_time": "float64",
-                                                    "ESM_activity": object, "ESM_activity_time": "float64",
-                                                    "ESM_smartphonelocation": object, "ESM_smartphonelocation_time": "float64",
-                                                    "ESM_aligned": object, "ESM_aligned_time": "float64",})
-    df[json_column_name] = df[json_column_name].apply(lambda x: json.loads(x))
-    # add sensor identifier to every JSON column
-    df = pd.concat([df, df[json_column_name].apply(pd.Series).add_prefix(sensor + "_") ], axis=1)
-    # TODO: add specidal identifier to be able to differentiate "battery" vs. "battery_charges" vs. "battery_discharges"
-    return df
-
-# NOTE: function is applied in next section
-# double check
-file = file_list[0]
-df_old = pd.read_csv(dir_sensorfiles + file)
-df = pd.read_csv(dir_sensorfiles + file + "_JSONconverted.csv")
 
 #endregion
 
