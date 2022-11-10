@@ -23,8 +23,11 @@ df_locations_events = df_locations_events[df_locations_events[label_column_name]
 # check how many events are there
 print("Number of events: ", len(df_locations_events["ESM_timestamp"].unique()))
 print("Number of participants with events: ", len(df_locations_events["loc_device_id"].unique()))
-print("Number of Before & After Sleep Events: " , df_locations_events[label_column_name].value_counts())
-print("Number of labels per participant: ", df_locations_events.groupby("loc_device_id")[label_column_name].value_counts())
+# only count one event per unique ESM_timestamp and how the label is distributed
+df_locations_events_vis = df_locations_events.drop_duplicates(subset=["ESM_timestamp"])
+print(df_locations_events_vis[label_column_name].value_counts())
+print("Number of labels per participant: ", df_locations_events_vis.groupby("loc_device_id")[label_column_name].value_counts())
+
 
 # only fist 1000 rows
 df_locations_part = df_locations[:1000]

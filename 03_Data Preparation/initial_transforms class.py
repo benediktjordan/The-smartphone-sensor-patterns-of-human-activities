@@ -21,6 +21,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import math
 import json
+import pickle
+import pyarrow.feather as feather
+
+
 
 # create class
 class Merge_Transform:
@@ -103,15 +107,16 @@ df_esm.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations
 
 
 # compare saving time
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
 start = time.time()
-df_locations.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all2.pkl")
+df_locations_pandas.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all2.pkl")
 end = time.time()
 print("saving time to_pickle: " + str(end - start))
 
 start = time.time()
 # save wiht pickle.dump
 with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all3.pkl", "wb") as f:
-    pickle.dump(df_locations, f)
+    pickle.dump(df_locations_pandas, f)
 end = time.time()
 print("saving time pickle_dump: " + str(end - start))
 
@@ -124,8 +129,80 @@ print("loading time pd.read_pickle: " + str(end - start))
 
 start = time.time()
 # load with pickle.load
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all3.pkl", "rb") as f:
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl", "rb") as f:
     df_locations_pickle = pickle.load(f)
 end = time.time()
 print("loading time pickle_load: " + str(end - start))
+
+
+
+
+#experimenting with Feather
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
+
+#compare saving times
+time_start = time.time()
+df_locations_3.to_feather("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.feather")
+time_end = time.time()
+print("saving time to_feather: " + str(time_end - time_start))
+
+start = time.time()
+df_locations_2.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_2.pkl")
+end = time.time()
+print("saving time to_pickle: " + str(end - start))
+
+start = time.time()
+# save wiht pickle.dump
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all3.pkl", "wb") as f:
+    pickle.dump(df_locations_2, f)
+end = time.time()
+print("saving time pickle_dump: " + str(end - start))
+
+time_start = time.time()
+df_locations_3.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
+time_end = time.time()
+print("saving time to_csv: " + str(time_end - time_start))
+
+
+
+#compar loading times
+time_start = time.time()
+df_locations_feather = feather.read_feather("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.feather")
+#readFrame = pd.read_feather("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.feather", columns=None, use_threads=True);
+time_end = time.time()
+print("loading time to_feather: " + str(time_end - time_start))
+
+start = time.time()
+df_locations_2 = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
+end = time.time()
+print("loading time pd.read_pickle: " + str(end - start))
+
+start = time.time()
+# load with pickle.load
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl", "rb") as f:
+    df_locations_3 = pickle.load(f)
+end = time.time()
+print("loading time pickle_load: " + str(end - start))
+
+start = time.time()
+df_locations_4 = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
+end = time.time()
+print("loading time pd.read_csv: " + str(end - start))
+
+
+##results (20889633, 5)
+saving time to_feather: 67.74425292015076
+saving time to_pickle: 137.4927520751953
+saving time pickle_dump: 54.08499884605408
+
+loading time to_feather: 116.26049423217773
+loading time pd.read_pickle: 9.52783989906311
+loading time pickle_load: 17.951920986175537
+
+##results for big DF (20889633, 15)
+loading time pd.read_pickle: 786.913162946701
+loading time pickle_load: 529.042601108551
+
+saving time to_csv: 273.6814148426056
+loading time pd.read_csv: 85.18825125694275
 

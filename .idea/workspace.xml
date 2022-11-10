@@ -2,11 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="added requirements.txt">
-      <change afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_FeatureExtraction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/clustering_GPS.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,11 +81,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/03_Data Preparation" />
       <recent name="$PROJECT_DIR$/00_Data Collection" />
       <recent name="$PROJECT_DIR$/AGENDER2.0" />
       <recent name="$PROJECT_DIR$/Data Exploration" />
       <recent name="$PROJECT_DIR$/Data Preparation" />
-      <recent name="$PROJECT_DIR$/Data Analysis" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -253,7 +254,10 @@
       <workItem from="1667830188578" duration="4628000" />
       <workItem from="1667903671136" duration="8484000" />
       <workItem from="1667921295558" duration="450000" />
-      <workItem from="1667921764112" duration="6070000" />
+      <workItem from="1667921764112" duration="6327000" />
+      <workItem from="1667986955093" duration="20086000" />
+      <workItem from="1668034814953" duration="16094000" />
+      <workItem from="1668064179440" duration="11094000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -458,7 +462,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667829865400</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="added requirements.txt">
+      <created>1667986926171</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1667986926171</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
