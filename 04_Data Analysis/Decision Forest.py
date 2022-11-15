@@ -3,7 +3,7 @@
 
 #region import
 import pickle
-import tensorflow_decision_forests as tfdf
+#import tensorflow_decision_forests as tfdf
 
 import os
 import random
@@ -86,8 +86,7 @@ dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
 sensors_included = "all"
 
 
-# iterate through all time periods
-## temporary: disabled permutation test due to computational complexity
+#region train DF for all timeperiods and activities. Apply LOSOCV, permutation test & binomial test
 
 timeperiod_list_outside = []
 label_list_outside = []
@@ -162,9 +161,12 @@ for timeperiod in timeperiods:
 		elif timeperiod == 2:
 			label_segment = 11
 		print("Shape before deleting data: ", df.shape)
+
 		# convert sensor_timestamp and ESM_timestamp to datetime
 		df["sensor_timestamp"] = pd.to_datetime(df["sensor_timestamp"])
 		df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+		# select only data which are in the label_segment around ESM_event
 		df = df[(df['sensor_timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['sensor_timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
 		print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
 
@@ -193,7 +195,6 @@ for timeperiod in timeperiods:
 		y_pred_array = np.empty([0])
 
 		#for loop to iterate through LOSOCV "rounds"
-
 		counter = 0
 		for i in tqdm(IDlist):
 			# only do LOSOCV for 5 probands (due to computational time)
@@ -475,10 +476,350 @@ df_results_final["F1"] = f1_final_list_outside
 df_results_final["Precision"] = precision_final_list_outside
 df_results_final["Recall"] = recall_final_list_outside
 df_results_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/sensors_included-" + sensors_included + "_timeperiod_around_event-" + str(label_segment) +  "_results_for_all_activities_and_feature_segments.csv")
+#endregion
+
+#region build DF class including the options to enable and disable permutation and binomial test
+class DecisionForest:
+	def __int__(self):
+		self.permutation_test = False
+		self.binomial_test = False
+
+	def DF_sklearn(df, label_segment, label_column_name, grid_search_space, n_permutations, path_storage):
+		"""
+		Builds a decision forest using the sklearn library
+		:param df:
+		:param label_segment: has to be in seconds
+		:return:
+		"""
+
+		# initialize metrics list for LOSOCV metrics
+		timeperiod_list = []
+		label_list = []
+		acc_final_list = []
+		bal_acc_final_list = []
+		f1_final_list = []
+		precision_final_list = []
+		recall_final_list = []
+
+		#reset index
+		df = df.reset_index(drop = True)
+
+		# convert timestamp and ESM_timestamp to datetime
+		df["timestamp"] = pd.to_datetime(df["timestamp"])
+		df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+		# Make list of all participants
+		IDlist = set(df["device_id"])
+
+		# initialize
+		test_proband = list()
+		outer_results_acc = list()
+		outer_results_acc_balanced = list()
+		outer_results_f1 = list()
+		outer_results_precision = list()
+		outer_results_recall = list()
+		best_parameters = list()
+
+		permutation_pvalue = list()
+		permutation_modelaccuracy = list()
+		pvalues_binomial = list()
+
+		test_proband_array = np.empty([0])
+		y_test_array = np.empty([0])
+		y_pred_array = np.empty([0])
+
+		# for loop to iterate through LOSOCV "rounds"
+		counter = 0
+		for i in tqdm(IDlist):
+			t0_inner = time.time()
+			
+			LOOCV_O = str(i)
+			df["device_id"] = df["device_id"].apply(str)
+			df_train = df[df["device_id"] != LOOCV_O]
+			df_test = df[df["device_id"] == LOOCV_O]
+
+			# define Test data - the person left out of training
+			X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
+												"timestamp"])  # add sensor_timestamp here as soon as available
+			X_test = np.array(X_test_df)
+			y_test_df = df_test_losocv[label_column_name]  # This is the outcome variable
+			y_test = np.array(y_test_df)
+
+			# jump over this iteration if y_test contains only one class
+			if len(set(y_test)) == 1:
+				print("y_test contains only one class")
+				continue
 
 
+			# define Train data - all other people in dataframe
+			X_train_df = df_train.copy()
 
-# os.system("shutdown /h") #hibernate
+			# define the model
+			model = RandomForestClassifier(random_state=1)
+
+			# define list of indices for inner CV for the GridSearch (use again LOSOCV with the remaining subjects)
+			# here a "Leave Two Subejcts Out" CV is used!
+			IDlist_inner = list(set(X_train_df["device_id"]))
+			inner_idxs = []
+			X_train_df = X_train_df.reset_index(drop=True)
+			for l in range(0, len(IDlist_inner), 2):
+				try:
+					IDlist_inner[l + 1]
+				except:
+					continue
+				else:
+					train = X_train_df[
+						(X_train_df["device_id"] != IDlist_inner[l]) & (X_train_df["device_id"] != IDlist_inner[l + 1])]
+					test = X_train_df[
+						(X_train_df["device_id"] == IDlist_inner[l]) | (X_train_df["device_id"] == IDlist_inner[l + 1])]
+					add = [train.index, test.index]
+					inner_idxs.append(add)
+
+			# drop participant column
+			df_train = df_train.drop(columns=["device_id"])
+
+			# drop other columns
+			X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
+												  "timestamp"])  # add sensor_timestamp later on here
+			X_train = np.array(X_train_df)
+			y_train_df = df_train[label_column_name]  # This is the outcome variable
+			y_train_df = y_train_df.reset_index(drop=True)
+			y_train = np.array(y_train_df)  # Outcome variable here
+
+			# define search
+			search = GridSearchCV(model, space, scoring='accuracy', cv=inner_idxs, refit=True, n_jobs=-1)
+
+			# execute search
+			print("Start fitting model...")
+			result = search.fit(X_train, y_train)
+			print("Model fitted.")
+			print("Best: %f using %s" % (result.best_score_, result.best_params_))
+
+			# get the best performing model fit on the whole training set
+			best_model = result.best_estimator_
+			# save the best model
+			pickle.dump(model, open(
+				path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_test_proband-" + str(
+					i) + "_model.sav", "wb"))
+			print("Best model: ", best_model)
+
+			# apply permutation test
+			print("Start permutation test...")
+			## create dataframe which contains all data and delete some stuff
+			data_permutation = df.copy()
+			data_permutation = data_permutation.reset_index(drop=True)
+
+			## create list which contains indices of train and test samples (differentiate by proband)
+			split_permutation = []
+			train_permutation = data_permutation[data_permutation["device_id"] != i]
+			test_permutation = data_permutation[data_permutation["device_id"] == i]
+			add_permutation = [train_permutation.index, test_permutation.index]
+			split_permutation.append(add_permutation)
+
+			##Drop some stuff
+			# data_permutation = data_permutation.drop(columns=dropcols)
+
+			##Create X and y dataset
+			X_permutation = data_permutation.drop(
+				columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp"])
+			y_permutation = data_permutation[label_column_name]
+
+			##compute permutation test
+			score_model, perm_scores_model, pvalue_model = permutation_test_score(best_model, X_permutation,
+																				  y_permutation, scoring="accuracy",
+																				  cv=split_permutation,
+																				  n_permutations=n_permutations)
+			print("Permutation test done.")
+
+			## visualize permutation test restuls
+			fig, ax = plt.subplots(figsize=(10, 5))
+			plt.title("Permutation Test results with Proband " + str(i) + " as Test-Data")
+			ax.hist(perm_scores_model, bins=20, density=True)
+			ax.axvline(score_model, ls='--', color='r')
+			score_label = (f"Score on original\ndata: {score_model:.2f}\n"
+						   f"(p-value: {pvalue_model:.3f})")
+			ax.text(0.14, 125, score_label, fontsize=12)
+			ax.set_xlabel("Accuracy score")
+			ax.set_ylabel("Probability")
+			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_test_proband-" + str(
+					i) + "_Permutation.png")
+			# plt.show()
+
+			# evaluate model on the hold out dataset
+			print("Start evaluating model...")
+			yhat = best_model.predict(X_test)
+
+			# evaluate the model
+			acc = accuracy_score(y_test, yhat)
+			acc_balanced = balanced_accuracy_score(y_test, yhat)
+			print('Balanced Accuracy: %.3f' % acc_balanced)
+			f1 = f1_score(y_true=y_test, y_pred=yhat, average="weighted")
+			precision = precision_score(y_true=y_test, y_pred=yhat, average="weighted")
+			recall = recall_score(y_true=y_test, y_pred=yhat, average="weighted")
+			# TODO document this: why I am using balanced accuracy (https://scikit-learn.org/stable/modules/model_evaluation.html#balanced-accuracy-score)
+			# and weighted f1, precision and recall (https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html=
+
+			# Visualize Confusion Matrix
+			# create 10x5 figure
+			fig, ax = plt.subplots(figsize=(10, 5))
+			mat = confusion_matrix(y_test, yhat)
+			sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False)
+			# change xticks and yticks to string labels
+			plt.title('Confusion Matrix where Proband ' + str(i) + " was test-data")
+			plt.xlabel('true label')
+			plt.ylabel('predicted label')
+			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_test_proband-" + str(
+					i) + "_ConfusionMatrix.png")
+			# plt.show()
+
+			# apply binomial test
+			print("Start binomial test...")
+			# calculate sum of diagonal axis of confusion matrix
+			sum_diagonal = 0
+			for i in range(len(mat)):
+				sum_diagonal += mat[i][i]
+			# calculate number of classes in y_test
+			classes = np.unique(y_test)
+			pvalue_binom = binom_test(x=sum_diagonal, n=len(y_test), p=1/classes, alternative='greater')
+			print("P-value binomial test: ", pvalue_binom)
+			print("Binomial test done.")
+
+			# feature importance: compute SHAP values
+			#TODO include here rather DF explanatory variables than SHAP values
+			print("Start computing SHAP values...")
+			explainer = shap.Explainer(best_model)
+			shap_values = explainer.shap_values(X_test)
+			# plt.figure(figsize=(10, 5))
+			fig, ax = plt.subplots(figsize=(10, 5))
+			plt.title("Feature Importance for iteration with proband " + str(i) + " as test set")
+			# plot summary_plot with tight layout
+			shap.summary_plot(shap_values[1], X_test_df, plot_type="bar", show=False, plot_size=(20, 10))
+			# fig = plt.gcf()
+			fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_test_proband-" + str(
+					i) + "_SHAPFeatureImportance.png")
+			# plt.show()
+
+			# store statistical test results (p-value permutation test, accuracy of that permutation iteration, pvalue binomial test) in list
+			print("Start storing statistical test results...")
+			permutation_pvalue.append(pvalue_model)
+			permutation_modelaccuracy.append(score_model)
+			pvalues_binomial.append(pvalue_binom)
+
+			# store the resulted metrics
+			test_proband.append(i)
+			outer_results_acc.append(acc)
+			outer_results_acc_balanced.append(acc_balanced)
+			outer_results_f1.append(f1)
+			outer_results_precision.append(precision)
+			outer_results_recall.append(recall)
+			best_parameters.append(str(result.best_params_))
+
+			# store the y_test and yhat for the final accuracy computation
+			test_proband_array = np.concatenate((test_proband_array, np.array((i,) * len(y_test))))
+			y_test_array = np.concatenate((y_test_array, y_test))
+			y_pred_array = np.concatenate((y_pred_array, yhat))
+
+			# report progress
+			t1_inner = time.time()
+		# print('>acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f, est=%.3f, cfg=%s' % (acc, f1, precision, recall, result.best_score_, result.best_params_))
+		# print("Permutation-Test p-value was " + str(pvalue_model) + " and Binomial Test p-values was " + str(pvalue_binom))
+		# print("The proband taken as test-data for this iteration was " + str(i))
+		# print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
+
+		# Save the resulting metrics:
+		results_LOSOCV = pd.DataFrame()
+		results_LOSOCV["Test-Proband"] = test_proband
+		results_LOSOCV["Accuracy"] = outer_results_acc
+		results_LOSOCV["Balanced Accuracy"] = outer_results_acc_balanced
+		results_LOSOCV["Accuracy by PermutationTest"] = permutation_modelaccuracy
+		results_LOSOCV["F1"] = outer_results_f1
+		results_LOSOCV["Precision"] = outer_results_precision
+		results_LOSOCV["Recall"] = outer_results_recall
+		results_LOSOCV["P-Value Permutation Test"] = permutation_pvalue
+		results_LOSOCV["P-Value Binomial Test"] = pvalues_binomial
+		# add best parameters
+		results_LOSOCV["Best Parameters"] = best_parameters
+		# add label column name as column
+		results_LOSOCV["Label Column Name"] = label_column_name
+		# add seconds around event as column
+		results_LOSOCV["Seconds around Event"] = label_segment
+		# add timeperiod of features as column
+		results_LOSOCV["Feature Segment Length"] = timeperiod
+		results_LOSOCV.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_results_LOSOCV.csv")
+
+		# save the y_test and yhat for the final accuracy computation
+		df_labels_results = pd.DataFrame(
+			{"y_test": y_test_array, "y_pred": y_pred_array, "test_proband": test_proband_array})
+		df_labels_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_results_labelsRealAndPredicted.csv")
+
+		# TODO: document this!
+		# compute the final metrics for this LOSOCV: here the cumulated y_test and yhat are used in order to account
+		# for the fact that some test-participants have more data than others AND that some participants more label-classes
+		# were present then for other participants
+		results_overall = pd.DataFrame()
+		results_overall["Label"][0] = label_column_name
+		results_overall["Seconds around Event"][0] = label_segment
+		results_overall["Balanced Accuracy"][0] = balanced_accuracy_score(y_test_array, y_pred_array)
+		results_overall["Accuracy"][0] = accuracy_score(y_test_array, y_pred_array)
+		results_overall["F1"][0] = f1_score(y_test_array, y_pred_array, average="weighted")
+		results_overall["Precision"][0] = precision_score(y_test_array, y_pred_array, average="weighted")
+		results_overall["Recall"][0] = recall_score(y_test_array, y_pred_array, average="weighted")
+
+
+		# TODO include here also a binomial test for the final accuracy
+		# TODO include here also a confusion matrix
+		# TODO think how to apply permutation test here
+
+		print("Computing for timeperiod " + str(
+			timeperiod) + " and label " + label_column_name + "has been minutes: " + str((time.time() - t0_label) / 60))
+
+		return results_overall
+
+
+# train decision forest
+# load data
+
+
+# delete unnecessary columns
+
+
+## initialize parameters
+# define search space
+# n_estimators = [100, 300, 500, 800, 1200]
+# max_depth = [5, 8, 15, 25, 30]
+# min_samples_split = [2, 5, 10, 15, 100]
+# min_samples_leaf = [1, 2, 5, 10]
+# max_features = ["sqrt", "log2", 3]
+
+# test search space
+# TODO Fine-Tuning kann auch später passieren; default Werte reichen fürs erste aus
+# TODO check welche Parameter ausgewählt werden, adapt Search Space
+#n_estimators = [50, 100, 500, 800]  # default 500
+#max_depth = [2, 5, 15]
+#min_samples_split = [2, 10, 30]
+#min_samples_leaf = [1, 5]
+#max_features = ["sqrt", 3, "log2", 20]  # double check; 3 ergibt keinen Sinn bei so vielen Features
+#TODO check which parameters performed best in my previous experiments
+
+n_estimators = [50]  # default 500
+max_depth = [2]
+min_samples_split = [2]
+min_samples_leaf = [1]
+max_features = ["sqrt"]
+
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+			 min_samples_leaf=min_samples_leaf, max_features=max_features)
+
+
+# select only data which are in the label_segment around ESM_event
+df = df[(df['sensor_timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) &
+		(df['sensor_timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
+print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
+
+# define number of permutations
+n_permutations = 100
+
+#
 # endregion
 
 

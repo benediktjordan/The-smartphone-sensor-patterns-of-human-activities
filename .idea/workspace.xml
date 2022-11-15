@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="added requirements.txt">
-      <change afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_FeatureExtraction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/clustering_GPS.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +255,8 @@
       <workItem from="1667921764112" duration="6327000" />
       <workItem from="1667986955093" duration="20086000" />
       <workItem from="1668034814953" duration="16094000" />
-      <workItem from="1668064179440" duration="11094000" />
+      <workItem from="1668064179440" duration="26760000" />
+      <workItem from="1668428116015" duration="7098000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -469,7 +468,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667986926171</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668089750419</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1668089750419</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -496,7 +502,8 @@
     <MESSAGE value="restructured the folder &amp; files" />
     <MESSAGE value="restructured the folder &amp; files; created new branch" />
     <MESSAGE value="added requirements.txt" />
-    <option name="LAST_COMMIT_MESSAGE" value="added requirements.txt" />
+    <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
+    <option name="LAST_COMMIT_MESSAGE" value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
