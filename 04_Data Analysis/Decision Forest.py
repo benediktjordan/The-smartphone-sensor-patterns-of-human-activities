@@ -480,9 +480,6 @@ df_results_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/da
 
 #region build DF class including the options to enable and disable permutation and binomial test
 class DecisionForest:
-	def __int__(self):
-		self.permutation_test = False
-		self.binomial_test = False
 
 	def DF_sklearn(df, label_segment, label_column_name, grid_search_space, n_permutations, path_storage):
 		"""
@@ -529,7 +526,8 @@ class DecisionForest:
 		y_pred_array = np.empty([0])
 
 		# for loop to iterate through LOSOCV "rounds"
-		counter = 0
+		counter = 1
+		num_participants = len(IDlist)
 		for i in tqdm(IDlist):
 			t0_inner = time.time()
 			
@@ -542,7 +540,7 @@ class DecisionForest:
 			X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
 												"timestamp"])  # add sensor_timestamp here as soon as available
 			X_test = np.array(X_test_df)
-			y_test_df = df_test_losocv[label_column_name]  # This is the outcome variable
+			y_test_df = df_test[label_column_name]  # This is the outcome variable
 			y_test = np.array(y_test_df)
 
 			# jump over this iteration if y_test contains only one class
@@ -587,7 +585,7 @@ class DecisionForest:
 			y_train = np.array(y_train_df)  # Outcome variable here
 
 			# define search
-			search = GridSearchCV(model, space, scoring='accuracy', cv=inner_idxs, refit=True, n_jobs=-1)
+			search = GridSearchCV(model, grid_search_space, scoring='accuracy', cv=inner_idxs, refit=True, n_jobs=-1)
 
 			# execute search
 			print("Start fitting model...")
@@ -679,8 +677,8 @@ class DecisionForest:
 			for i in range(len(mat)):
 				sum_diagonal += mat[i][i]
 			# calculate number of classes in y_test
-			classes = np.unique(y_test)
-			pvalue_binom = binom_test(x=sum_diagonal, n=len(y_test), p=1/classes, alternative='greater')
+			classes = len(np.unique(y_test))
+			pvalue_binom = binom_test(x=sum_diagonal, n=len(y_test), p=(1/classes), alternative='greater')
 			print("P-value binomial test: ", pvalue_binom)
 			print("Binomial test done.")
 
@@ -721,6 +719,8 @@ class DecisionForest:
 
 			# report progress
 			t1_inner = time.time()
+			print("Time for participant " + str(counter) + "/" + str(num_participants) + " has been " + str((t1_inner - t0_inner)/60) + " minutes.")
+			counter += 1
 		# print('>acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f, est=%.3f, cfg=%s' % (acc, f1, precision, recall, result.best_score_, result.best_params_))
 		# print("Permutation-Test p-value was " + str(pvalue_model) + " and Binomial Test p-values was " + str(pvalue_binom))
 		# print("The proband taken as test-data for this iteration was " + str(i))
@@ -744,7 +744,6 @@ class DecisionForest:
 		# add seconds around event as column
 		results_LOSOCV["Seconds around Event"] = label_segment
 		# add timeperiod of features as column
-		results_LOSOCV["Feature Segment Length"] = timeperiod
 		results_LOSOCV.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_results_LOSOCV.csv")
 
 		# save the y_test and yhat for the final accuracy computation
@@ -757,21 +756,18 @@ class DecisionForest:
 		# for the fact that some test-participants have more data than others AND that some participants more label-classes
 		# were present then for other participants
 		results_overall = pd.DataFrame()
-		results_overall["Label"][0] = label_column_name
-		results_overall["Seconds around Event"][0] = label_segment
-		results_overall["Balanced Accuracy"][0] = balanced_accuracy_score(y_test_array, y_pred_array)
-		results_overall["Accuracy"][0] = accuracy_score(y_test_array, y_pred_array)
-		results_overall["F1"][0] = f1_score(y_test_array, y_pred_array, average="weighted")
-		results_overall["Precision"][0] = precision_score(y_test_array, y_pred_array, average="weighted")
-		results_overall["Recall"][0] = recall_score(y_test_array, y_pred_array, average="weighted")
+		results_overall["Label"] = [label_column_name]
+		results_overall["Seconds around Event"] = [label_segment]
+		results_overall["Balanced Accuracy"] = [balanced_accuracy_score(y_test_array, y_pred_array)]
+		results_overall["Accuracy"] = [accuracy_score(y_test_array, y_pred_array)]
+		results_overall["F1"] = [f1_score(y_test_array, y_pred_array, average="weighted")]
+		results_overall["Precision"] = [precision_score(y_test_array, y_pred_array, average="weighted")]
+		results_overall["Recall"] = [recall_score(y_test_array, y_pred_array, average="weighted")]
 
 
 		# TODO include here also a binomial test for the final accuracy
 		# TODO include here also a confusion matrix
 		# TODO think how to apply permutation test here
-
-		print("Computing for timeperiod " + str(
-			timeperiod) + " and label " + label_column_name + "has been minutes: " + str((time.time() - t0_label) / 60))
 
 		return results_overall
 
@@ -785,11 +781,11 @@ class DecisionForest:
 
 ## initialize parameters
 # define search space
-# n_estimators = [100, 300, 500, 800, 1200]
-# max_depth = [5, 8, 15, 25, 30]
-# min_samples_split = [2, 5, 10, 15, 100]
+# n_estimators = [50, 100, 300, 500, 800, 1200]
+# max_depth = [5, 8, 15, 25]
+# min_samples_split = [2, 5, 10, 20, 50, 100]
 # min_samples_leaf = [1, 2, 5, 10]
-# max_features = ["sqrt", "log2", 3]
+# max_features = ["sqrt", "log2", 3, 20, 50]
 
 # test search space
 # TODO Fine-Tuning kann auch später passieren; default Werte reichen fürs erste aus
@@ -801,23 +797,7 @@ class DecisionForest:
 #max_features = ["sqrt", 3, "log2", 20]  # double check; 3 ergibt keinen Sinn bei so vielen Features
 #TODO check which parameters performed best in my previous experiments
 
-n_estimators = [50]  # default 500
-max_depth = [2]
-min_samples_split = [2]
-min_samples_leaf = [1]
-max_features = ["sqrt"]
 
-grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
-			 min_samples_leaf=min_samples_leaf, max_features=max_features)
-
-
-# select only data which are in the label_segment around ESM_event
-df = df[(df['sensor_timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) &
-		(df['sensor_timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
-print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
-
-# define number of permutations
-n_permutations = 100
 
 #
 # endregion

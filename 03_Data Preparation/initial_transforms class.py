@@ -1,13 +1,28 @@
 # Explanation: this class should contain the following methods:
 # 1. __init__(): this method should contain the following attributes:
 
-# 2. merge_unaligned_timeseries(): this method should contain the following attributes:
+# 2. delete_duplicates(): this method should delete duplicates
+## drop duplicates
+# check for duplicates
+# drop columns "Unnahmed: 0" and "0"
+df = df.drop(columns=["Unnamed: 0", "0"])
+df.df().sum()
+# drop duplicate rows
+df = df.drop_duplicates()
+
+
+# 3. merge(): this method should contain the following steps:
+#     a. merge the high-frequency features with the low-frequency features
+#     b. return the merged dataframe
+#
+
+# 4. merge_unaligned_timeseries(): this method should contain the following attributes:
 #   - self.df_base: the dataframe that should be merged with the other dataframe
 #   - self.df_tomerge: the dataframe that should be merged with the base dataframe
 #   - self.merge_sensor: the sensor that should be merged with the base dataframe
 #   - self.sensor: the sensor that should be merged with the base dataframe
 
-# 3. merge_sensors(): this method should contain the following attributes:
+# 5. merge_sensors(): this method should contain the following attributes:
 #   - self.dir_folders: the directory where the folders of different databased are stored
 #   - self.list_sensors: the list of sensors that should be used
 
@@ -23,7 +38,7 @@ import math
 import json
 import pickle
 import pyarrow.feather as feather
-
+#endregion
 
 
 # create class

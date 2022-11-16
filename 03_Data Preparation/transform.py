@@ -390,6 +390,8 @@ for timestamp in esm_all_final["timestamp"]:
 # TODO: check why I still have the file "gravity_from_S3" and solve the problem
 # TODO: make sure that only ESM_timestamps (as the identifier) remain in sensordata
 
+#TODO before selecting xmin around event, delete events which are less than 1/5 minutes apart from each other (for same participant!)
+
 dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
 #sensor = "barometer"
 path_esm ="/Volumes/INTENSO/In Usage new/Databases/esm_all_transformed.csv"

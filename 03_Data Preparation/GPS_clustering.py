@@ -189,6 +189,8 @@ df_most_frequent_location = most_frequent_location(df, starthour, endhour)
 #save most frequent location
 df_most_frequent_location.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/most_frequent_location.csv", index=False)
 
+
+
 # see if I can find sleep locations of participants in the most frequent locations:
 def calculate_distances_between_labels_and_most_frequent_locations(df_locations_for_labels, df_most_frequent_location):
     #iterate through df_locations_for_labels
@@ -552,6 +554,9 @@ def cluster_for_timeperiod(df, starthour, endhour):
     return df_summary
 
 
+
+
+
 # compute nights and daysin chunks
 #night
 starthour = 0
@@ -581,11 +586,11 @@ for df in pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/loca
 #night
 starthour = 0
 endhour = 6
-chunk_number = 5
+chunk_number = 42
 #day
 starthour = 9
 endhour = 18
-chunk_number = 5
+chunk_number = 42
 
 folder = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/"
 for i in range(1, chunk_number + 1):
@@ -598,24 +603,101 @@ for i in range(1, chunk_number + 1):
 df_merged.to_csv(folder + "hours-"+ str(starthour) +"-" + str(endhour) + "_freqquent_locations_summary_merged.csv", index=False)
 
 #TODO merge locations that are close to each other
+#testregion
+#load
+df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-0-6_freqquent_locations_summary_merged.csv")
 
+#create function
+def merge_close_locations(df):
+    df_final = pd.DataFrame(columns=["participant", "cluster_latitude", "cluster_longitude", "cluster_entries_in_50m_range", "number of entries"])
+
+    # for every participant create dataframe containing centroids of all clusters
+    for participant in df["participant"].unique():
+        df_participant = df[df["participant"] == participant]
+        for index, row in df_participant.iterrows():
+            for i in range(1, int(row["number_clusters"])+1):
+                #add to df_final
+                df_final.loc[len(df_final)] = [participant, row["cluster_" + str(i) + "_latitude"], row["cluster_" + str(i) + "_longitude"], row["cluster_" + str(i) + "_entries_in_50m_range"], (row["number_entries"]/row["number_clusters"])]
+
+     #for every cluster centroid check if there is another cluster centroid closer than 50m
+    dropped_indices = []
+    for participant in df_final["participant"].unique():
+        df_participant = df_final[df_final["participant"] == participant]
+        for index, row in df_participant.iterrows():
+            # check if index was dropped already. If yes, continue
+            if index in dropped_indices:
+                continue
+            # calculate if any other cluster centroid is closer than 50m
+            for index2, row2 in df_participant.iterrows():
+                # check if index was dropped already. If yes, continue
+                if index2 in dropped_indices:
+                    continue
+                if index != index2:
+                    distance = geopy.distance.geodesic(
+                        (row["cluster_latitude"], row["cluster_longitude"]),
+                        (row2["cluster_latitude"], row2["cluster_longitude"])).m
+                    print("Distance for participant " + str(participant) + " between cluster " + str(index) + " and cluster " + str(index2) + " is " + str(distance))
+
+                    if distance < 50:
+                        #merge
+                        df_final.loc[index, "cluster_latitude"] = (row["cluster_latitude"] + row2["cluster_latitude"])/2
+                        df_final.loc[index, "cluster_longitude"] = (row["cluster_longitude"] + row2["cluster_longitude"])/2
+                        df_final.loc[index, "cluster_entries_in_50m_range"] = row["cluster_entries_in_50m_range"] + row2["cluster_entries_in_50m_range"]
+                        df_final.loc[index, "number of entries"] = df_final.loc[index, "number of entries"] + row2["number of entries"]
+                        print("number of entries added: " + str(row2["number of entries"]))
+                        #delete row2
+                        print("number of entries dropped: " + str(df_final.loc[index2, "number of entries"]))
+                        df_final = df_final.drop(index2)
+                        print("Dropped index " + str(index2))
+                        # add dropped index to list of dropped indices
+                        dropped_indices.append(index2)
+
+    #TODO if yes, merge the two clusters
+
+    return df_final
+
+# run function
+df_final = merge_close_locations(df)
 
 #TODO delete in day and night most frequent locations the ones which dont represent many values
 #load data
 starthour = 0
 endhour = 6
-df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-"+ str(starthour)+"-"+ str(endhour) +"_freqquent_locations_summary_merged.csv")
+#df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-"+ str(starthour)+"-"+ str(endhour) +"_freqquent_locations_summary_merged.csv")
+df = df_final.copy()
 
 # delete locations which are not frequent enough
 # if %values < (number_of_entries/number_clusters+1) then delete
-for index, row in df.iterrows():
-    for i in range(0, int(row["number_clusters"])):
-        if row["cluster_" + str(i+1) + "_entries_in_50m_range"] < (row["number_entries"]/(row["number_clusters"]+1)):
-            df.loc[index, "cluster_" + str(i+1) + "_latitude"] = np.nan
-            df.loc[index, "cluster_" + str(i+1) + "_longitude"] = np.nan
-            df.loc[index, "cluster_" + str(i+1) + "_entries_in_50m_range"] = np.nan
+df["percentage_values_in_50m_range"] = ""
+for participant in df["participant"].unique():
+    df_participant = df[df["participant"] == participant]
+    num_entries_participant = df_participant["number of entries"].sum()
+    num_clusters_participant = len(df_participant)
+    # sort df_participant by number of entries in 50m range (lowest first);
+    # important since then the small clusters are deleted first
+    df_participant = df_participant.sort_values(by=["cluster_entries_in_50m_range"], ascending=True)
+
+    # iterate through clusters
+    for index, row in df_participant.iterrows():
+        # calculate percentage of values which are in 50m range around cluster centroid
+        df.loc[index, "percentage_values_in_50m_range"]  = row["cluster_entries_in_50m_range"] / num_entries_participant
+        # check if there is only one cluster left for participant; if yes, continue
+        if len(df[df["participant"]==participant]) == 1:
+            continue
+        # check if %values < (number_of_entries/number_clusters+1)
+        if (row["cluster_entries_in_50m_range"] < (num_entries_participant/num_clusters_participant+1)):
+            df = df.drop(index)
+
+
+    df_participant["percentage_values_in_50m_range"] = df_participant["cluster_entries_in_50m_range"]/df_participant["number of entries"]
+
+#TODO something wrong here since there are more points around the cluster then in total
+
+#save
 df.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-"+ str(starthour) +"-"+ str(endhour) +"_freqquent_locations_summary_merged.csv", index=False)
 # label all 
+
+
 
 
 #testing

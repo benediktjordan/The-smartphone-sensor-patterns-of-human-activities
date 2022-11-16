@@ -8,10 +8,6 @@ import numpy as np
 
 #region create merge object/class
 class Merge_and_Impute:
-    def __init__(self, df_base, df_tomerge, timedelta):
-        self.df_base = df_base
-        self.df_tomerge = df_tomerge
-        self.timedelta = timedelta
     def merge(df_base, df_tomerge, timedelta, columns_to_delete):
         df_final = pd.DataFrame()
 
@@ -80,7 +76,7 @@ class Merge_and_Impute:
 
     def impute_deleteNaN(df_final):
         # delete rows with NaN values
-        df_final = df_final.dropna(axis=0)
+        df_final = df_final.dropna(axis=0, how='any')
         return df_final
 
     #TODO include here imputation methods:
@@ -90,84 +86,8 @@ class Merge_and_Impute:
 
 
 
-
-
-# for human motion general: merge motion features & GPS features (speed & acceleration)
-timedelta = "1000ms" # has to be in a format compatible with pd.TimeDelta()
-columns_to_delete = ['device_id', 'label_human motion - general', "ESM_timestamp", "label_human motion - general"] # columns that should be deleted from df_tomerge
-# load df_base: this should be the df with features with less "sampling rate"/frequency
-# here: load motion features which are computed for 2 seconds
-df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/locations-aroundevents_features-distance-speed-acceleration.csv")
-# load df_tomerge: this should be the df with features with higher "sampling rate"/frequency
-df_tomerge = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_highfrequencysensors-all_timeperiod-2 s_featureselection.pkl")
-
-#test performance
-#df_base = df_base.iloc[0:250000]
-#df_tomerge = df_tomerge.iloc[0:100000]
-
-# label df_tomerge with human motion general labels & delete all NaN rows
-sensors_included = "all"
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl",
-        'rb') as f:
-    dict_label = pickle.load(f)
-df_base = labeling_sensor_df(df_base, dict_label, label_column_name = "label_human motion - general" , ESM_identifier_column = "ESM_timestamp")
-# how many nans in "label_human motion - general" column?
-print("There are so many NaN values in label column: " + str(df_base["label_human motion - general"].isna().sum()))
-# delete all rows with NaN in "label_human motion - general" column
-df_base = df_base.dropna(subset=["label_human motion - general"])
-
-df_final = merge(df_base, df_tomerge, timedelta, columns_to_delete)
-# save intermediate
-#df_final.to_csv("/Users/benediktjordan/Downloads/df_final_intermediate.csv")
-df_final.to_pickle("/Users/benediktjordan/Downloads/df_final_intermediate.pkl")
-
-
-#temporary row
-df_final = pd.read_csv("/Users/benediktjordan/Downloads/df_final_intermediate.csv")
-
-# NaN imputation: delete all NaN values
-print("There are so many NaN values in df_final before imputation: " + str(df_final[df_final.isna().any(axis=1)]))
-#print rows containing nan values
-df_final = impute_deleteNaN(df_final)
-print("There are so many NaN values in df_final after imputation: " + str(df_final[df_final.isna().any(axis=1)]))
-
-# delete unnecessary columns
-
-# save df_final with pickle
-df_final.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensorsAll(2seconds)-and-locations(1seconds).pkl")
-
-
-
-
-# check results
-## how many NaN values in df_final for each column?
-print(df_final.isna().sum())
-
-
-
-
-
-
-
-#testdata
-df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/locations-aroundevents_features-distance-speed-acceleration.csv")
-df_tomerge = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_highfrequencysensors-all_timeperiod-2 s_featureselection.pkl")
-
-#use only 1000 rows for testing
-df_base = df_base.iloc[0:1000]
-df_tomerge = df_tomerge.iloc[0:1000]
-#endregion
-
-#testdata for timeseries merging
-base_sensor = "accelerometer"
-df_base_timeseries = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/" + str(
-    base_sensor) + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-
-
-
-
-
 # region data preparation: create merged timeseries
+#TODO integrate these functions into "Merge_and_Impute" class (more exact: check if Merge_and_Impute class works for timeseries merging)
 ## import data
 base_sensor = "linear_accelerometer"
 sensors = [ "rotation"]
