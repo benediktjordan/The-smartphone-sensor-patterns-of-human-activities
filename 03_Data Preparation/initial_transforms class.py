@@ -26,6 +26,8 @@ df = df.drop_duplicates()
 #   - self.dir_folders: the directory where the folders of different databased are stored
 #   - self.list_sensors: the list of sensors that should be used
 
+# 6. merge_participantIDs(): this method merges the ID´s of participants
+
 #region import
 import pandas as pd
 import numpy as np
@@ -101,6 +103,13 @@ class Merge_Transform:
             # add sensor identifier to every JSON column
             df = pd.concat([df, df["3"].apply(pd.Series).add_prefix(prefix + "_")], axis=1)
         return df
+
+    def merge_participantIDs(df, user_database):
+        # replace UserIDs in "device_id" column based on mapping in user_databases (ID -> new_ID)
+        df["device_id"] = df["device_id"].replace(user_database["ID"].values, user_database["new_ID"].values)
+        df["device_id"] = df["device_id"].astype(int)
+        return df
+
 
 
     # endregion

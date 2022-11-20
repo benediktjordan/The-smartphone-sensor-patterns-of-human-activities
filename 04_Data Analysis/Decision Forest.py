@@ -532,8 +532,8 @@ class DecisionForest:
 			t0_inner = time.time()
 
 			#split data into train and test
-			LOOCV_O = str(i)
-			df["device_id"] = df["device_id"].apply(str)
+			LOOCV_O = i
+			#df["device_id"] = df["device_id"].apply(str)
 			df_train = df[df["device_id"] != LOOCV_O]
 			df_test = df[df["device_id"] == LOOCV_O]
 
@@ -578,8 +578,7 @@ class DecisionForest:
 			df_train = df_train.drop(columns=["device_id"])
 
 			# drop other columns
-			X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
-												  "timestamp"])  # add sensor_timestamp later on here
+			X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "timestamp"])  # add sensor_timestamp later on here
 			X_train = np.array(X_train_df)
 			y_train_df = df_train[label_column_name]  # This is the outcome variable
 			y_train_df = y_train_df.reset_index(drop=True)
@@ -625,6 +624,9 @@ class DecisionForest:
 			test_permutation = data_permutation[data_permutation["device_id"] == i]
 			add_permutation = [train_permutation.index, test_permutation.index]
 			split_permutation.append(add_permutation)
+
+
+
 
 			##Drop some stuff
 			# data_permutation = data_permutation.drop(columns=dropcols)

@@ -92,7 +92,7 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 #endregion
 
 # region data transformation
-#TODO merge ID´s if they are from the same participant
+#TODO merge ID´s if they are from the same participant for "xmin around events" and "merged timeseries" files
 
 
 # region general data preparation (same for all activities)
@@ -150,6 +150,7 @@ path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analys
 n_permutations = 2 # define number of permutations; better 1000
 label_segments = [2, 5, 10, 20, 60] #in seconds; define length of segments for label
 label_column_name = "label_human motion - general"
+label_classes = ["standing", "lying", "sitting"] # which label classes should be considered
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: best parameters are used
 drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
 
@@ -166,11 +167,19 @@ grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_sam
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
 df = df.drop(columns=drop_cols)
+df = merge_participantIDs(df, users) #temporary: merge participant ids
+df = df[df[label_column_name].isin(label_classes)] # drop rows which don´t contain labels which are in label_classes
+
 
 # select only data which are in the label_segment around ESM_event & drop columns
 for label_segment in label_segments:
     df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
     print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+    # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+    df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+    df_label_counts["total"] = df_label_counts.sum(axis=1)
+    df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+    df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
     df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning)
     df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
 
