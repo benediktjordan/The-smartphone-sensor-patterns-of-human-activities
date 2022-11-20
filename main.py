@@ -91,8 +91,13 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 #endregion
 
+# region data transformation
+#TODO merge ID´s if they are from the same participant
+
+
 # region general data preparation (same for all activities)
 ## location data preparation
+
 #region calcualate distance, speed & acceleration
 # load data around events
 df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
@@ -114,7 +119,7 @@ df_features = df_features.reset_index(drop=True)
 df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/locations-aroundevents_features-distance-speed-acceleration.csv")
 #endregion
 
-
+#region different activities
 
 #region human motion
 # load labels
@@ -145,15 +150,17 @@ path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analys
 n_permutations = 2 # define number of permutations; better 1000
 label_segments = [2, 5, 10, 20, 60] #in seconds; define length of segments for label
 label_column_name = "label_human motion - general"
+parameter_tuning = "no" # if True: parameter tuning is performed; if False: best parameters are used
 drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
 
+# if parameter tuning is true, define search space
 n_estimators = [50, 100, 500, 800]  # default 500
 max_depth = [2, 5, 15]
 min_samples_split = [2, 10, 30]
 min_samples_leaf = [1, 5]
 max_features = ["sqrt", 3, "log2", 20]
 grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
-			 min_samples_leaf=min_samples_leaf, max_features=max_features)
+             min_samples_leaf=min_samples_leaf, max_features=max_features)
 
 
 df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -164,8 +171,74 @@ df = df.drop(columns=drop_cols)
 for label_segment in label_segments:
     df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
     print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
-    df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage)
-    df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "s_df_results.csv")
+    df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning)
+    df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
 
 #endregion
-#print "Hello"
+
+#region locations
+# compute frequent locations for each user during day and night (on all location data) (based on GPS_find_frequent_clusters class)
+output_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/"
+range_n_clusters = [2, 3, 4, 5, 6] #which number of clusters are tested by the algorithm
+## calculate in chunks (since computational complexity doesn´t allow to calculate all participants at once) for day and night
+for i in [[9,18],[0,6]]:
+    starthour = i[0]
+    endhour = i[1]
+
+    #calculate chunks
+    chunk_counter = 1
+    for df_locations_alltime in pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_sorted.csv", chunksize=500000):
+        time_start = time.time()
+        df_summary = GPS_find_frequent_locations.cluster_for_timeperiod(df_locations_alltime, starthour, endhour, range_n_clusters, output_path)
+        df_summary.to_csv(os.path.join(output_path, "hours-{}-{}_freqquent_locations_summary_chunk-{}.csv".format(starthour, endhour, chunk_counter),), index=False)
+        chunk_counter += 1
+        time_end = time.time()
+        print("Time needed for chunk: " + str((time_end - time_start)/60) + " minutes")
+        print("Done with chunk " + str(chunk_counter) + " chunks.")
+    if starthour == 9:
+        chunk_counter_day = chunk_counter
+    else:
+        chunk_counter_night = chunk_counter
+## merge all chunks
+for i in [[9,18],[0,6]]:
+    starthour = i[0]
+    endhour = i[1]
+    if starthour == 9:
+        chunk_counter = chunk_counter_day
+    else:
+        chunk_counter = chunk_counter_night
+
+    for i in range(1, chunk_counter + 1):
+        df_chunk = pd.read_csv(
+            output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunk-" + str(i) + ".csv")
+        if i == 1:
+            df_merged = df_chunk
+        else:
+            df_merged = pd.concat([df_merged, df_chunk], ignore_index=True)
+    df_merged.to_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged.csv", index=False)
+## merge locations which are close to each other (for day and night)
+threshold_distance = 50 #in meters
+for i in [[9,18],[0,6]]:
+    starthour = i[0]
+    endhour = i[1]
+    df = pd.read_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged.csv")
+    df_merged = GPS_find_frequent_locations.merge_close_locations(df, threshold_distance)
+    df_merged.to_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged_locationsmerged.csv", index=False)
+## delete locations which are not frequent enough (for day and night)
+## if %values of cluster entries < (number_of_entries/number_clusters+1) then delete
+for i in [[9,18],[0,6]]:
+    starthour = i[0]
+    endhour = i[1]
+    df = pd.read_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged_locationsmerged.csv")
+    df_merged = GPS_find_frequent_locations.delete_locations_not_frequent_enough(df)
+    df_merged.to_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged_locationsmerged_unfrequentlocationsdeleted.csv", index=False)
+
+# classify the frequent locations as home, work-place, other frequent place
+
+# label location data with ESM location data (on xmin around events location data)
+
+# predict for every location if it is home, work-place or other frequent place
+
+# calculate evaluation metrics on predicted labels
+#endregion
+

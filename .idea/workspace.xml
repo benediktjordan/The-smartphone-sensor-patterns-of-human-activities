@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <change afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -264,7 +262,9 @@
       <workItem from="1668496026777" duration="15185000" />
       <workItem from="1668514898574" duration="10167000" />
       <workItem from="1668536849110" duration="6071000" />
-      <workItem from="1668613653239" duration="930000" />
+      <workItem from="1668613653239" duration="1290000" />
+      <workItem from="1668615422062" duration="16724000" />
+      <workItem from="1668871102469" duration="9899000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -490,7 +490,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668496281734</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668615040033</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1668615040033</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -567,6 +574,11 @@
           <url>file://$PROJECT_DIR$/03_Data Preparation/label_transformation.py</url>
           <line>21</line>
           <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>125</line>
+          <option name="timeStamp" value="24" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
