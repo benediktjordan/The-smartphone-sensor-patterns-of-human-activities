@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -263,7 +264,7 @@
       <workItem from="1668536849110" duration="6071000" />
       <workItem from="1668613653239" duration="1290000" />
       <workItem from="1668615422062" duration="16724000" />
-      <workItem from="1668871102469" duration="15052000" />
+      <workItem from="1668871102469" duration="26142000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -503,7 +504,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668954656205</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion">
+      <created>1668960124084</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1668960124084</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -531,7 +539,8 @@
     <MESSAGE value="restructured the folder &amp; files; created new branch" />
     <MESSAGE value="added requirements.txt" />
     <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
-    <option name="LAST_COMMIT_MESSAGE" value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
+    <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
+    <option name="LAST_COMMIT_MESSAGE" value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -580,6 +589,11 @@
           <url>file://$PROJECT_DIR$/03_Data Preparation/label_transformation.py</url>
           <line>21</line>
           <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py</url>
+          <line>106</line>
+          <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

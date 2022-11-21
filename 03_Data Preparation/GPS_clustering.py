@@ -52,6 +52,7 @@ with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation
 ## based on https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
 class GPS_find_frequent_locations:
 
+    # create location clusters for the given timeperiod (i.e. day and night)
     def cluster_for_timeperiod(df, starthour, endhour, range_n_clusters, output_path):
 
         # initialize lists
@@ -280,8 +281,8 @@ class GPS_find_frequent_locations:
 
                 # break if silhouette score is above 0.9
                 if silhouette_avg > 0.9:
-                    print("Silhouette score is above 0.9 with cluster number: " + str(
-                        n_clusters) + " and participant " + participant + ", breaking loop")
+                    print("Silhouette score is above 0.9 with cluster number: ",
+                        n_clusters, " and participant ", participant, ", breaking loop")
                     break
 
             # calculating clustering with optimal number of clusters
@@ -384,6 +385,7 @@ class GPS_find_frequent_locations:
 
         return df_summary
 
+    # merge the clusters which are less than "threshold_distance" meters apart
     def merge_close_locations(df, threshold_distance):
         df_final = pd.DataFrame(
             columns=["participant", "cluster_latitude", "cluster_longitude", "cluster_entries_in_50m_range",
@@ -442,6 +444,7 @@ class GPS_find_frequent_locations:
 
         return df_final
 
+    # delete locations which are not frequent enough
     def delete_locations_not_frequent_enough(df):
         df["percentage_values_in_50m_range"] = ""
         for participant in df["participant"].unique():
@@ -469,6 +472,7 @@ class GPS_find_frequent_locations:
         return df
         #TODO something wrong with the calculation of "number of entries" here since there are more points around the cluster then in total
 
+    # identify home, work, other sleep locations, other frequent locations
     def classify_locations(df_frequentlocations_day, df_frequentlocations_night, threshold_distance):
         # identify home location & sleep locations
         ## if there is only one location, it is the home location

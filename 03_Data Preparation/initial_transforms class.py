@@ -104,14 +104,24 @@ class Merge_Transform:
             df = pd.concat([df, df["3"].apply(pd.Series).add_prefix(prefix + "_")], axis=1)
         return df
 
-    def merge_participantIDs(df, user_database):
+    def merge_participantIDs(df, user_database, device_id_col = None):
+        # if there is no column "device_id" in df, find the column that contains the device_id
+        if device_id_col == None:
+            if "device_id" not in df.columns:
+                for col in df.columns:
+                    if "device_id" in col:
+                        device_id_col = col
+                        break
+            else:
+                device_id_col = "device_id"
+
         # replace UserIDs in "device_id" column based on mapping in user_databases (ID -> new_ID)
-        df["device_id"] = df["device_id"].replace(user_database["ID"].values, user_database["new_ID"].values)
-        df["device_id"] = df["device_id"].astype(int)
+        df[device_id_col] = df[device_id_col].replace(user_database["ID"].values, user_database["new_ID"].values)
+        df[device_id_col] = df[device_id_col].astype(int)
         return df
 
-
-
+test = df_frequentlocations_day.copy()
+df = test.copy()
     # endregion
 
 

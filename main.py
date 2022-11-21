@@ -185,8 +185,26 @@ for label_segment in label_segments:
 
 #endregion
 
+#region public transport
+
+
+#endregion
+
 #region locations
+## What to improve (current accuracy: 54% (with 33% random accuracy))
+#TODO merge participant IDs and run model again
+#TODO change classification of frequent labels: "other sleep place" is often actually in reality "home". How to deal with this?
+#TODO look in detail into incorrect predictions: maybe need to delete "other frequent locations" label? Other improvements?
+
+input_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_sorted.csv"
+
+# temporary: merge participant ids
+df = pd.read_csv(input_path)
+df = merge_participantIDs(df, users)
+df.to_csv(input_path+ "_merged-participantIDs.csv")
+
 # compute frequent locations for each user during day and night (on all location data) (based on GPS_find_frequent_clusters class)
+input_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_sorted.csv_merged-participantIDs.csv"
 output_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/"
 range_n_clusters = [2, 3, 4, 5, 6] #which number of clusters are tested by the algorithm
 ## calculate in chunks (since computational complexity doesn´t allow to calculate all participants at once) for day and night
@@ -196,7 +214,7 @@ for i in [[9,18],[0,6]]:
 
     #calculate chunks
     chunk_counter = 1
-    for df_locations_alltime in pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_sorted.csv", chunksize=500000):
+    for df_locations_alltime in pd.read_csv(input_path, chunksize=500000):
         time_start = time.time()
         df_summary = GPS_find_frequent_locations.cluster_for_timeperiod(df_locations_alltime, starthour, endhour, range_n_clusters, output_path)
         df_summary.to_csv(os.path.join(output_path, "hours-{}-{}_freqquent_locations_summary_chunk-{}.csv".format(starthour, endhour, chunk_counter),), index=False)
@@ -243,11 +261,53 @@ for i in [[9,18],[0,6]]:
     df_merged.to_csv(output_path + "hours-" + str(starthour) + "-" + str(endhour) + "_freqquent_locations_summary_chunksmerged_locationsmerged_unfrequentlocationsdeleted.csv", index=False)
 
 # classify the frequent locations as home, work-place, other frequent place
+df_frequentlocations_day = pd.read_csv(output_path + "hours-9-18_freqquent_locations_summary_chunksmerged_locationsmerged_unfrequentlocationsdeleted.csv")
+df_frequentlocations_night = pd.read_csv(output_path + "hours-0-6_freqquent_locations_summary_chunksmerged_locationsmerged_unfrequentlocationsdeleted.csv")
+#temporary: merge participant ids
+df_frequentlocations_day = Merge_Transform.merge_participantIDs(df_frequentlocations_day, users, device_id_col="participant")
+df_frequentlocations_night = Merge_Transform.merge_participantIDs(df_frequentlocations_night, users, device_id_col="participant")
+threshold_distance = 50 #in meters
+locations_classifications = GPS_find_frequent_locations.classify_locations(df_frequentlocations_day, df_frequentlocations_night, threshold_distance)
 
-# label location data with ESM location data (on xmin around events location data)
+
+# load (with pickle) & label location data with ESM location data (on xmin around events location data)
+input_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+label_column_name = "label_location"
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_locations_xmin = pd.read_pickle(input_path)
+df_locations_xmin = Merge_Transform.merge_participantIDs(df_locations_xmin, users) #temporary: merge participant ids
+df_locations_xmin = labeling_sensor_df(df_locations_xmin, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+
+# get only one location for every event
+df_locations = GPS_computations.get_locations_for_labels(df_locations_xmin, label_column_name)
+
+# merge label categories to home, work, other frequent locations
+map_locations = {"at another workplace": "other frequent place",
+                 "at a friends place": "other locations",
+                 "in restaurant": "other locations",
+                    "on the way": "other locations",
+                    "with friends outside": "other locations",
+                 "at home": "home",
+                    "in the office": "work"}
+df_locations["label"] = df_locations["label"].replace(map_locations)
+
+# delete all rows with label "other locations"
+df_locations = df_locations[df_locations["label"] != "other locations"]
+
+# create table with participants x labels
+df_label_counts = df_locations.groupby("participant")["label"].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
 
 # predict for every location if it is home, work-place or other frequent place
+df_locations = GPS_computations.classify_locations(df_locations, locations_classifications)#
 
-# calculate evaluation metrics on predicted labels
+# compute accuracy of location classification
+df_locations["correct_classification"] = df_locations["label"] == df_locations["location_classification"]
+df_locations["correct_classification"].value_counts()
+print("Accuracy is " + str(df_locations["correct_classification"].value_counts()[1]/df_locations["correct_classification"].value_counts().sum()))
+
 #endregion
+
+
 

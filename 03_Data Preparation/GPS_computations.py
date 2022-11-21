@@ -1,5 +1,6 @@
 #region import
 import pandas as pd
+import geopy.distance
 
 
 #endregion
@@ -49,6 +50,42 @@ class GPS_computations:
              "longitude": location_longitude})
 
         return df_locations_for_labels
+
+    # get locations closest to events
+    def classify_locations(df_locations, location_classifications):
+        # iterate through df_locations and compute distance between location and the locations classifications in location_classifications for this participant
+        for index, row in df_locations.iterrows():
+            # get participant
+            participant = row["participant"]
+            # get location
+            location = (row["latitude"], row["longitude"])
+            # get location classifications for this participant
+            location_classifications_participant = locations_classifications[participant]
+
+            # compute distance between location and location classifications with geopy geodesic distance
+            name_of_location_classifications = []
+            distances = []
+            for index_classification, row_classification in location_classifications_participant.iterrows():
+                name_of_location_classifications.append(row_classification["location_name"])
+                location_classification = (row_classification["latitude"], row_classification["longitude"])
+                distances.append(geopy.distance.geodesic(location, location_classification).m)
+
+            # get location classification with minimum distance
+            df_locations.at[index, "location_classification"] = name_of_location_classifications[distances.index(min(distances))]
+            df_locations.at[index, "distance_to_location_classification (m)"] = min(distances)
+            # also add a column with the distance to the second closest location classification
+            distances.remove(min(distances))
+            df_locations.at[index, "location_classification_second_closest_location"] = name_of_location_classifications[distances.index(min(distances))]
+            df_locations.at[index, "distance_to_second_closest_location_classification (m)"] = min(distances)
+
+        return df_locations
+
+
+
+
+
+
+
 
 # get location
 df_locations = pd.read_csv()

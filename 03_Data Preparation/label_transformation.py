@@ -126,7 +126,10 @@ location = {
     "at home": ["at home"],
 
     "at a friends place": ["at a friends place"],
+
     "in restaurant": ["in restaurant"],
+
+    "shopping": ["shopping"],
 
     "on the way: in train": ["on the way"],
     "on the way: walking/\cycling": ["on the way"],
