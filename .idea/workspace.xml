@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -264,7 +261,7 @@
       <workItem from="1668536849110" duration="6071000" />
       <workItem from="1668613653239" duration="1290000" />
       <workItem from="1668615422062" duration="16724000" />
-      <workItem from="1668871102469" duration="26142000" />
+      <workItem from="1668871102469" duration="35627000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -511,7 +508,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668960124084</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy">
+      <created>1669046597340</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1669046597340</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -540,7 +544,8 @@
     <MESSAGE value="added requirements.txt" />
     <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
     <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
-    <option name="LAST_COMMIT_MESSAGE" value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
+    <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
+    <option name="LAST_COMMIT_MESSAGE" value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

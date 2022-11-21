@@ -55,10 +55,24 @@ class GPS_computations:
     def classify_locations(df_locations, location_classifications):
         # iterate through df_locations and compute distance between location and the locations classifications in location_classifications for this participant
         for index, row in df_locations.iterrows():
+            # find "device_id" column
+            if "loc_device_id" in df_locations.columns:
+                name_participant_column = "loc_device_id"
+                latitude_column = "loc_double_latitude"
+                longitude_column = "loc_double_longitude"
+            elif "device_id" in df_locations.columns:
+                name_participant_column = "device_id"
+            elif "participant" in df_locations.columns:
+                name_participant_column = "participant"
+                latitude_column = "latitude"
+                longitude_column = "longitude"
+            else:
+                print("No column with participant information found")
+
             # get participant
-            participant = row["participant"]
+            participant = row[name_participant_column]
             # get location
-            location = (row["latitude"], row["longitude"])
+            location = (row[latitude_column], row[longitude_column])
             # get location classifications for this participant
             location_classifications_participant = locations_classifications[participant]
 
