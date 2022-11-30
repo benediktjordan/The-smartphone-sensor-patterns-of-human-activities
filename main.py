@@ -24,6 +24,9 @@ from sklearn.model_selection import validation_curve
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 
+#evaluation
+from sklearn.metrics import balanced_accuracy_score
+
 #nested CV
 from numpy import mean
 from numpy import std
@@ -122,6 +125,11 @@ df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_pr
 #region different activities
 
 #region human motion
+#TODO extract & select features for ONLY linear accelerometer data -> then train model on this data
+#TODO merge linear accelerometer & rotation/gyroscope data -> then extract & select features for this data -> then train model on the features
+#TODO add noise removal & normalization to data preparation. Here are some ideas from the HAR review paper: Concerning the Noise Removal step, 48 CML-based articles and 12 DL-based articles make use of different noise removal techniques. Among all such techniques the most used ones are: z-normalization [75], [120], min-max [70], [127], and linear interpolation [102], [111] are the most used normalization steps, preceded by a filtering step based on the application of outlier detection [70], [117], [163], Butterworth [82], [101], [117], [123], [127], [128], [152], [155], [174], [189], median [74], [101], [117], [127], [132], [147], [155], [182], [183], high-pass [92], [96], [117], [128], [169], [173], [208], or statistical [58] filters.
+#TODO create other features (using tsfresh). Here are the ones most used in the HAR literature (compare review): compare my documentation!
+
 # load labels
 sensors_included = "all"
 with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl",
@@ -343,6 +351,7 @@ with open(output_path + "locations_classifications.pkl", 'wb') as f:
 
 
 # load (with pickle) & label location data with ESM location data (on xmin around events location data)
+locations_classifications = pickle.load(open(output_path + "locations_classifications.pkl", 'rb'))
 input_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl"
 label_column_name = "label_location"
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
@@ -377,8 +386,14 @@ df_locations = GPS_computations.classify_locations(df_locations, locations_class
 # compute accuracy of location classification
 df_locations["correct_classification"] = df_locations["label"] == df_locations["location_classification"]
 df_locations["correct_classification"].value_counts()
-print("Accuracy is " + str(df_locations["correct_classification"].value_counts()[1]/df_locations["correct_classification"].value_counts().sum()))
+#print("Accuracy is " + str(df_locations["correct_classification"].value_counts()[1]/df_locations["correct_classification"].value_counts().sum()))
+acc = accuracy_score(df_locations["label"], df_locations["location_classification"])
+acc_balanced = balanced_accuracy_score(df_locations["label"], df_locations["location_classification"])
+# visualize confusion matrix
+# import balanced_accuracy_score
 
+acc_balanced, absolute_or_relative_values, title, label_mapping, save_path
+visualizations.confusion_matrix(df_locations["location_classification"], df_locations["label"], acc_balanced, "relative", "Confusion Matrix Location Classification", None, output_path + "confusion_matrix_location_classification.png")
 #endregion
 
 #region before and after sleep
@@ -477,9 +492,66 @@ for label_segment in label_segments:
 #endregion
 
 #region bathroom-times
+#TODO train model when the feature creation & selection for rotation is done
 ## How to improve the model?
 #TODO train LSTM to detect the "walking to bathroom" session
 #TODO create classifier from human motion model predictions over a few seconds to identify "walking to bathroom" session and use that as input
+
+##set parameters
+path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/rotation/rotation_timeperiod-30_featureselection.pkl"
+label_column_name = "label_on the toilet"
+
+##load data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_labels = pd.DataFrame.from_dict(dict_label, orient="index")
+df_features = pd.read_pickle(path_features)#load rotation features which are used for model predictions
+
+# get overview over labels
+df_label_counts = df_labels.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+
+# some data transformations
+df_features = Merge_Transform.merge_participantIDs(df_features, users) #temporary: merge participant ids
+df_features = df_features.dropna(subset=["label_on the toilet"]) #drop rows which don´t contain labels
+
+# train decision forest
+## initialize parameters
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_on the toilet/features_rotation/"
+n_permutations = 2 # define number of permutations; better 1000
+label_segments = [60, 20, 10, 5, 2] #in seconds; define length of segments for label
+label_classes = ["on the toilet", "sitting (not on the toilet)"] # which label classes should be considered
+parameter_tuning = "no" # must be a string: so "yes" or "no"
+drop_cols = [] # columns that should be dropped
+
+# if parameter tuning is true, define search space
+n_estimators = [50, 100, 500, 800]  # default 500
+max_depth = [2, 5, 15]
+min_samples_split = [2, 10, 30]
+min_samples_leaf = [1, 5]
+max_features = ["sqrt", 3, "log2", 20]
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+             min_samples_leaf=min_samples_leaf, max_features=max_features)
+
+df = df_features.copy()
+df.columns = [column.replace("sensor_timestamp", "timestamp") for column in df.columns] #rename columns: if "sensor_timestamp" is in column name, replace it with "timestamp"
+df.columns = [column.replace("loc_device_id", "device_id") for column in df.columns]
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+df = df.drop(columns=drop_cols)
+df = df[df[label_column_name].isin(label_classes)] # drop rows which don´t contain labels which are in label_classes
+
+# select only data which are in the label_segment around ESM_event & drop columns
+for label_segment in label_segments:
+    df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
+    print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+    # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+    df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+    df_label_counts["total"] = df_label_counts.sum(axis=1)
+    df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+    df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+    df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning)
+    df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
 
 #endregion
 

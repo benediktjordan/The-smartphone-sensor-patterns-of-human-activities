@@ -685,7 +685,6 @@ class DecisionForest:
 			yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
 			yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
 
-
 			# Visualize Confusion Matrix with absolute values
 			fig, ax = plt.subplots(figsize=(10, 5))
 			mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix)
@@ -795,12 +794,12 @@ class DecisionForest:
 		# add seconds around event as column
 		results_LOSOCV["Seconds around Event"] = label_segment
 		# add timeperiod of features as column
-		results_LOSOCV.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_results_LOSOCV.csv")
+		results_LOSOCV.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "_results_LOSOCV.csv")
 
 		# save the y_test and yhat for the final accuracy computation
 		df_labels_results = pd.DataFrame(
 			{"y_test": y_test_array, "y_pred": y_pred_array, "test_proband": test_proband_array})
-		df_labels_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active +  "_results_labelsRealAndPredicted.csv")
+		df_labels_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning +  "_results_labelsRealAndPredicted.csv")
 
 		# TODO: document this!
 		# compute the final metrics for this LOSOCV: here the cumulated y_test and yhat are used in order to account

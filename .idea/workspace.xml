@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
+      <change afterPath="$PROJECT_DIR$/02_Data Exploration/PerfectData.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/04_Data Analysis/visualizations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_old.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,7 +58,6 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_Data Analysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
@@ -73,7 +82,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.notifications&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -261,7 +270,14 @@
       <workItem from="1668536849110" duration="6071000" />
       <workItem from="1668613653239" duration="1290000" />
       <workItem from="1668615422062" duration="16724000" />
-      <workItem from="1668871102469" duration="35627000" />
+      <workItem from="1668871102469" duration="49431000" />
+      <workItem from="1669193415423" duration="598000" />
+      <workItem from="1669198376815" duration="4702000" />
+      <workItem from="1669232454923" duration="95000" />
+      <workItem from="1669232587710" duration="14915000" />
+      <workItem from="1669248831955" duration="12855000" />
+      <workItem from="1669720147998" duration="14215000" />
+      <workItem from="1669811937380" duration="5394000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -515,7 +531,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669046597340</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
+      <created>1669061522706</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1669061522706</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -545,7 +568,8 @@
     <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
     <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
     <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
-    <option name="LAST_COMMIT_MESSAGE" value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
+    <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
+    <option name="LAST_COMMIT_MESSAGE" value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -596,9 +620,14 @@
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py</url>
-          <line>106</line>
-          <option name="timeStamp" value="28" />
+          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
+          <line>2</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>276</line>
+          <option name="timeStamp" value="33" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

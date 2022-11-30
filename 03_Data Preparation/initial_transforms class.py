@@ -104,13 +104,16 @@ class Merge_Transform:
             df = pd.concat([df, df["3"].apply(pd.Series).add_prefix(prefix + "_")], axis=1)
         return df
 
+    # merge IDs of participants which have several IDs
     def merge_participantIDs(df, user_database, device_id_col = None):
         # if there is no column "device_id" in df, find the column that contains the device_id
         if device_id_col == None:
             if "device_id" not in df.columns:
                 for col in df.columns:
                     if "device_id" in col:
-                        device_id_col = col
+                        #rename column into "device_id"
+                        df = df.rename(columns={col: "device_id"})
+                        device_id_col = "device_id"
                         break
             else:
                 device_id_col = "device_id"

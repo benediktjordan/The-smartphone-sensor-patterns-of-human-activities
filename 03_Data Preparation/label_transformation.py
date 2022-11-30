@@ -124,7 +124,6 @@ location = {
 
     "in home-office": ["at home"],
     "at home": ["at home"],
-
     "at a friends place": ["at a friends place"],
 
     "in restaurant": ["in restaurant"],

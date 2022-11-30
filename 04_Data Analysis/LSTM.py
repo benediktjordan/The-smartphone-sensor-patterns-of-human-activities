@@ -50,6 +50,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import balanced_accuracy_score
+
 
 #Feature Importance
 import shap
@@ -60,6 +62,10 @@ from sklearn.model_selection import permutation_test_score
 
 # for scaling
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler
+
+#import class weights from sklearn
+from sklearn.utils import class_weight
 
 #Tune Hyperparameters
 import keras_tuner
@@ -94,11 +100,6 @@ from keras.layers import LeakyReLU
 # endregion
 
 # added line
-
-
-
-
-
 
 
 
@@ -138,68 +139,148 @@ yhat = model.predict(X_test)
 
 
 #region implement LOSOCV
-
-# load test data only 100000 entries
-df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/merged/all_esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
-
+# initialize parameters
 label_column_name = "label_human motion - general"
-sensors_included = "all"
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl", 'rb') as f:
+sensors_included = ["gyroscope", "linear_accelerometer"] #note: the first sensor in this list has to be the base sensor!
+# Set time steps and window-shifting size for LSTM
+#TIME_STEPS = 200 #20 seconds if frequency is 10Hz
+#STEP = 40
+TIME_STEPS = 40 #4 seconds if frequency is 10Hz
+STEP = 20 # 2 seconds if frequency is 10Hz
+tuner_enabled = "no"
+label_segment = 10 # in seconds; how much time before and after the ESM timestamp should be considered for the label?
+label_classes_included = ["standing", "walking"]
+
+# load sensor data and labels
+sensor_names = ""
+counter = 0
+for sensor in sensors_included:
+    if counter == 0:
+        sensor_names = sensor + "_with"
+        counter = counter + 1
+    else:
+        sensor_names = sensor_names + "-" + sensor
+        counter = counter + 1
+df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/" + sensor_names  + "_esm_timeperiod_5 min_TimeseriesMerged.csv",
+    parse_dates=['timestamp', 'ESM_timestamp'], infer_datetime_format=True)
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl", 'rb') as f:
     dict_label = pickle.load(f)
 
-# Set time steps and window-shifting size for LSTM
-TIME_STEPS = 200
-STEP = 40
+class LSTMClassifier:
+
+    # select columns: select only the relevant columns for further processing
+    def select_features(self, df, sensors_included):
+        sensor_columns_list = []
+        sensors_included_names = ""
+        for sensor in sensors_included:
+            sensor_columns_list.append(sensor_columns[sensor])
+            sensors_included_names = sensors_included_names + sensor + "_"
+
+    # preprocessing: delete data which is too far from event; add labels; delete NaN labels; merge IDs of same person
+
+    # exploration: explore label distribution; explore sensor-label connection
+
+    # create scalers
+
+    # create dataset (with the correct time steps & format for LSTM)
+
+    # create tuner
+
+    # create LSTM model
+
+    # create evaluation metrics
+
+    # create confusion metrics
+
+    # create LOSOCV iteration function
+
+
+
 
 # select only relevant columns
-merged_sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
+#sensors = ["accelerometer", "gravity", "gyroscope", "linear_accelerometer", "magnetometer", "rotation"]
 # get sensor_columns for merged sensors
 sensor_columns_list = []
-for sensor in merged_sensors:
+sensors_included_text = ""
+for sensor in sensors_included:
     sensor_columns_list.append(sensor_columns[sensor])
+    sensors_included_text = sensors_included_text + sensor + "_"
 # combine list elements into one element
 sensor_columns_list = [item for sublist in sensor_columns_list for item in sublist]
-
-# set parameters
-# decide label-segment: how much time before and after the ESM timestamp should be considered for the label?
-label_segment = 10 # in seconds
 
 # add to sensor columns other columns which are necessary for LSTM
 sensor_columns_plus_others = sensor_columns_list.copy()
 sensor_columns_plus_others.append("timestamp")
 sensor_columns_plus_others.append("ESM_timestamp")
-sensor_columns_plus_others.append("2")  # the device ID
+sensor_columns_plus_others.append("device_id")  # the device ID
 sensor_columns_plus_others.append("1")  # timestamp of the sensor collection
 
 # get only sensor columns
 df = df[sensor_columns_plus_others]
 
+# delete all data which is not in ESM_event +- label_segment/2
+print("Shape before deleting data: ", df.shape)
+df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment/2)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment/2))]
+print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
+
 # add label column to sensor data
 df = labeling_sensor_df(df, dict_label, label_column_name)
 print("Labelling done. Current label is: ", label_column_name)
 
-# delete all data which is not in ESM_event +- label_segment
-print("Shape before deleting data: ", df.shape)
-df = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=label_segment)) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=label_segment))]
-print("Number of records after deleting all data which is not in ESM_event +- label_segment: ", len(df))
+# delete NaN values in label column
+print("Shape before deleting NaN values in label column: ", df.shape)
+df = df.dropna(subset=[label_column_name])
+print("Number of records after deleting NaN values in label column: ", len(df))
 
+#temporary: merge IDs of particiapnts
+df = Merge_Transform.merge_participantIDs(df, users)#temporary: merge participant ids
+
+# explore label distribution
+# take only one record per "ESM_timestamp"
+df_label_counting = df.drop_duplicates(subset=['ESM_timestamp'])
+df_label_counts = df_label_counting.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+# visually
+sns.countplot(x = label_column_name, data = df_label_counting, order = df_label_counting[label_column_name].value_counts().index)
+plt.show()
+
+# explore sensor-label connection
+def plot_activity(activity, df):
+    data = df[df[label_column_name] == activity][sensor_columns_list][:50]
+    axis = data.plot(subplots=True, figsize=(16, 12),
+                     title=activity)
+    for ax in axis:
+        ax.legend(loc='lower left', bbox_to_anchor=(1.0, 0.5))
+    plt.show()
+plot_activity("sitting", df)
+plot_activity("standing", df)
+plot_activity("lying", df)
+plot_activity("walking", df)
+plot_activity("running", df)
+plot_activity("cycling", df)
+
+# select labels included
+df = df[df[label_column_name].isin(label_classes_included)]
+df[label_column_name].value_counts()
 
 # balance dataset based on the data exploration
 # TODO: IMPROVE BALANCING
 ## only keep activities with at least 50.000 records
 df[label_column_name].value_counts()
-df = df[df[label_column_name].isin(df[label_column_name].value_counts()[df[label_column_name].value_counts() > 20000].index)]
+threshold_label_count = len(df) / (df[label_column_name].nunique()+1)
+#df = df[df[label_column_name].isin(df[label_column_name].value_counts()[df[label_column_name].value_counts() > 10000].index)]
 df[label_column_name].value_counts()
 
 ## only keep data from participants with at least 50.000 records
-df['2'].value_counts()
-df = df[df['2'].isin(df['2'].value_counts()[df['2'].value_counts() > 50000].index)]
-df['2'].value_counts()
+df['device_id'].value_counts()
+threshold_participant_count = len(df) / (df['device_id'].nunique()+3)
+df = df[df['device_id'].isin(df['device_id'].value_counts()[df['device_id'].value_counts() > 200].index)]
+df['device_id'].value_counts()
 
 
 # Make list of all ID's in idcolumn
-IDlist = set(df["2"])
+IDlist = set(df["device_id"])
 print("Number of participants: ", len(IDlist))
 
 
@@ -284,17 +365,49 @@ def plot_pr(y_true, y_pred, class_names):
     plt.legend(loc="lower right")
     plt.show()
 
+#scale data with MinMax Scaler
+def scale_data_MinMax(train_data, test_data, sensor_columns_list):
+    f_transformer = MinMaxScaler()
+    #t_transformer = MinMaxScaler()
+    f_transformer = f_transformer.fit(train_data[sensor_columns_list].to_numpy())
+    #t_transformer = t_transformer.fit(train_data[[label_column_name]])
+    train_data.loc[:, sensor_columns_list] = f_transformer.transform(train_data[sensor_columns_list].to_numpy())
+    #train_data[label_column_name] = t_transformer.transform(train_data[[label_column_name]])
+    test_data.loc[:, sensor_columns_list] = f_transformer.transform(test_data[sensor_columns_list].to_numpy())
+    #test_data[label_column_name] = t_transformer.transform(test_data[[label_column_name]])
+
+    return f_transformer, train_data, test_data, #t_transformer
+
+# scale data with Robust Scaler
+def scale_data_Robust(df_train, df_test, sensor_columns_list):
+
+    scaler = RobustScaler()
+
+    scaler = scaler.fit(df_train[sensor_columns_list])
+
+    df_train.loc[:, sensor_columns_list] = scaler.transform(
+        df_train[sensor_columns_list].to_numpy()
+    )
+
+    df_test.loc[:, sensor_columns_list] = scaler.transform(
+        df_test[sensor_columns_list].to_numpy()
+    )
+
+    return scaler, df_train, df_test
+
+
+
 # create tuner_build function
 def build_tuner(tuner_choice):
     if tuner_choice == "random":
         tuner = RandomSearch(
             build_model,
             objective='val_accuracy',
-            max_trials=20, #number of hyperparameter combinations the tuner will try
+            max_trials=10, #number of hyperparameter combinations the tuner will try
             executions_per_trial=1, #number of models that should be built and fit for each trial (due to its stochastic nature,
             # the same model can be trained and still different results)
             directory="/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/"+ label_column_name +"/models",
-            project_name="lstm_"+ label_column_name +"_random"
+            project_name="lstm_"+ label_column_name +"_random",
         )
     elif tuner_choice == "bayesian":
         tuner = BayesianOptimization(
@@ -323,15 +436,15 @@ def build_tuner(tuner_choice):
     return tuner
 
 
-
-
-
 #initialize
 test_proband = list()
 outer_results_acc = list()
+outer_results_acc_balanced = list()
 outer_results_f1 = list()
 outer_results_precision = list()
 outer_results_recall = list()
+y_test_all = list()
+yhat_all = list()
 
 #for loop to iterate through LOSOCV "rounds"
 t0 = time.time()
@@ -340,27 +453,15 @@ for i in IDlist:
     LOOCV_O = str(i)
 
     # select training and testing data for this LOSOCV round
-    df["2"] = df["2"].apply(str)
-    df_train = df[df["2"] != LOOCV_O].copy()
-    df_test = df[df["2"] == LOOCV_O].copy()
+    df["device_id"] = df["device_id"].apply(str)
+    df_train = df[df["device_id"] != LOOCV_O].copy()
+    df_test = df[df["device_id"] == LOOCV_O].copy()
 
     # scale data
     # based on: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
     # note: scaling should be done for training and testing data seperately
-    def scale_data(train_data, test_data, sensor_columns_list, label_column_name):
-        f_transformer = MinMaxScaler()
-        #t_transformer = MinMaxScaler()
-        f_transformer = f_transformer.fit(train_data[sensor_columns_list].to_numpy())
-        #t_transformer = t_transformer.fit(train_data[[label_column_name]])
-        train_data.loc[:, sensor_columns_list] = f_transformer.transform(train_data[sensor_columns_list].to_numpy())
-        #train_data[label_column_name] = t_transformer.transform(train_data[[label_column_name]])
-        test_data.loc[:, sensor_columns_list] = f_transformer.transform(test_data[sensor_columns_list].to_numpy())
-        #test_data[label_column_name] = t_transformer.transform(test_data[[label_column_name]])
-
-        return f_transformer, train_data, test_data, #t_transformer
-
-
-    f_trans, df_train, df_test = scale_data(df_train, df_test, sensor_columns_list, label_column_name)
+    #f_trans, df_train, df_test = scale_data_MinMax(df_train, df_test, sensor_columns_list, label_column_name)
+    scaler, df_train, df_test = scale_data_Robust(df_train, df_test, sensor_columns_list)
 
     # create dataset structure needed for LSTM
     X_train, y_train = create_dataset(
@@ -379,83 +480,287 @@ for i in IDlist:
     y_train = enc.transform(y_train)
     y_test = enc.transform(y_test)
     #print(X_train.shape, y_train.shape)
+    # use enc to reverse the encoding
+    #print(enc.inverse_transform(y_train))
+    # print the mapping of the ONeHotEncoder
+    print(enc.categories_)
 
-    # this model & tuner implementation is based on the following tutorial: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
+    # create class weights
+    # get one-dimensional array of labels
+    y_train_1D = y_train.argmax(axis=1)
+    class_weights = class_weight.compute_class_weight(class_weight = 'balanced', classes = np.unique(y_train_1D), y = y_train_1D)
+    class_weights_dict = dict(enumerate(class_weights))
 
-    def build_model(hp):
-        model = Sequential()
-        model.add(LSTM(hp.Int('input_unit', min_value=32, max_value=512, step=32), return_sequences=True,
-                       input_shape=(X_train.shape[1], X_train.shape[2])))
-        for i in range(hp.Int('n_layers', 1, 4)):
-            model.add(LSTM(hp.Int(f'lstm_{i}_units', min_value=32, max_value=512, step=32), return_sequences=True))
-        model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
-        model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
-        model.add(Dense(y_train.shape[1],
-                        activation=hp.Choice('dense_activation', values=['LeakyReLU', 'tanh'], default='LeakyReLU')))
-        #TODO insert into documentation: replaced the "ReLu" and "sigmoid" activation function by "LeakyReLU" and "tanh",
-        # since the other two lead to all-zero predictions
-        # replacement based on this forum answer: https://github.com/keras-team/keras/issues/3687
+    # create tuner and model
+    #TODO: problem with the tuner is that it doesnt work with the class weights; therefore useless at the moment
+    if tuner_enabled == "yes":
+        # this model & tuner implementation is based on the following tutorial: https://medium.com/analytics-vidhya/hypertuning-a-lstm-with-keras-tuner-to-forecast-solar-irradiance-7da7577e96eb
+        # define model (which then will be optimised by the tuner)
+        def build_model(hp):
+            model = Sequential()
+            model.add(LSTM(hp.Int('input_unit', min_value=32, max_value=512, step=32), return_sequences=True,
+                           input_shape=(X_train.shape[1], X_train.shape[2])))
+            for i in range(hp.Int('n_layers', 1, 4)):
+                model.add(LSTM(hp.Int(f'lstm_{i}_units', min_value=32, max_value=512, step=32), return_sequences=True))
+            model.add(LSTM(hp.Int('layer_2_neurons', min_value=32, max_value=512, step=32)))
+            model.add(Dropout(hp.Float('Dropout_rate', min_value=0, max_value=0.5, step=0.1)))
+            model.add(Dense(y_train.shape[1],
+                            activation=hp.Choice('dense_activation', values=['LeakyReLU', 'tanh'], default='LeakyReLU')))
+            #TODO insert into documentation: replaced the "ReLu" and "sigmoid" activation function by "LeakyReLU" and "tanh",
+            # since the other two lead to all-zero predictions
+            # replacement based on this forum answer: https://github.com/keras-team/keras/issues/3687
 
-        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+            model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 
-        return model
+            return model
 
-    tuner = build_tuner("bayesian")
+        # tune hyperparameters
+        tuner = build_tuner("random")
 
-    print("Start tuning")
-    tuner.search(
-        x=X_train,
-        y=y_train,
-        epochs=20,
-        batch_size=128,
-        validation_data=(X_test, y_test),
+        print("Start tuning")
+        tuner.search(
+            x=X_train,
+            y=y_train,
+            epochs=20,
+            batch_size=128,
+            validation_data=(X_test, y_test),
+        )
+        print("Tuner search finished for proband " + LOOCV_O)
+        print(tuner.results_summary())
+
+        # get the best model from tuner
+        model = tuner.get_best_models(num_models=1)[0]
+        bestHP = tuner.get_best_hyperparameters(num_trials=1)[0]
+        print(bestHP.values)
+
+
+    # define model
+    model = keras.Sequential()
+    model.add(
+        keras.layers.Bidirectional(
+            keras.layers.LSTM(
+                units=128,
+                input_shape=[X_train.shape[1], X_train.shape[2]]
+            )
+        )
     )
-    print("Tuner search finished for proband " + LOOCV_O)
-    print(tuner.results_summary())
+    model.add(keras.layers.Dropout(rate=0.5))
+    model.add(keras.layers.Dense(units=128, activation='relu'))
+    model.add(keras.layers.Dense(y_train.shape[1], activation='softmax'))
 
-    # get the best model from tuner
-    best_model = tuner.get_best_models(num_models=1)[0]
-    bestHP = tuner.get_best_hyperparameters(num_trials=1)[0]
-    print(bestHP.values)
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer='adam',
+        metrics=['acc']
+    )
+
+    # train model
+    history = model.fit(
+        X_train, y_train,
+        epochs=20,
+        batch_size=32,
+        validation_split=0.1,
+        shuffle=False,
+        class_weight=class_weights_dict
+    )
+
+    # plot training history
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='test')
+    plt.legend()
+    plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) + "_test_proband-" + str(i) + "_model_history.png")
+    #plt.show()
+    plt.close()
+
+
 
     ### evaluate model
-    yhat = best_model.predict(X_test)
+    yhat = model.predict(X_test)
 
-    ### save model
-    save_model(best_model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_label_segment_around_ESMevent-" + str(label_segment) + "_test_proband-" + str(i) + "_LSTM.h5")
+    ### save model and hyperparameters (only if tuner is enabled)
+    save_model(model, "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) + "_test_proband-" + str(i) + "_LSTM.h5")
+    # save hyperparameters
+    if tuner_enabled == "yes":
+        with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) + "_test_proband-" + str(i) + "_LSTM_hyperparameters.txt", "w") as text_file:
+            text_file.write("hyperparameters: %s" % bestHP.values)
+
+    # transform yhat: set max value in yhat to 1 and all other values to 0
+    yhat_rounded = np.where(yhat == np.amax(yhat, axis=1, keepdims=True), 1, 0)
+
+    # transform them back into string labels
+    y_test_strings = enc.inverse_transform(y_test)
+    yhat_strings = enc.inverse_transform(yhat_rounded)
+    # take one dimension out of the array
+    y_test_strings = y_test_strings.ravel()
+    yhat_strings = yhat_strings.ravel()
+    print("y values have been transformed")
 
     # evaluate model
-    #import accuracy score for LSTM
-    acc = accuracy_score(y_test, yhat.round())
+    acc = accuracy_score(np.argmax(y_test, axis=1), np.argmax(yhat_rounded, axis=1))
+    acc_balanced = balanced_accuracy_score(np.argmax(y_test, axis=1), np.argmax(yhat_rounded, axis=1))
     #print("Accuracy of LSTM: ", accuracy_score(y_test, y_pred.round()))
-    f1 = f1_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
-    precision = precision_score(y_true=y_test, y_pred=yhat.round(), pos_label=1  , average='macro')
-    recall = recall_score(y_true=y_test, y_pred=yhat.round(), pos_label=1, average='macro')
+    f1 = f1_score(y_true=np.argmax(y_test, axis=1), y_pred=np.argmax(yhat_rounded, axis=1) , average='macro')
+    precision = precision_score(y_true=np.argmax(y_test, axis=1), y_pred=np.argmax(yhat_rounded, axis=1), average='macro')
+    recall = recall_score(y_true=np.argmax(y_test, axis=1), y_pred=np.argmax(yhat_rounded, axis=1), average='macro')
+    #print accuracy for test proband
+    print("Accuracy of LSTM for test proband " + str(i) + ": ", acc_balanced)
 
     # store the result
     test_proband.append(i)
     outer_results_acc.append(acc)
+    outer_results_acc_balanced.append(acc_balanced)
     outer_results_f1.append(f1)
     outer_results_precision.append(precision)
     outer_results_recall.append(recall)
 
+    y_test_all.append(y_test_strings)
+    yhat_all.append(yhat_strings)
+
     # report progress
-	print('>acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f' % (acc, f1, precision, recall))
+	print('>balanced acc=%.3f,f1=%.3f,precision=%.3f,recall=%.3f' % (acc_balanced, f1, precision, recall))
     print("The proband taken as test-data for this iteration was " + str(i))
 
-    # Visualize Confusion Matrix
-    #figure = plot_cm(enc.inverse_transform(y_test), enc.inverse_transform(yhat), enc.categories_[0])
-    #figure.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + '_ConfusionMatrix.png')
-    #figure.show()  # ta-da!
+    # convert categorical labels to numerical labels and save the mapping for later visualization
+    # convert y_test to pandas series
+    y_test_confusionmatrix = pd.Series(y_test_strings)
+    y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
+    label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
+    y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
+    y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
+    # also convert yhat to numerical labels using same mapping
+    yhat_confusionmatrix = pd.Series(yhat_strings)
+    yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
+    label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
+    # check if the mapping is the same
+    if label_mapping == label_mapping2:
+        print("The label mapping is the same")
+    else:
+        if len(label_mapping2) < len(label_mapping):
+            #add "NaN" labels tolabel_mapping2
+            for i in range(len(label_mapping2), len(label_mapping)):
+                label_mapping2[i] = "NaN"
+        elif len(label_mapping2) > len(label_mapping):
+            #add "NaN" labels tolabel_mapping
+            for i in range(len(label_mapping), len(label_mapping2)):
+                label_mapping[i] = "NaN"
+
+    yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
+    yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+
+    print("y values have been transformed for confusion matrix ")
+
+    # Visualize Confusion Matrix with absolute values
+    fig, ax = plt.subplots(figsize=(10, 5))
+    mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix)
+    sns.heatmap(mat, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, fmt='d', cbar=False, linewidths=0.2)
+    plt.title('Confusion Matrix Absolute Values with Test-Proband ' + str(i))
+    plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+    # add xticks and yticks from label_mapping (which is a dictionary)
+    tick_marks = np.arange(len(label_mapping)) + 0.5
+    plt.xticks(tick_marks, label_mapping2.values(), rotation=0)
+    plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    #plt.show()
+    fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name +
+                "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) +
+                "_test_proband-" + str(i) + "_LSTM_confusionmatrix_absolute.png")
+    #plt.close()
+    print("Confusion Matrix with absolute values has been plotted")
+
+    # visualize confusion matrix with percentages
+    # Get and reshape confusion matrix data
+    matrix = mat.astype('float') / mat.sum(axis=1)[:, np.newaxis]
+    plt.figure(figsize=(16, 7))
+    sns.set(font_scale=1.4)
+    sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
+    # Add labels to the plot
+    plt.xticks(tick_marks, label_mapping.values(), rotation=0)
+    plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.title('Confusion Matrix Relative Values with Test-Proband ' + str(i))
+    plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+    plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name +
+                "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) +
+                "_test_proband-" + str(i) + "_LSTM_confusionmatrix_relative.png")
+    #plt.close()
+    print("Confusion Matrix with relative values has been plotted")
 
     t1_inner = time.time()
     print("This inner iteration has taken so many minutes: " + str((t1_inner - t0_inner)/60))
 
+#get the overall result for this LOSOCV from the combined y_test and yhat predictions of all inner iterations
+# and append them to the outer_results lists
+#combine all y_test and yhat values
+y_test_all = np.concatenate(y_test_all)
+yhat_all = np.concatenate(yhat_all)
+
+test_proband.append("overall")
+outer_results_acc.append(accuracy_score(y_test_all, yhat_all))
+outer_results_acc_balanced.append(balanced_accuracy_score(y_test_all, yhat_all))
+outer_results_f1.append(f1_score(y_test_all, yhat_all, average='macro'))
+outer_results_precision.append(precision_score(y_test_all, yhat_all, average='macro'))
+outer_results_recall.append(recall_score(y_true=y_test_all, y_pred=yhat_all, average='macro'))
+
 #store all results in one dataframe:
-df_stats = pd.DataFrame(data=[test_proband, outer_results_acc, outer_results_f1, outer_results_precision, outer_results_recall]).transpose()
-df_stats.columns= ["test_proband","acc", "f1","precision", "recall"]
-outer_filename1 = "OuterProgrammingResult.csv"
-df_stats.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name + "/sensors_included-" + sensors_included + "_test_proband-" + str(i) + "_results.csv")
+df_stats = pd.DataFrame(data=[test_proband, outer_results_acc, outer_results_acc_balanced, outer_results_f1, outer_results_precision, outer_results_recall]).transpose()
+df_stats.columns= ["test_proband","acc", "acc_balanced", "f1","precision", "recall"]
+df_stats.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name +
+                "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) +
+                "_LSTM_results.csv", index=False)
+
+# convert categorical labels to numerical labels and save the mapping for later visualization
+# convert y_test to pandas series
+y_test_confusionmatrix = pd.Series(y_test_all)
+y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
+label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
+y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
+y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
+# also convert yhat to numerical labels using same mapping
+yhat_confusionmatrix = pd.Series(yhat_all)
+yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
+label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
+yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
+yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+
+# Visualize Confusion Matrix with absolute values
+fig, ax = plt.subplots(figsize=(10, 5))
+mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix)
+sns.heatmap(mat, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, fmt='d', cbar=False, linewidths=0.2)
+plt.title("Confusion Matrix Absolute Values for Combined LOSOCV Results" )
+plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+# add xticks and yticks from label_mapping (which is a dictionary)
+tick_marks = np.arange(len(label_mapping)) + 0.5
+plt.xticks(tick_marks, label_mapping.values(), rotation=0)
+plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
+fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name +
+            "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) +
+            "_LSTM_confusionmatrix_absolute.png")
+
+# visualize confusion matrix with percentages
+# Get and reshape confusion matrix data
+matrix = mat.astype('float') / mat.sum(axis=1)[:, np.newaxis]
+plt.figure(figsize=(16, 7))
+sns.set(font_scale=1.4)
+sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
+# Add labels to the plot
+plt.xticks(tick_marks, label_mapping.values(), rotation=0)
+plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title("Confusion Matrix Relative Values for Combined LOSOCV Results")
+plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/lstm/" + label_column_name +
+            "/sensors_included-" + sensors_included_text + "label_segment_around_ESMevent-" + str(label_segment) +
+            "_LSTM_confusionmatrix_relative.png")
+plt.show()
+
+
+
 
 t1 = time.time()
 print("The whole process has taken so many seconds: " + str(t1 - t0))
@@ -467,6 +772,8 @@ print('Precision: %.3f (%.3f)' % (mean(outer_results_precision), std(outer_resul
 print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_recall)))
 #os.system("shutdown /h") #hibernate
 #endregion
+
+
 
 
 
