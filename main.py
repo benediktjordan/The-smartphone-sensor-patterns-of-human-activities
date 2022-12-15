@@ -140,25 +140,28 @@ with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation
 timedelta = "1000ms" # the time which merged points can be apart; has to be in a format compatible with pd.TimeDelta()
 drop_cols = ['device_id', 'label_human motion - general', "ESM_timestamp", "label_human motion - general"] # columns that should be deleted from df_tomerge
 
-df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/locations-aroundevents_features-distance-speed-acceleration.csv") # load df_base: this should be the df with features with less "sampling rate"/frequency; # here: load motion features which are computed for 2 seconds
+df_base = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration.csv") # load df_base: this should be the df with features with less "sampling rate"/frequency; # here: load motion features which are computed for 2 seconds
 df_base = labeling_sensor_df(df_base, dict_label, label_column_name = "label_human motion - general" , ESM_identifier_column = "ESM_timestamp")
 df_base = df_base.dropna(subset=["label_human motion - general"]) #drop NaN labels
-df_tomerge = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_highfrequencysensors-all_timeperiod-1 s_featureselection.pkl") # load df_tomerge: this should be the df with features with higher "sampling rate"/frequency
+#df_tomerge = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_highfrequencysensors-all_timeperiod-1 s_featureselection.pkl") # load df_tomerge: this should be the df with features with higher "sampling rate"/frequency
+df_tomerge = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/linear_accelerometer/activity-label_human montion - general_sensor-linear_accelerometer_timeperiod-1_featureselection.pkl") # load df_tomerge: this should be the df with features with higher "sampling rate"/frequency
 df_final = Merge_and_Impute.merge(df_base, df_tomerge, timedelta, drop_cols) # merge df_base and df_tomerge
 #TODO integrate "delete columns with only "NaN" values" into "features selection" section
 df_final = df_final.dropna(axis=1, how='all') # delete columns with only "NaN" values
 print("So many rows contain missing values after merging: " + str(df_final.isnull().values.any()))
 df_final_nan = Merge_and_Impute.impute_deleteNaN(df_final) # delete rows which contain missing values
-df_final_nan.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensorsAll(1seconds)-and-locations(1seconds).pkl")
+#storage_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensorsAll(1seconds)-and-locations(1seconds).pkl"
+storage_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-linear_accelerometer(1seconds)-and-GPS(1seconds).pkl"
+df_final_nan.to_pickle(storage_path)
 
 ## train Decision Forest on motion & GPS features
 ### initialize parameters
-df = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensorsAll(1seconds)-and-locations(1seconds).pkl")
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/features-motion-1s-gps-1s/"
+df = pd.read_pickle(storage_path)
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/features-linear_accelerometer-1s-gps-1s/"
 n_permutations = 2 # define number of permutations; better 1000
 label_segments = [2, 5, 10, 20, 60] #in seconds; define length of segments for label
 label_column_name = "label_human motion - general"
-label_classes = ["standing", "lying", "sitting"] # which label classes should be considered
+label_classes = ["standing", "lying", "sitting", "walking", "cycling"] # which label classes should be considered
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: best parameters are used
 drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
 
@@ -175,7 +178,7 @@ grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_sam
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
 df = df.drop(columns=drop_cols)
-df = merge_participantIDs(df, users) #temporary: merge participant ids
+df = Merge_Transform.merge_participantIDs(df, users) #temporary: merge participant ids
 df = df[df[label_column_name].isin(label_classes)] # drop rows which don´t contain labels which are in label_classes
 
 

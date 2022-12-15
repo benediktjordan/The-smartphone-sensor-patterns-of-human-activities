@@ -8,6 +8,7 @@ import numpy as np
 
 #region create merge object/class
 class Merge_and_Impute:
+    #merge timeseries
     def merge(df_base, df_tomerge, timedelta, columns_to_delete):
         df_final = pd.DataFrame()
 
@@ -54,7 +55,7 @@ class Merge_and_Impute:
 
             # delete columns from df_tomerger_user that dont have to be merged
             df_tomerge_user = df_tomerge_user.drop(columns= columns_to_delete)
-            df_tomerge_user = df_tomerge_user.drop(columns=['device_id'])
+            #df_tomerge_user = df_tomerge_user.drop(columns=['device_id'])
 
             # delete columns "Unnamed: 0", "0", "1" and "2" from df_sensor_user_event: all the information of these
             # columns is already contained in the JSON data
@@ -75,6 +76,7 @@ class Merge_and_Impute:
             user_count += 1
         return df_final
 
+    # delete rows with missing values
     def impute_deleteNaN(df_final):
         # delete rows with NaN values
         df_final = df_final.dropna(axis=0, how='any')

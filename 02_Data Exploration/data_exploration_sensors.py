@@ -2,30 +2,28 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 import numpy as np
+import datetime
 #from matplotlib import rc
 #rc('text', usetex=True)
 #endregion
 
 class data_exploration_sensors:
-    def __init__(self, sensordata_path):
-        self.sensordata_path = sensordata_path
 
     # load sensor data
-    def load_sensordata(self):
+    def load_sensordata(sensordata_path):
         # check if sensor_path is .csv or .pkl
-
-
-        if self.sensordata_path.endswith(".csv"):
-            df = pd.read_csv(self.sensordata_path)
-        elif self.sensordata_path.endswith(".pkl"):
-            df = pd.read_pickle(self.sensordata_path)
+        if sensordata_path.endswith(".csv"):
+            df = pd.read_csv(sensordata_path)
+        elif sensordata_path.endswith(".pkl"):
+            df = pd.read_pickle(sensordata_path)
         else:
             print("Error: sensordata_path is not .csv or .pkl")
         return df
 
-    # create function which visualizes the data in lineplot for specific ES-event in timeperiod
-    def vis_sensordata_around_event(df_sensor, event_time, time_period, sensor_name, label_column_name):
+    # sensor-based: create function which visualizes the data of one sensor in lineplot for specific ES-event in timeperiod
+    def vis_sensordata_around_event_onesensor(df_sensor, event_time, time_period, sensor_name, label_column_name, axs_limitations):
         # find names of sensor columns and rename columns
         for col in df_sensor.columns:
             if "double_values_0" in col:
@@ -34,14 +32,6 @@ class data_exploration_sensors:
                 df_sensor = df_sensor.rename(columns={col: "y-axis"})
             elif "double_values_2" in col:
                 df_sensor = df_sensor.rename(columns={col: "z-axis"})
-
-        # get 10% and 90% quantiles of x, y and z axis
-        x_01 = df_sensor["x-axis"].quantile(0.01)
-        x_99 = df_sensor["x-axis"].quantile(0.99)
-        y_01 = df_sensor["y-axis"].quantile(0.01)
-        y_99 = df_sensor["y-axis"].quantile(0.99)
-        z_01 = df_sensor["z-axis"].quantile(0.01)
-        z_99 = df_sensor["z-axis"].quantile(0.99)
 
         # make sure that timestamp columns are datetime format
         df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
@@ -62,11 +52,33 @@ class data_exploration_sensors:
         df_event["time relative to event (s)"] = df_event["timestamp"] - event_time
         df_event["time relative to event (s)"] = df_event["time relative to event (s)"].dt.total_seconds()
 
+        # create axis limitations for every sensor
+        if axs_limitations == "general":
+            # get 1% and 99% quantiles of x, y and z axis
+            x_01 = df_sensor["x-axis"].quantile(0.01)
+            x_99 = df_sensor["x-axis"].quantile(0.99)
+            y_01 = df_sensor["y-axis"].quantile(0.01)
+            y_99 = df_sensor["y-axis"].quantile(0.99)
+            z_01 = df_sensor["z-axis"].quantile(0.01)
+            z_99 = df_sensor["z-axis"].quantile(0.99)
+
+        elif axs_limitations == "event":
+            # get 1% and 99% quantiles of x, y and z axis
+            x_01 = df_event["x-axis"].quantile(0.01)
+            x_99 = df_event["x-axis"].quantile(0.99)
+            y_01 = df_event["y-axis"].quantile(0.01)
+            y_99 = df_event["y-axis"].quantile(0.99)
+            z_01 = df_event["z-axis"].quantile(0.01)
+            z_99 = df_event["z-axis"].quantile(0.99)
+        else:
+            print("Error: axs_limitations is not 'general' or 'event'")
+            return None
+
         # compute participant ID: take the first one of df_event
         #print("ESM timestamp: ", event_time)
         participant_id = df_event["device_id"].iloc[0]
         # compute esm_answer
-        esm_answer = df_event[label_column_name].iloc[0]
+        activity_name = df_event[label_column_name].iloc[0]
 
         # visualize for every one of the three axis the data in a lineplot with seaborn
         fig, axs = plt.subplots(3, 1, figsize=(15, 10))
@@ -79,16 +91,17 @@ class data_exploration_sensors:
         axs[1].set_ylim(y_01, y_99)
         axs[2].set_ylim(z_01, z_99)
 
-        plt.suptitle(sensor_name + " Around the Activity " + esm_answer +
-                     "\n(Participant " + str(participant_id) +" at " + str(event_time) + ")", fontsize = 20)
+        plt.suptitle(sensor_name + " Around the Activity " + activity_name +
+                     "\n(Participant " + str(participant_id) +" at " + str(event_time) + " with axis based on " + axs_limitations + " data)", fontsize = 20)
+
         fig.tight_layout()
         fig.subplots_adjust(top=0.88)
         #plt.show()
 
-        return fig
+        return fig, activity_name
 
     # apply vis_sensordata_around_event for all events which contain specific activity class
-    def vis_sensordata_around_event_foractivity(activity_name, df_sensor, time_period, sensor_name, label_column_name, path_to_save):
+    def vis_sensordata_around_event_onesensor_foractivity(activity_name, df_sensor, time_period, sensor_name, label_column_name, path_to_save):
         # create df with only events which contain the activity_name
         df_sensor = df_sensor[df_sensor[label_column_name] == activity_name]
 
@@ -105,28 +118,190 @@ class data_exploration_sensors:
             fig.savefig(path_to_save + activity_name + "/" + activity_name + "_EventTime-"  + str(event_time) + "_Segment-" + str(time_period) + "_Sensor-"+ sensor_name + ".png")
             plt.close(fig)
 
+    # event-based: visualize several sensors (2-4; must be high-frequency) around every event
+    #TODO include in this function the possibility to visualize also for data from second iteration:
+    #-> make labeling optional DONE
+    #-> create "ESM_timestamp" column in the new dataset below
+    #-> add new User_ID to the users list
+    # -> rename "label" column in "label_human motion - general"
+    # -> think what other adaptations need to be done
+    # -> visualize also GPS feature speed
+    # -> compare (in another function) activity recognition quality of Google automatic activity recognition
+    def vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period, label_column_name, path_sensordata, axs_limitations, label_data = False):
+        """
+        :param list_sensors: list of sensors to visualize
+        :param event_time:
+        :param time_period:
+        :param label_column_name:
+        :param path_sensordata:
+        :param label_data:
+        :param axs_limitations: decide if axis limitations should be 0.01 and 0.99 quantiles of
+         -> whole sensordata (general)
+         -> sensordata around event_time (event)
+        :return:
+        """
+        #initialize
+        dict_df_event = {}
+        dict_axs = {}
+        # iterate through all sensors and create df_sensor_event for every sensor
+        for sensor in list_sensors:
+            time0 = time.time()
+            #load sensor data
+            # replace "INSERT" in path_sensordata with sensor name
+            path_sensordata_adapted = path_sensordata.replace("INSERT", sensor[1])
+            df_sensor = data_exploration_sensors.load_sensordata(path_sensordata_adapted)
 
+            #preprocessing
+            df_sensor = Merge_Transform.merge_participantIDs(df_sensor, users)  # merge participant IDs
+            if label_data == True: #only if data from first iteration, labelling of sensordata is needed
+                df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
+            df_sensor = df_sensor.dropna(subset=[label_column_name])  # delete all rows which contain NaN values in the label column
+
+            # find names of sensor columns and rename columns
+            for col in df_sensor.columns:
+                if "double_values_0" in col:
+                    df_sensor = df_sensor.rename(columns={col: "x-axis"})
+                elif "double_values_1" in col:
+                    df_sensor = df_sensor.rename(columns={col: "y-axis"})
+                elif "double_values_2" in col:
+                    df_sensor = df_sensor.rename(columns={col: "z-axis"})
+
+            # make sure that timestamp columns are datetime format
+            df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+            df_sensor["ESM_timestamp"] = pd.to_datetime(df_sensor["ESM_timestamp"])
+            event_time = pd.to_datetime(event_time)
+
+            # create df with sensor data around event_time of the event and participant
+            df_event = df_sensor[df_sensor["ESM_timestamp"] == event_time].copy()
+            df_event = df_event[(df_event['timestamp'] >= event_time - pd.Timedelta(seconds=(time_period / 2))) & (
+                    df_event['timestamp'] <= event_time + pd.Timedelta(seconds=(time_period / 2)))]
+
+            #create axis limitations for every sensor
+            dict_axs[sensor[0]] = {}
+            if axs_limitations == "general":
+                # get 1% and 99% quantiles of x, y and z axis and put in dictionary
+                dict_axs[sensor[0]]["x_01"] = df_sensor["x-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["x_99"] = df_sensor["x-axis"].quantile(0.99)
+                dict_axs[sensor[0]]["y_01"] = df_sensor["y-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["y_99"] = df_sensor["y-axis"].quantile(0.99)
+                dict_axs[sensor[0]]["z_01"] = df_sensor["z-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["z_99"] = df_sensor["z-axis"].quantile(0.99)
+
+            elif axs_limitations == "event":
+                # get 1% and 99% quantiles of x, y and z axis and put in dictionary
+                dict_axs[sensor[0]]["x_01"] = df_event["x-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["x_99"] = df_event["x-axis"].quantile(0.99)
+                dict_axs[sensor[0]]["y_01"] = df_event["y-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["y_99"] = df_event["y-axis"].quantile(0.99)
+                dict_axs[sensor[0]]["z_01"] = df_event["z-axis"].quantile(0.01)
+                dict_axs[sensor[0]]["z_99"] = df_event["z-axis"].quantile(0.99)
+
+            # check if df_event is empty: if yes, break function and return None
+            if df_event.empty:
+                print("df_event is empty with event_time: " + str(event_time) + " and sensor: " + sensor[0])
+                return None, None
+
+            # transform unix time into seconds relative to event_time
+            df_event["time relative to event (s)"] = df_event["timestamp"] - event_time
+            df_event["time relative to event (s)"] = df_event["time relative to event (s)"].dt.total_seconds()
+
+            #store this df_event in a dictionary with sensor name as key
+            dict_df_event[sensor[0]] = df_event
+
+            # print progress
+            #print("Sensor " + sensor[0] + " done and took " + str((time.time() - time0)/60) + " minutes")
+
+        # compute participant ID: take the first one of df_event
+        # print("ESM timestamp: ", event_time)
+        participant_id = df_event["device_id"].iloc[0]
+        # compute esm_answer
+        activity_name = df_event[label_column_name].iloc[0]
+
+        # visualize all df_events in one plot
+        ## create number of subplots based on number of sensors
+        if len(list_sensors) == 4 or len(list_sensors) == 3:
+            fig, axs = plt.subplots(6, 2, figsize=(15, 10))
+            # plot sensordata from first sensor in dict_df_event on first subplot
+            # create title for first subplot
+            axs[0, 0].set_title(list_sensors[0][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[0, 0])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[1, 0])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[2, 0])
+            # limit axes
+            axs[0, 0].set_ylim(dict_axs[list_sensors[0][0]]["x_01"], dict_axs[list_sensors[0][0]]["x_99"])
+            axs[1, 0].set_ylim(dict_axs[list_sensors[0][0]]["y_01"], dict_axs[list_sensors[0][0]]["y_99"])
+            axs[2, 0].set_ylim(dict_axs[list_sensors[0][0]]["z_01"], dict_axs[list_sensors[0][0]]["z_99"])
+
+            # plot sensordata from second sensor in dict_df_event on second  subplots
+            axs[0, 1].set_title(list_sensors[1][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[0, 1])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[1, 1])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[2, 1])
+            # limit axes
+            axs[0, 1].set_ylim(dict_axs[list_sensors[1][0]]["x_01"], dict_axs[list_sensors[1][0]]["x_99"])
+            axs[1, 1].set_ylim(dict_axs[list_sensors[1][0]]["y_01"], dict_axs[list_sensors[1][0]]["y_99"])
+            axs[2, 1].set_ylim(dict_axs[list_sensors[1][0]]["z_01"], dict_axs[list_sensors[1][0]]["z_99"])
+
+            # plot sensordata from third sensor in dict_df_event on third subplots
+            axs[3, 0].set_title(list_sensors[2][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[3, 0])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[4, 0])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[5, 0])
+            # limit axes
+            axs[3, 0].set_ylim(dict_axs[list_sensors[2][0]]["x_01"], dict_axs[list_sensors[2][0]]["x_99"])
+            axs[4, 0].set_ylim(dict_axs[list_sensors[2][0]]["y_01"], dict_axs[list_sensors[2][0]]["y_99"])
+            axs[5, 0].set_ylim(dict_axs[list_sensors[2][0]]["z_01"], dict_axs[list_sensors[2][0]]["z_99"])
+
+            # if there are four sensors, plot sensordata from fourth sensor in dict_df_event on fourth subplots
+            if len(list_sensors) == 4:
+                axs[3, 1].set_title(list_sensors[3][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[3, 1])
+                sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[4, 1])
+                sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[5, 1])
+                # limit axes
+                axs[3, 1].set_ylim(dict_axs[list_sensors[3][0]]["x_01"], dict_axs[list_sensors[3][0]]["x_99"])
+                axs[4, 1].set_ylim(dict_axs[list_sensors[3][0]]["y_01"], dict_axs[list_sensors[3][0]]["y_99"])
+                axs[5, 1].set_ylim(dict_axs[list_sensors[3][0]]["z_01"], dict_axs[list_sensors[3][0]]["z_99"])
+
+        elif len(list_sensors) == 2:
+            fig, axs = plt.subplots(3, 2, figsize=(15, 10))
+            # plot sensordata from first sensor in dict_df_event on first three subplots
+            axs[0, 0].set_title(list_sensors[0][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[0, 0])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[1, 0])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[2, 0])
+            # limit axes
+            axs[0, 0].set_ylim(dict_axs[list_sensors[0][0]]["x_01"], dict_axs[list_sensors[0][0]]["x_99"])
+            axs[1, 0].set_ylim(dict_axs[list_sensors[0][0]]["y_01"], dict_axs[list_sensors[0][0]]["y_99"])
+            axs[2, 0].set_ylim(dict_axs[list_sensors[0][0]]["z_01"], dict_axs[list_sensors[0][0]]["z_99"])
+            # plot sensordata from second sensor in dict_df_event on second three subplots
+            axs[0, 1].set_title(list_sensors[1][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[0, 1])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[1, 1])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[2, 1])
+            # limit axes
+            axs[0, 1].set_ylim(dict_axs[list_sensors[1][0]]["x_01"], dict_axs[list_sensors[1][0]]["x_99"])
+            axs[1, 1].set_ylim(dict_axs[list_sensors[1][0]]["y_01"], dict_axs[list_sensors[1][0]]["y_99"])
+            axs[2, 1].set_ylim(dict_axs[list_sensors[1][0]]["z_01"], dict_axs[list_sensors[1][0]]["z_99"])
+
+        # set title for whole plot
+        plt.suptitle("Sensordata around Activity " + activity_name +
+                     "\n(Participant " + str(participant_id) + " at " + str(event_time) + " with axis based on " + axs_limitations + " data)", fontsize=20)
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.88)
+        # plt.show()
+
+        return fig, activity_name
+
+
+#region Iteration 01
 #load data & initialize
 label_column_name = "label_human motion - general"
 time_period = 90  # seconds
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
 path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/human_motion_general/"
 
-# find visualization for single events
-sensordata_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/linear_accelerometer_esm_timeperiod_5 min.csv_JSONconverted.pkl"
-sensor_name = "Linear Accelerometer"
-df_sensor = data_exploration_sensors(sensordata_path).load_sensordata()
-df_sensor = Merge_Transform.merge_participantIDs(df_sensor, users) #merge participant IDs
-df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
-df_sensor = df_sensor.dropna(subset=[label_column_name]) # delete all rows which contain NaN values in the label column
-
-event_time = "2022-07-05T09:10:23.036999936"
-fig = data_exploration_sensors.vis_sensordata_around_event(df_sensor, event_time, time_period, sensor_name, label_column_name)
-plt.show()
-
-
-
-# visualize for sensors in sensor_list: all events of all human motion activities:
+#region sensor-based: visualize data around events: one plot per event & sensor
 path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/human_motion_general/"
 
 sensor_list = [["Linear Accelerometer", "linear_accelerometer"],
@@ -146,7 +321,264 @@ for sensor in sensor_list:
     for activity_name in df_sensor[label_column_name].unique():
         print("Started visualization for activity: " + activity_name)
         data_exploration_sensors.vis_sensordata_around_event_foractivity(activity_name, df_sensor, time_period, sensor_name, label_column_name, path_to_save)
+#endregion
 
+#region sensor-based: find visualization for single events (one plot per event & sensor)
+sensordata_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/linear_accelerometer_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+sensor_name = "Linear Accelerometer"
+df_sensor = data_exploration_sensors(sensordata_path).load_sensordata()
+df_sensor = Merge_Transform.merge_participantIDs(df_sensor, users) #merge participant IDs
+df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
+df_sensor = df_sensor.dropna(subset=[label_column_name]) # delete all rows which contain NaN values in the label column
+
+event_time = "2022-07-02 04:23:01.163000064"
+fig = data_exploration_sensors.vis_sensordata_around_event(df_sensor, event_time, time_period, sensor_name, label_column_name)
+plt.show()
+#endregion
+
+#region event-based_ visualize data around events: one plot per event & several sensors: for all events
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+list_sensors =  ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations","plugin_ios_activity_recognition"]
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/human_motion_general/"
+axs_limitations = "general"
+label_data = True
+
+sensor_list = [["Linear Accelerometer", "linear_accelerometer"],
+               ["Gyroscope", "gyroscope"],
+               ["Magnetometer", "magnetometer"],
+                ["Rotation", "rotation"]]
+
+# create list with all event times
+event_times = []
+for key in dict_label.keys():
+    event_times.append(key)
+
+# apply vis_sensordata_around_event for every event time in event_times
+num_events = 1
+sensor_names = ""
+for sensor in sensor_list:
+    sensor_names += sensor[1] + "_"
+for event_time in event_times:
+    time0 = time.time()
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(sensor_list, event_time, time_period,
+                                                                           label_column_name, path_sensordata,axs_limitations, label_data)
+    # check if fig is None: if yes, continue with next event_time
+    if fig is None:
+        continue
+    fig.savefig(
+        path_to_save + activity_name + "/" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + ".png")
+    plt.close(fig)
+    # print progress
+    print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
+    num_events += 1
+#endregion
+
+#region event-based_ visualize data around events: single event (one plot per event & several sensors)
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+#path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/perfectdata/INSERT_labeled.csv"
+list_sensors =  ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations","plugin_ios_activity_recognition"]
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/human_motion_general/"
+event_time = "2022-07-03 10:00:04.428000000"
+sensor_list = [["Linear Accelerometer", "linear_accelerometer"],
+               ["Magnetometer", "magnetometer"],
+               ["Gyroscope", "gyroscope"],
+                ["Rotation", "rotation"]]
+sensor_names = ""
+for sensor in sensor_list:
+    sensor_names += sensor[1] + "_"
+fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_foursensors(sensor_list, event_time, time_period,
+                                                                       label_column_name, path_sensordata)
+# check if fig is None: if yes, continue with next event_time
+if fig is None:
+    continue
+fig.savefig(
+    path_to_save + activity_name + "/" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+        time_period) + "_Sensors-" + sensor_names + ".png")
+plt.show()
+#endregion
+
+#endregion
+
+#region Iteration 02
+#load data & initialize
+label_column_name = "label_human motion - general"
+time_period = 90  # seconds
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/dict_label_iteration02_Ben.pkl")
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/human_motion_general/"
+
+# create events (=ESM_timestamps) column in the sensordata (based on
+#iterate through all sensorfiles and add ESM_timestamps column
+for sensor in list_sensors:
+    print("start with sensor " + sensor[1])
+    path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/" + sensor[1] + "_labeled.csv"
+    df_sensor = pd.read_csv(path_sensordata)
+    # convert timestamp to datetime
+    df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+
+    # iterate through dict_label and create a list of all events (=ESM_timestamps)
+    df_sensor["ESM_timestamp"] = ""
+    for key in dict_label.keys():
+        print("start with key " + str(key))
+        # create list of times: every "time_period" second from start_session ongoing one timestamp (until end_session)
+        event_times = []
+        start_session = dict_label[key]["start_session"]
+        end_session = dict_label[key]["end_session"]
+        event_time = start_session + datetime.timedelta(seconds=(time_period/2))
+        #run while loop until event_time is bigger than end_session
+        while event_time < end_session:
+            event_times.append(event_time)
+            event_time = event_time + datetime.timedelta(seconds=time_period)
+
+        # iterate through event_times: for each timestamp in df_sensor, check if it is in "time_period" around event_time
+        # if yes, add event_time to df_sensor["ESM_timestamps"]
+        for event_time in event_times:
+            row_count = 1
+            for index, row in df_sensor.iterrows():
+                if row["timestamp"] >= event_time - datetime.timedelta(seconds=(time_period/2)) and row["timestamp"] <= event_time + datetime.timedelta(seconds=(time_period/2)):
+                    df_sensor.at[index, "ESM_timestamp"] = event_time
+                row_count += 1
+
+    # save df_sensor
+    df_sensor.to_csv(path_sensordata + "_with_ESM_timestamps.csv", index=False)
+    #df_sensor.to_pickle(path_sensordata + "_with_ESM_timestamps.pkl")
+
+#create visualization for df_sensor
+
+
+#region sensor-based: find visualization for single events (one plot per event & sensor)
+sensor_name = "linear_accelerometer"
+event_time = "2022-11-30 15:56:45"
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/INSERT_labeled.csv"
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/label_human motion - general/"
+axs_limitations = "general" #if y-axis limits should be based on whole sensor data (general) or on data around event (event)
+
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/" + sensor_name + "_labeled.csv_with_ESM_timestamps.csv"
+
+df_sensor = data_exploration_sensors.load_sensordata(path_sensordata)
+df_sensor = Merge_Transform.merge_participantIDs(df_sensor, users) #merge participant IDs
+df_sensor = df_sensor.dropna(subset=[label_column_name]) # delete all rows which contain NaN values in the label column
+
+fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_onesensor(df_sensor, event_time, time_period, sensor_name, label_column_name, axs_limitations)
+plt.show()
+fig.savefig(path_to_save + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_name + "_axis_limitations-" + axs_limitations + ".png")
+#endregion
+
+#region event-based_ visualize data around events: single event (one plot per event & several sensors) NOT FINISHED
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/perfectdata/INSERT_labeled.csv"
+list_sensors =  ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations","plugin_ios_activity_recognition"]
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/human_motion_general/"
+event_time = "2022-07-03 10:00:04.428000000"
+sensor_list = [["Linear Accelerometer", "linear_accelerometer"],
+               ["Magnetometer", "magnetometer"],
+               ["Gyroscope", "gyroscope"],
+                ["Rotation", "rotation"]]
+sensor_names = ""
+for sensor in sensor_list:
+    sensor_names += sensor[1] + "_"
+fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_foursensors(sensor_list, event_time, time_period,
+                                                                       label_column_name, path_sensordata)
+# check if fig is None: if yes, continue with next event_time
+if fig is None:
+    continue
+fig.savefig(
+    path_to_save + activity_name + "/" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+        time_period) + "_Sensors-" + sensor_names + ".png")
+plt.show()
+#endregion
+
+#region event-based_ visualize data around events: one plot per event & several sensors: for all events
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/INSERT_labeled.csv"
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/human_motion_general/"
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
+               ["Magnetometer", "magnetometer"],
+               ["Gyroscope", "gyroscope"],
+                ["Rotation", "rotation"]]
+axs_limitations = "general" #if y-axis limits should be based on whole sensor data (general) or on data around event (event)
+
+
+#create list of events (go through events from one sensor)
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/" + sensor_list[0][1] + "_labeled.csv_with_ESM_timestamps.csv"
+df_sensor = pd.read_csv(path_sensordata)
+event_times = df_sensor["ESM_timestamp"].unique()
+event_times = event_times[~pd.isnull(event_times)]# delete nan
+
+# apply vis_sensordata_around_event for every event time in event_times
+path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Ben/INSERT_labeled.csv_with_ESM_timestamps.csv"
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/label_human motion - general/"
+num_events = 1
+sensor_names = ""
+for sensor in sensor_list:
+    sensor_names += sensor[1] + "_"
+
+for event_time in event_times:
+    time_0 = time.time()
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period,
+                                                                           label_column_name, path_sensordata, axs_limitations)
+    # check if fig is None: if yes, continue with next event_time
+    if fig is None:
+        print("fig is None")
+        continue
+    fig.savefig(
+        path_to_save + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + "_axis_limitations-" + axs_limitations + ".png")
+    plt.close(fig)
+    # print progress
+    print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time_0)/60) + " minutes.")#
+    # print time needed for processing
+    num_events += 1
+#endregion
+
+
+
+#endregion
+
+
+
+
+
+#testrun
+test = df_sensor["ESM_timestamp"][df_sensor["ESM_timestamp"] == event_time]
+## create df_event by filtering for +-30 seconds around timestamp
+#convert timestamp to datetime in df_sensor
+df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+event_time = pd.to_datetime(event_time)
+df_event = df_sensor[(df_sensor["ESM_timestamp"] == event_time) & (df_sensor["timestamp"] >= (pd.to_datetime(event_time) - pd.Timedelta("30s"))) & (df_sensor["timestamp"] <= (pd.to_datetime(event_time) + pd.Timedelta("30s")))]
+#create time relative to event time
+df_event["time relative to event (s)"] = df_event["timestamp"] - pd.to_datetime(event_time)
+# rename lin_double_values_0, 1, and 2 in x-axis, y-axis, z-axis
+df_event = df_event.rename(columns={"lin_double_values_0": "x-axis", "lin_double_values_1": "y-axis", "lin_double_values_2": "z-axis"})
+##create 12 lineplots
+fig, axs = plt.subplots(6, 2, figsize=(15, 10))
+sns.lineplot(x="time relative to event (s)", y="x-axis", data=df_event, ax=axs[0,0])
+sns.lineplot(x="time relative to event (s)", y="y-axis", data=df_event, ax=axs[0,1])
+sns.lineplot(x="time relative to event (s)", y="z-axis", data=df_event, ax=axs[1,0])
+sns.lineplot(x="time relative to event (s)", y="x-axis", data=df_event, ax=axs[1,1])
+sns.lineplot(x="time relative to event (s)", y="y-axis", data=df_event, ax=axs[2,0])
+sns.lineplot(x="time relative to event (s)", y="z-axis", data=df_event, ax=axs[2,1])
+sns.lineplot(x="time relative to event (s)", y="x-axis", data=df_event, ax=axs[3,0])
+sns.lineplot(x="time relative to event (s)", y="y-axis", data=df_event, ax=axs[3,1])
+sns.lineplot(x="time relative to event (s)", y="z-axis", data=df_event, ax=axs[4,0])
+sns.lineplot(x="time relative to event (s)", y="x-axis", data=df_event, ax=axs[4,1])
+sns.lineplot(x="time relative to event (s)", y="y-axis", data=df_event, ax=axs[5,0])
+sns.lineplot(x="time relative to event (s)", y="z-axis", data=df_event, ax=axs[5,1])
+#include title for every subplot
+axs[0,0].set_title("x-axis")
+axs[0,1].set_title("y-axis")
+axs[1,0].set_title("z-axis")
+axs[1,1].set_title("x-axis")
+axs[2,0].set_title("y-axis")
+axs[2,1].set_title("z-axis")
+axs[3,0].set_title("x-axis")
+axs[3,1].set_title("y-axis")
+axs[4,0].set_title("z-axis")
+axs[4,1].set_title("x-axis")
+axs[5,0].set_title("y-axis")
+axs[5,1].set_title("z-axis")
+# tight layout
+plt.tight_layout()
+plt.show()
 
 
 

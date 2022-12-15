@@ -123,6 +123,8 @@ class Merge_Transform:
         df[device_id_col] = df[device_id_col].astype(int)
         return df
 
+    # label sensor data with ESM data
+
 test = df_frequentlocations_day.copy()
 df = test.copy()
     # endregion

@@ -2,18 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
-      <change afterPath="$PROJECT_DIR$/02_Data Exploration/PerfectData.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/04_Data Analysis/visualizations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_old.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/PerfectData.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/PerfectData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -277,7 +271,9 @@
       <workItem from="1669232587710" duration="14915000" />
       <workItem from="1669248831955" duration="12855000" />
       <workItem from="1669720147998" duration="14215000" />
-      <workItem from="1669811937380" duration="5394000" />
+      <workItem from="1669811937380" duration="10396000" />
+      <workItem from="1669979494615" duration="47575000" />
+      <workItem from="1671034597423" duration="627000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -538,7 +534,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669061522706</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
+      <created>1669829705814</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1669829705814</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -626,8 +629,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>276</line>
+          <line>279</line>
           <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py</url>
+          <line>7</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>300</line>
+          <option name="timeStamp" value="40" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
