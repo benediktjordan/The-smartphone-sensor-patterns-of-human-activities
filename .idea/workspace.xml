@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_iteration02.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -562,7 +564,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672913157325</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(">
+      <created>1672915660765</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1672915660765</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -595,7 +604,8 @@
     <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
     <MESSAGE value="nothing" />
     <MESSAGE value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
-    <option name="LAST_COMMIT_MESSAGE" value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
+    <MESSAGE value="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(" />
+    <option name="LAST_COMMIT_MESSAGE" value="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -652,7 +662,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>420</line>
+          <line>457</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -672,7 +682,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>262</line>
+          <line>299</line>
           <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>

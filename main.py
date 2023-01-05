@@ -131,29 +131,65 @@ df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_pr
 #region Laboratory Data
 
 #region data transformation for human motion
-# label sensordata
+#merge sensor files for same participant (necessary for Benedikt´s data)
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt_old/"
+sensor_list = ["accelerometer", "gyroscope", "magnetometer", "plugin_ios_activity_recognition",
+               "rotation", "linear_accelerometer", "locations"]
+#iterate through folders in path_datasets and merge sensor files for same participant
+for sensor in sensor_list:
+    print("start with sensor: " + sensor)
+    counter = 1
+    for folder in os.listdir(path_datasets):
+        print("start with folder: " + folder)
+        # check if folder ends with ".csv"
+        if folder == ".DS_Store" or folder.endswith(".csv"):
+            continue
+        if counter == 1:
+            df_sensor = pd.read_csv(path_datasets + folder + "/" + sensor + ".csv")
+        if counter > 1:
+            #concatenate dataframes
+            df_sensor = pd.concat([df_sensor, pd.read_csv(path_datasets + folder + "/" + sensor + ".csv")])
+        counter += 1
+
+    #delete duplicates
+    print("Number of duplicates before deletion: " + str(df_sensor.duplicated().sum()))
+    df_sensor = df_sensor.drop_duplicates()
+    print("Number of duplicates after deletion: " + str(df_sensor.duplicated().sum()))
+    #save to csv
+    df_sensor.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt_old/" + sensor + ".csv")
+
+# label sensordata & add ESM timestamp
+length_of_esm_events = 90 # in seconds; this is the length of the ESM events in which the sensor data will be segmented
 dir_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
 for index, user in users_iteration02.iterrows():
     for index2, sensor in sensors_and_frequencies.iterrows():
         print("User: " + str(user["Name"]) + " - Sensor: " + str(sensor["Sensor"]))
         path_sensorfile = dir_dataset + user["Name"] + "/" + sensor["Sensor"] + ".csv"
         dict_label = pd.read_pickle(dir_dataset + user["Name"] + "/dict_label_iteration02_" + user["Name"] + ".pkl")
-        #check if sensorfile doesn't exist
-        if not os.path.exists(path_sensorfile):
+        if not os.path.exists(path_sensorfile): #check if sensorfile doesn't exist
             print("Sensorfile doesn't exist")
             continue
-        df_sensor = InitialTransforms_Iteration02.label_sensor_data(path_sensorfile, dict_label)
-        if df_sensor is None:
+        df_sensor = InitialTransforms_Iteration02.label_sensor_data(path_sensorfile, dict_label) #calculate labels
+        if df_sensor is None or df_sensor.empty: #check if sensorfile is empty
             continue
-
-        # analytics: find out how many labeled sensor minutes are in df_sensor
-        if int(sensor["Frequency (in Hz)"]) is not 0:
+        df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled.csv", index=False)
+        df_sensor = InitialTransforms_Iteration02.add_esm_timestamps(df_sensor, dict_label, length_of_esm_events) #add ESM_timestamp
+        if int(sensor["Frequency (in Hz)"]) is not 0:# analytics: find out how many labeled sensor minutes are in df_sensor and how many of those minutes are in ESM-events
             num_minutes = len(df_sensor["timestamp"]) / sensor["Frequency (in Hz)"] / 60
             print("Number of labeled sensor minutes for user " + user["Name"] + ": " + str(num_minutes) + " minutes")
-        # save the data
-        df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled.csv", index=False)
+            esm_events_total_length = (len(df_sensor["ESM_timestamp"].unique()) * length_of_esm_events)/60
+            print("Percentage of labeled sensor minutes that are in ESM events: " + str(esm_events_total_length/num_minutes * 100) + "%")
+        df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled_esm_timestamps.csv", index=False)
+        print("Sensorfile labeled and ESM_timestamps added for user " + user["Name"] + " and sensor " + sensor["Sensor"])
 
-#add ESM timestamps
+# merge sensorfiles of different users
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+for index, sensor in sensors_and_frequencies.iterrows():
+    print("start with sensor: " + sensor["Sensor"])
+    df_sensor = Merge_Transform.join_sensor_files(path_datasets, sensor["Sensor"], sensor_appendix = "_labeled_esm_timestamps")
+    if df_sensor is None or df_sensor.empty:
+        continue
+    df_sensor.to_csv(path_datasets + sensor["Sensor"] + "_labeled_esm_timestamps_allparticipants.csv", index=False)
 
 
 #endregion
@@ -708,3 +744,6 @@ for label_segment in label_segments:
 ## Public Transport: in public transport; in train
 #endregion
 #endregion
+
+#testregion
+df_test = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt/linear_accelerometer_labeled_esm_timestamps.csv")

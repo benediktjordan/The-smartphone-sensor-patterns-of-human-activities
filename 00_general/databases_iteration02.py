@@ -5,7 +5,7 @@ import pandas as pd
 
 #endregion
 
-#region
+#region users
 users_iteration02 = pd.DataFrame([["Benedikt","", 17, 2],
                         ["Cordula","", 20, 2],
                         ["Simone","", 1, 2],
@@ -17,6 +17,7 @@ users_iteration02 = pd.DataFrame([["Benedikt","", 17, 2],
 
 
 #endregion
+
 #region labels
 # create dictionary with start and end times of different activities; start_session and end_session should be datetime objects
 dict_label_iteration02_Benedikt = {"standing": {"start_session": pd.Timestamp("2022-11-30 15:44:00"), "end_session": pd.Timestamp("2022-11-30 15:46:00")},

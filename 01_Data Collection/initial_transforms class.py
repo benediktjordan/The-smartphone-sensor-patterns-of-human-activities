@@ -50,23 +50,30 @@ class Merge_Transform:
         self.sensor = sensor
 
     # join sensorfiles from different databases
-    def join_sensor_files(self):
+    def join_sensor_files(dir_databases, sensor, sensor_appendix = None):
         counter = 0
-        for root, dirs, files in os.walk(self.dir_databases):  # iterate through different subfolders
+        for root, dirs, files in os.walk(dir_databases):  # iterate through different subfolders
             for subfolder in dirs:
-                path_sensor = self.dir_databases + "/" + subfolder + "/" + self.sensor + ".csv"
+                path_sensor = dir_databases + "/" + subfolder + "/" + sensor + ".csv"
+                if sensor_appendix != None:
+                    path_sensor = dir_databases + "/" + subfolder + "/" + sensor + sensor_appendix + ".csv"
                 if os.path.exists(path_sensor):
                     if counter == 0:
                         sensor_all = pd.read_csv(path_sensor)
                         counter += 1
                         print("This file was used as the base: " + str(path_sensor))
                     else:
-                        sensor_all = sensor_all.append(pd.read_csv(path_sensor))
+                        #concatenate sensorfiles
+                        sensor_all = pd.concat([sensor_all, pd.read_csv(path_sensor)])
                         print("len of sensor_all is : " + str(len(sensor_all)))
                         print("This files was added: " + str(path_sensor))
                         counter += 1
                 else:
                     continue
+
+        if counter == 0:
+            print("No sensorfiles were found for sensor " + sensor)
+            return None
 
         return sensor_all
 
