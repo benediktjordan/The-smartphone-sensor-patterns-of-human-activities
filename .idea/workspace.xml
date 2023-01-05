@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="restructured the folder &amp; files; created new branch">
-      <change beforePath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/LSTM.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="nothing">
+      <change afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,6 +20,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="Jupyter Notebook" />
         <option value="Python Script" />
       </list>
     </option>
@@ -35,9 +44,16 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="recentNewPullRequestHead">
+      <RepoCoordinatesHolder>
+        <option name="owner" value="benejo123" />
+        <option name="repository" value="context_detection" />
+      </RepoCoordinatesHolder>
+    </option>
+  </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_Data Analysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
@@ -62,16 +78,21 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.notifications&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/03_Data Preparation" />
       <recent name="$PROJECT_DIR$/00_Data Collection" />
       <recent name="$PROJECT_DIR$/AGENDER2.0" />
       <recent name="$PROJECT_DIR$/Data Exploration" />
       <recent name="$PROJECT_DIR$/Data Preparation" />
-      <recent name="$PROJECT_DIR$/Data Analysis" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -231,7 +252,38 @@
       <workItem from="1666354256331" duration="2991000" />
       <workItem from="1666627264847" duration="2788000" />
       <workItem from="1666692724579" duration="444000" />
-      <workItem from="1666693294078" duration="11447000" />
+      <workItem from="1666693294078" duration="27709000" />
+      <workItem from="1666795001980" duration="326000" />
+      <workItem from="1666798135412" duration="23423000" />
+      <workItem from="1666905497431" duration="1262000" />
+      <workItem from="1666959365278" duration="444000" />
+      <workItem from="1666959866986" duration="15509000" />
+      <workItem from="1667830188578" duration="4628000" />
+      <workItem from="1667903671136" duration="8484000" />
+      <workItem from="1667921295558" duration="450000" />
+      <workItem from="1667921764112" duration="6327000" />
+      <workItem from="1667986955093" duration="20086000" />
+      <workItem from="1668034814953" duration="16094000" />
+      <workItem from="1668064179440" duration="26760000" />
+      <workItem from="1668428116015" duration="7098000" />
+      <workItem from="1668496026777" duration="15185000" />
+      <workItem from="1668514898574" duration="10167000" />
+      <workItem from="1668536849110" duration="6071000" />
+      <workItem from="1668613653239" duration="1290000" />
+      <workItem from="1668615422062" duration="16724000" />
+      <workItem from="1668871102469" duration="49431000" />
+      <workItem from="1669193415423" duration="598000" />
+      <workItem from="1669198376815" duration="4702000" />
+      <workItem from="1669232454923" duration="95000" />
+      <workItem from="1669232587710" duration="14915000" />
+      <workItem from="1669248831955" duration="12855000" />
+      <workItem from="1669720147998" duration="14215000" />
+      <workItem from="1669811937380" duration="10396000" />
+      <workItem from="1669979494615" duration="47575000" />
+      <workItem from="1671034597423" duration="8337000" />
+      <workItem from="1671793357747" duration="417000" />
+      <workItem from="1672742421796" duration="9826000" />
+      <workItem from="1672778185855" duration="21590000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -408,7 +460,105 @@
       <option name="project" value="LOCAL" />
       <updated>1666768649598</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="added requirements.txt">
+      <created>1666769032425</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1666769032425</updated>
+    </task>
+    <task id="LOCAL-00027" summary="added requirements.txt">
+      <created>1666769181972</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1666769181972</updated>
+    </task>
+    <task id="LOCAL-00028" summary="added requirements.txt">
+      <created>1667574971976</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1667574971976</updated>
+    </task>
+    <task id="LOCAL-00029" summary="added requirements.txt">
+      <created>1667829865400</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1667829865400</updated>
+    </task>
+    <task id="LOCAL-00030" summary="added requirements.txt">
+      <created>1667986926171</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1667986926171</updated>
+    </task>
+    <task id="LOCAL-00031" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668089750419</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1668089750419</updated>
+    </task>
+    <task id="LOCAL-00032" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668496281734</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1668496281734</updated>
+    </task>
+    <task id="LOCAL-00033" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668615040033</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1668615040033</updated>
+    </task>
+    <task id="LOCAL-00034" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
+      <created>1668954656205</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1668954656205</updated>
+    </task>
+    <task id="LOCAL-00035" summary="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion">
+      <created>1668960124084</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1668960124084</updated>
+    </task>
+    <task id="LOCAL-00036" summary="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy">
+      <created>1669046597340</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1669046597340</updated>
+    </task>
+    <task id="LOCAL-00037" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
+      <created>1669061522706</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1669061522706</updated>
+    </task>
+    <task id="LOCAL-00038" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
+      <created>1669829705814</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1669829705814</updated>
+    </task>
+    <task id="LOCAL-00039" summary="nothing">
+      <created>1671101758571</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1671101758571</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -434,7 +584,13 @@
     <MESSAGE value="This is the first commit message" />
     <MESSAGE value="restructured the folder &amp; files" />
     <MESSAGE value="restructured the folder &amp; files; created new branch" />
-    <option name="LAST_COMMIT_MESSAGE" value="restructured the folder &amp; files; created new branch" />
+    <MESSAGE value="added requirements.txt" />
+    <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
+    <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
+    <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
+    <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
+    <MESSAGE value="nothing" />
+    <option name="LAST_COMMIT_MESSAGE" value="nothing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -478,6 +634,36 @@
           <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
           <line>387</line>
           <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_Data Preparation/label_transformation.py</url>
+          <line>21</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
+          <line>2</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>384</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py</url>
+          <line>7</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>300</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
+          <line>381</line>
+          <option name="timeStamp" value="42" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
