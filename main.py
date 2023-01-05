@@ -179,7 +179,7 @@ label_column_name = "label_human motion - general"
 path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensors-all(1seconds)-and-GPS(1seconds).pkl"
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/labelsegments_comparison/features-highfrequencysensors-all-1s-gps-1s/"
 n_permutations = 2 # define number of permutations; better 1000
-label_segments = list(range(50, 121, 10)) #in seconds; defines label segments to test
+label_segments = list(range(30, 121, 1)) #in seconds; defines label segments to test
 label_classes = ["standing", "lying", "sitting", "walking", "cycling"] # which label classes should be considered
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
 drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
@@ -194,6 +194,9 @@ df = df[df[label_column_name].isin(label_classes)] # drop rows which don´t cont
 df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
                                              "Precision", "Recall"])
 for label_segment in label_segments:
+    #check if label_segment is 40 or 50 or 60 seconds; if so, continue
+    if label_segment == 40 or label_segment == 50 or label_segment == 60 or label_segment == 70 or label_segment == 80 or label_segment == 90 or label_segment == 100 or label_segment == 110 or label_segment == 120:
+        continue
     t0 = time.time()
     df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
     print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))

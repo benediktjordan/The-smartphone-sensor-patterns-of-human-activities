@@ -34,7 +34,7 @@ users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88", 1, 1],
                       ["Benedikt_5 (vorher Unknown_2)", "57fc9641-9f4d-409b-bffd-f333b01c33c9", 17, 1],
                       ["Benedikt_secondiPhone", "4c1db32b-48fc-4fa6-a4fe-c44f079b7ca4", 17, 1],
                       ["Benedikt_tablet","0960f02f-8c67-486c-b8db-7850d4a7070b", 17, 1],
-                      ["Benedikt_seconditerationa", "ba683866-dfc3-47e0-a75a-61c07cf33505", 17, 2]],
+                      ["Benedikt_seconditeration", "ba683866-dfc3-47e0-a75a-61c07cf33505", 17, 2]],
                      columns = ["Name", "ID", "new_ID", "iteration"])
 
 sensors_and_frequencies = pd.DataFrame([["barometer",0.1],
