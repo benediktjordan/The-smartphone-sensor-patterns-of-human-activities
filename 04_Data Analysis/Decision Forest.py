@@ -481,7 +481,7 @@ df_results_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/da
 #region build DF class including the options to enable and disable permutation and binomial test
 class DecisionForest:
 
-	def DF_sklearn(df, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning):
+	def DF_sklearn(df, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, grid_search_space = None, feature_importance = None):
 		"""
 		Builds a decision forest using the sklearn library
 		:param df:
@@ -516,6 +516,7 @@ class DecisionForest:
 		outer_results_precision = list()
 		outer_results_recall = list()
 		best_parameters = list()
+		outer_results_best_params = list()
 
 		permutation_pvalue = list()
 		permutation_modelaccuracy = list()
@@ -557,7 +558,7 @@ class DecisionForest:
 
 			# define list of indices for inner CV for the GridSearch (use again LOSOCV with the remaining subjects)
 			# here a "Leave Two Subejcts Out" CV is used!
-			if parameter_tuning == True:
+			if parameter_tuning == "yes":
 				IDlist_inner = list(set(X_train_df["device_id"]))
 				inner_idxs = []
 				X_train_df = X_train_df.reset_index(drop=True)
@@ -598,6 +599,7 @@ class DecisionForest:
 
 				# get the best performing model fit on the whole training set
 				best_model = result.best_estimator_
+				best_params = result.best_params_
 				parameter_tuning_active = "yes"
 
 			# if parameter tuning is set to False, use the default parameters
@@ -732,18 +734,19 @@ class DecisionForest:
 
 			# feature importance: compute SHAP values
 			#TODO include here rather DF explanatory variables than SHAP values
-			print("Start computing SHAP values...")
-			explainer = shap.Explainer(best_model)
-			shap_values = explainer.shap_values(X_test)
-			# plt.figure(figsize=(10, 5))
-			fig, ax = plt.subplots(figsize=(10, 5))
-			plt.title("Feature Importance for iteration with proband " + str(i) + " as test set")
-			# plot summary_plot with tight layout
-			shap.summary_plot(shap_values[1], X_test_df, plot_type="bar", show=False, plot_size=(20, 10))
-			# fig = plt.gcf()
-			fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
-					i) + "_SHAPFeatureImportance.png")
-			# plt.show()
+			if feature_importance == "shap":
+				print("Start computing SHAP values...")
+				explainer = shap.Explainer(best_model)
+				shap_values = explainer.shap_values(X_test)
+				# plt.figure(figsize=(10, 5))
+				fig, ax = plt.subplots(figsize=(10, 5))
+				plt.title("Feature Importance for iteration with proband " + str(i) + " as test set")
+				# plot summary_plot with tight layout
+				shap.summary_plot(shap_values[1], X_test_df, plot_type="bar", show=False, plot_size=(20, 10))
+				# fig = plt.gcf()
+				fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
+						i) + "_SHAPFeatureImportance.png")
+				# plt.show()
 
 			# store statistical test results (p-value permutation test, accuracy of that permutation iteration, pvalue binomial test) in list
 			print("Start storing statistical test results...")
@@ -788,7 +791,7 @@ class DecisionForest:
 		results_LOSOCV["P-Value Binomial Test"] = pvalues_binomial
 		# add best parameters if parameter tuning was active
 		if parameter_tuning == "yes":
-			results_LOSOCV["Best Parameters"] = best_parameters
+			results_LOSOCV["Best Parameters"] = outer_results_best_params
 		# add label column name as column
 		results_LOSOCV["Label Column Name"] = label_column_name
 		# add seconds around event as column

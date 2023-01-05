@@ -35,6 +35,7 @@ class FeatureExtraction_GPS:
                 df_event = df_event.sort_values(by="timestamp")
                 # reset index
                 df_event = df_event.reset_index(drop=True)
+
                 # calculate distance
                 df_event["distance (m)"] = 0
                 for i in range(0, len(df_event)):
