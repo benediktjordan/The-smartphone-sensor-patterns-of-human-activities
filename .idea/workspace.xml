@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="nothing">
-      <change afterPath="$PROJECT_DIR$/00_general/databases_iteration02.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -557,7 +555,14 @@
       <option name="project" value="LOCAL" />
       <updated>1671101758571</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user">
+      <created>1672913157324</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1672913157325</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -589,7 +594,8 @@
     <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
     <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
     <MESSAGE value="nothing" />
-    <option name="LAST_COMMIT_MESSAGE" value="nothing" />
+    <MESSAGE value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
+    <option name="LAST_COMMIT_MESSAGE" value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -646,7 +652,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>387</line>
+          <line>420</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -663,6 +669,11 @@
           <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
           <line>381</line>
           <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>262</line>
+          <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

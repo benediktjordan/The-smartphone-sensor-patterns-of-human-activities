@@ -128,6 +128,37 @@ df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_pr
 #TODO add noise removal & normalization to data preparation. Here are some ideas from the HAR review paper: Concerning the Noise Removal step, 48 CML-based articles and 12 DL-based articles make use of different noise removal techniques. Among all such techniques the most used ones are: z-normalization [75], [120], min-max [70], [127], and linear interpolation [102], [111] are the most used normalization steps, preceded by a filtering step based on the application of outlier detection [70], [117], [163], Butterworth [82], [101], [117], [123], [127], [128], [152], [155], [174], [189], median [74], [101], [117], [127], [132], [147], [155], [182], [183], high-pass [92], [96], [117], [128], [169], [173], [208], or statistical [58] filters.
 #TODO create other features (using tsfresh). Here are the ones most used in the HAR literature (compare review): compare my documentation!
 
+#region Laboratory Data
+
+#region data transformation for human motion
+# label sensordata
+dir_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+for index, user in users_iteration02.iterrows():
+    for index2, sensor in sensors_and_frequencies.iterrows():
+        print("User: " + str(user["Name"]) + " - Sensor: " + str(sensor["Sensor"]))
+        path_sensorfile = dir_dataset + user["Name"] + "/" + sensor["Sensor"] + ".csv"
+        dict_label = pd.read_pickle(dir_dataset + user["Name"] + "/dict_label_iteration02_" + user["Name"] + ".pkl")
+        #check if sensorfile doesn't exist
+        if not os.path.exists(path_sensorfile):
+            print("Sensorfile doesn't exist")
+            continue
+        df_sensor = InitialTransforms_Iteration02.label_sensor_data(path_sensorfile, dict_label)
+        if df_sensor is None:
+            continue
+
+        # analytics: find out how many labeled sensor minutes are in df_sensor
+        if int(sensor["Frequency (in Hz)"]) is not 0:
+            num_minutes = len(df_sensor["timestamp"]) / sensor["Frequency (in Hz)"] / 60
+            print("Number of labeled sensor minutes for user " + user["Name"] + ": " + str(num_minutes) + " minutes")
+        # save the data
+        df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled.csv", index=False)
+
+#add ESM timestamps
+
+
+#endregion
+#endregion
+
 #region data preparation for human motion
 label_column_name = "label_human motion - general"
 # load labels
@@ -303,6 +334,9 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 #endregion
 
 #endregion
+
+#endregion
+
 
 #region public transport
 ## what can be improved?
@@ -663,6 +697,8 @@ for label_segment in label_segments:
     df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
     df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning)
     df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
+
+#endregion
 
 #endregion
 
