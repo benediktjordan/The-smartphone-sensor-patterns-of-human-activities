@@ -362,6 +362,36 @@ for sensor in sensors:
             pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
 
 ## combine different sensor files into one file
+## concatenate dataframes based on sensor_timestamp column and device_id column
+#Note: important to merge based not only on timestamp BUT ALSO on device_id, as for TIna & Selcuk the timestamp is the same
+#(as well as the ESM_timestamp)
+sensors = ["rotation", "magnetometer", "linear_accelerometer", "gyroscope", "accelerometer"]
+feature_segments = [1,2,5,10,30] #in seconds
+for feature_segment in feature_segments:
+    df_features = pd.DataFrame()
+    counter = 1
+    print("start with feature segment ", feature_segment)
+    for sensor in sensors:
+        print("start with sensor ", sensor)
+        path_features = path_storage + sensor + "_feature-segment-" + str(feature_segment) + "s_tsfresh-features-extracted.pkl"
+        with open(path_features, 'rb') as f:
+            df_features_sensor = pickle.load(f)
+            print("df_features_sensor has size ", df_features_sensor.shape)
+        if counter == 1:
+            df_features = df_features_sensor
+            print("df_features has size ", df_features.shape)
+            counter += 1
+            continue
+        # if not first sensor merged, delete "ESM_timestamp", "device_id" columns
+        df_features_sensor.drop(columns=["ESM_timestamp"], inplace=True)
+        # merge dataframes based on sensor_timestamp column
+        df_features = pd.merge(df_features, df_features_sensor, on=['sensor_timestamp', "device_id"], how = "outer")
+        print("df_features has size ", df_features.shape)
+        counter += 1
+    # save df_features
+    path_features = path_storage + "highfrequency-sensors_feature-segment-" + str(feature_segment) + "s_tsfresh-features-extracted.pkl"
+    with open(path_features, 'wb') as f:
+        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
 
 
 # feature creation for GPS data
