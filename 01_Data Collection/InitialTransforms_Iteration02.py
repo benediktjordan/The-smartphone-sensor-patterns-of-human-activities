@@ -87,7 +87,7 @@ class InitialTransforms_Iteration02:
                 #check if there is a label for that event time
                 if len(df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]) > 0:
                     label = df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]["label_human motion - general"].iloc[0]
-                    dict_label_esm[event_time] = label
-
+                    # add event_time and label to dict_label_esm; the label should be in a dictionary with the key name "label_human motion - general"
+                    dict_label_esm[event_time] = {"label_human motion - general": label}
         return df_sensor, dict_label_esm
 
