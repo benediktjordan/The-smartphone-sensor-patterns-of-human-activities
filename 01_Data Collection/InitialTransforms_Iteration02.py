@@ -30,16 +30,16 @@ class InitialTransforms_Iteration02:
             return None
 
         # create datetime timestamp column and add one hour (in order to align to Berlin timezone)
-        df_sensor["timestamp_unix"] = df_sensor["timestamp"].copy()
-        df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp_unix"], unit="ms") + pd.Timedelta(hours=1)
+        df_sensor["timestamp_datetime"] = df_sensor["timestamp"].copy()
+        df_sensor["timestamp_datetime"] = pd.to_datetime(df_sensor["timestamp"], unit="ms") + pd.Timedelta(hours=1)
 
         # label the data
         for activity in dict_label.keys():
-            df_sensor.loc[(df_sensor["timestamp"] >= dict_label[activity]["start_session"]) & (
-                        df_sensor["timestamp"] <= dict_label[activity][
+            df_sensor.loc[(df_sensor["timestamp_datetime"] >= dict_label[activity]["start_session"]) & (
+                        df_sensor["timestamp_datetime"] <= dict_label[activity][
                     "end_session"]), "label_human motion - general"] = activity
             #get the number or rows for that activity
-            print("Number of entries for activity" + activity + " are: " + str(len(df_sensor.loc[(df_sensor["timestamp"] >= dict_label[activity]["start_session"]) & (df_sensor["timestamp"] <= dict_label[activity]["end_session"])])) + "with start time " + str(dict_label[activity]["start_session"]) + "and end time " + str(dict_label[activity]["end_session"]))
+            print("Number of entries for activity" + activity + " are: " + str(len(df_sensor.loc[(df_sensor["timestamp_datetime"] >= dict_label[activity]["start_session"]) & (df_sensor["timestamp_datetime"] <= dict_label[activity]["end_session"])])) + "with start time " + str(dict_label[activity]["start_session"]) + "and end time " + str(dict_label[activity]["end_session"]))
         # delete all rows with nan as label
         df_sensor = df_sensor.dropna(subset=["label_human motion - general"])
 
@@ -49,7 +49,7 @@ class InitialTransforms_Iteration02:
     def add_esm_timestamps(df_sensor, dict_label, length_of_esm_events):
 
         # convert timestamp to datetime
-        df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+        df_sensor["timestamp_datetime"] = pd.to_datetime(df_sensor["timestamp_datetime"])
 
         # iterate through dict_label and create a list of all events (=ESM_timestamps)
         df_sensor["ESM_timestamp"] = ""
@@ -70,7 +70,7 @@ class InitialTransforms_Iteration02:
             for event_time in event_times:
                 row_count = 1
                 for index, row in df_sensor.iterrows():
-                    if row["timestamp"] >= event_time - datetime.timedelta(seconds=(length_of_esm_events / 2)) and row["timestamp"] <= event_time + datetime.timedelta(seconds=(length_of_esm_events / 2)):
+                    if row["timestamp_datetime"] >= event_time - datetime.timedelta(seconds=(length_of_esm_events / 2)) and row["timestamp_datetime"] <= event_time + datetime.timedelta(seconds=(length_of_esm_events / 2)):
                         df_sensor.at[index, "ESM_timestamp"] = event_time
                     row_count += 1
 

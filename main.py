@@ -193,6 +193,193 @@ for index, sensor in sensors_and_frequencies.iterrows():
 
 
 #endregion
+
+#region data preparation for human motion
+#merge high-frequency sensors
+sensors_high_frequency = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
+timedelta = "100ms" #must be in format compatible with pandas.Timedelta
+columns_to_delete = ["device_id", "label_human motion - general", "ESM_timestamp"]
+sensor_timeseries_are_merged = True
+
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+counter = 1
+for sensor in sensors_high_frequency:
+    print("start with sensor: " + sensor)
+    if counter == 1:
+        sensor_base = sensor
+        df_base = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
+        df_base = df_base.drop(columns=["timestamp"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
+        df_base = df_base.rename(columns={"timestamp_datetime": "timestamp"})
+        for col in df_base.columns: #rename columns of df_base so that they can be still identified later on
+        if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp" and col != "label_human motion - general":
+            df_base = df_base.rename(columns={col: sensor_base[:3] + "_" + col})
+        counter += 1
+        continue
+    if counter > 1:
+        sensor_tomerge = sensor
+        df_tomerge = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
+        df_tomerge = df_tomerge.drop(columns=["timestamp"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
+        df_tomerge = df_tomerge.rename(columns={"timestamp_datetime": "timestamp"})
+        df_base = Merge_and_Impute.merge(df_base, sensor_base, df_tomerge, sensor_tomerge, timedelta, columns_to_delete, sensor_timeseries_are_merged)
+        counter += 1
+#save to csv
+df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/highfrequencysensors_allparticipants.csv", index=False)
+
+# feature creation & selection: tsfresh features for high-frequency sensors
+##NOTE: the following code regarding feature extraction and selection with tsfresh is copied from "pythonProject", as the
+## code can only be deployed there (due to requirements of tsfresh); therefore this code needs to be updated regularly
+
+sensors = ["rotation", "magnetometer", "linear_accelerometer", "gyroscope", "accelerometer"]
+feature_segments = [30, 1,2,5,10] #in seconds
+sensors = ["linear_accelerometer", "gyroscope", "accelerometer"]
+feature_segments = [30, 1,2,5,10] #in seconds
+frequency = 10 #in Hz
+path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/highfrequencysensors_allparticipants.csv"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/"
+
+#feature extraction in one run -> didn´t work, always crushed!
+for feature_segment in tqdm(feature_segments):
+    time.start = time.time()
+    df_sensor = pd.read_csv(path_sensorfile)
+
+    df_features = computeFeatures.feature_extraction(df_sensor, sensor_columns, feature_segment, time_column_name = "timestamp", ESM_event_column_name = "ESM_timestamp")
+
+    # check if df_features is an empty DataFrame;
+    if df_features.empty:
+        print("df_features is empty in time_period ", seconds)
+        continue
+
+    #print(f"date: {datetime.datetime.now()}")
+    print("Time for feature segment " + str(feature_segment) + ": " + str((time.time() - time.start)/60) + " minutes - without saving")
+
+    # save features with pickle
+    path_features = path_storage + "highfrequency-sensors_timeperiod-" + str(feature_segment) + "_tsfresh-features-extracted.pkl"
+    with open(path_features, 'wb') as f:
+        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+    #df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+    print("Time for feature segment " + str(feature_segment) + " seconds:" + str((time.time() - time.start)/60) + "minutes - with saving")
+    # print shape of df_features
+    print(df_features.shape)
+
+#feature extraction in chunks for every sensor separately
+## note: calculating features for every sensor separately is a major improvement since it uses all
+## available sensor data; when calculating features for all sensors together, only the records with no
+## missing value in any of the sensors were used -> DOCUMENT AS FUCKUP!
+for sensor in sensors:
+    print("start with sensor: ", sensor)
+    sensor_columns = []
+    sensor_columns.append(database_sensor_columns[sensor])
+    sensor_columns = [item for sublist in sensor_columns for item in sublist]
+
+    for feature_segment in tqdm(feature_segments):
+    # iterate through sensor dataframe in steps of 500000
+        chunksize_counter = 1
+        for df_sensor in pd.read_csv(path_sensorfile, chunksize=100000):
+            # print the current time
+            print(f"date: {datetime.datetime.now()}")
+            # jump over chunksizes which are already done
+            # if chunksize counter is smaller than 2, continue
+            # if chunksize_counter < 51 and seconds == 1:
+            #    print("jump over chunksize "+str(chunksize_counter))
+            #    chunksize_counter += 1
+            #    continue
+
+            time.start = time.time()
+            df_features = computeFeatures.feature_extraction(df_sensor, sensor_columns, feature_segment,
+                                                             time_column_name="timestamp",
+                                                             ESM_event_column_name="ESM_timestamp")
+            # check if df_features is an empty DataFrame; if so, continues with next chunksize
+            if df_features.empty:
+                print("df_features is empty for chunksize ", chunksize_counter, " in time_period ", seconds,
+                      ", was removed, continuing with next chunk")
+                chunksize_counter += 1
+                continue
+
+            print(f"date: {datetime.datetime.now()}")
+            print(
+                "Time for " + str(feature_segment) + " seconds: " + str((time.time() - time.start) / 60) + " - without saving")
+
+            # save features with pickle
+            path_features = path_storage + sensor + "_feature_segment-" + str(
+                feature_segment) + "s_tsfresh-features-extracted_chunknumber" + str(chunksize_counter) + ".pkl"
+
+            with open(path_features, 'wb') as f:
+                pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+            # df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+            print("Time for sensor" + sensor + " and feature segment "+ str(feature_segment) + " seconds and chunknumber: " + str(chunksize_counter) + ":" + str(
+                (time.time() - time.start) / 60) + " with saving")
+            # print shape of df_features
+            print(df_features.shape)
+            # increase chunksize_counter
+            chunksize_counter += 1
+
+# combine chunks
+df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/linear_accelerometer_feature_segment-1s_tsfresh-features-extracted_chunknumber1.pkl")
+df_test2 = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/linear_accelerometer_feature_segment-1s_tsfresh-features-extracted_chunknumber2.pkl")
+
+sensors = ["rotation", "magnetometer", "linear_accelerometer", "gyroscope", "accelerometer"]
+time_periods = [1,2,5,10,30] #in seconds
+chunksize_counter = 2
+for sensor in sensors:
+    for second in time_periods:
+        # create empty dataframe
+        df_features = pd.DataFrame()
+        # iterate through all chunks
+        for chunknumber in range(1, chunksize_counter+1):
+
+            # try to load chunk; if doesn´t exist - continue
+            try:
+                path_features = path_storage + sensor + "_feature_segment-" + str(second) + "s_tsfresh-features-extracted_chunknumber" + str(chunknumber)+ ".pkl"
+                with open(path_features, 'rb') as f:
+                    df_features_chunk = pickle.load(f)
+            except:
+                print("sensor "+ sensor + "_chunknumber ", chunknumber, " in time_period ", second, " does not exist, continuing with next chunk")
+                continue
+
+            # load chunk which exists
+            path_features = path_storage + sensor + "_feature_segment-" + str(
+                second) + "s_tsfresh-features-extracted_chunknumber" + str(chunknumber) + ".pkl"
+            with open(path_features, 'rb') as f:
+                df_features_chunk = pickle.load(f)
+
+            # print size of chunk and df_features
+            print("sensor " + sensor + "chunknumber ", chunknumber, " in time_period ", second, " has size ", df_features_chunk.shape)
+
+            # concatenate chunk to df_features
+            df_features = pd.concat([df_features, df_features_chunk], axis=0)
+            print("df_features has size ", df_features.shape)
+
+            print("chunknumber ", chunknumber, " in time_period ", second, " loaded and concatenated")
+
+        # reset index
+        df_features.reset_index(drop=True, inplace=True)
+
+        # save df_features
+        path_features = path_storage +  sensor + "_feature-segment-" + str(second) + "s_tsfresh-features-extracted.pkl"
+        with open(path_features, 'wb') as f:
+            pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+## combine different sensor files into one file
+
+
+# feature creation for GPS data
+
+# select features for hypothesis-driven feature selection
+highfrequency_features_list = ()
+
+#testcase
+df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/highfrequency-sensors_timeperiod-30_tsfresh-features-extracted.pkl")
+all_features = df_test.columns
+# get list of features in all_features which contain "fft"
+fft_features = [feature for feature in all_features if "fft" in feature]
+lin_fft_features = [feature for feature in fft_features if "lin_double_values" in feature]
+#convert lin_fft_features to dataframe
+df_lin_fft_features = df_test[lin_fft_features]
+
+#endregion
+
 #endregion
 
 #region data preparation for human motion

@@ -9,7 +9,7 @@ import numpy as np
 #region create merge object/class
 class Merge_and_Impute:
     #merge timeseries
-    def merge(df_base, df_tomerge, timedelta, columns_to_delete):
+    def merge(df_base, sensor_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, sensor_timeseries_are_merged = False):
         df_final = pd.DataFrame()
 
         # harmonize column names
@@ -37,12 +37,13 @@ class Merge_and_Impute:
         total_users = len(df_base['device_id'].unique())
         # iterate through participants and ESM_timestamps
         for user in df_base['device_id'].unique():
+            print("User with ID " + str(user) + " is being processed.")
             time_start = time.time()
 
             df_base_user = df_base[df_base['device_id'] == user]
             df_tomerge_user = df_tomerge[df_tomerge['device_id'] == user]
 
-            # make sure that timestamp coluns are in datetime format
+            # make sure that timestamp columns are in datetime format with using .loc
             df_base_user['timestamp'] = pd.to_datetime(df_base_user['timestamp'])
             df_tomerge_user['timestamp'] = pd.to_datetime(df_tomerge_user['timestamp'])
 
@@ -51,7 +52,7 @@ class Merge_and_Impute:
             df_tomerge_user = df_tomerge_user.sort_values(by='timestamp')
 
             # duplicate timestamp column for test purposes
-            df_tomerge_user['timestamp_merged'] = df_tomerge_user['timestamp']
+            df_tomerge_user['timestamp_merged'] = df_tomerge_user['timestamp'].copy()
 
             # delete columns from df_tomerger_user that dont have to be merged
             df_tomerge_user = df_tomerge_user.drop(columns= columns_to_delete)
@@ -61,19 +62,39 @@ class Merge_and_Impute:
             # columns is already contained in the JSON data
             #df_sensor_user_event = df_sensor_user_event.drop(columns=['Unnamed: 0', '0', '1', '2'])
 
+            #if sensor timeseries are merged: add prefix of three first letters of sensor to column names
+            # in order that the "double_values_X" columns of different sensors can be differentiated
+            if sensor_timeseries_are_merged == True:
+                # add prefix to column names except for "timestamp" and "device_id"
+                for col in df_tomerge_user.columns:
+                    if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp":
+                        df_tomerge_user = df_tomerge_user.rename(columns={col: sensor_merge[:3] + "_" + col})
+
             # merge dataframes
-            df_merged = pd.merge_asof(df_base_user, df_tomerge_user, on='timestamp',
+            df_merged = pd.merge_asof(df_base_user, df_tomerge_user, on= "timestamp",
                                       tolerance=pd.Timedelta(timedelta), direction='nearest')
             # Explanation: this function looks for every entry in the left timeseries if there is a
-            # entry in the right timeseries which is max. "timedelta" time apart
+            # entry in the right timeseries which is max. "timedelta" time apart; direction = "nearest" means
+            # that the closest entry is chosen
             # TODO: include functionality so that also sensors with lesser frequency can be merged (i.e.
             #  locations, open_wheather etc.)
+
+            # delete from df_tomerge_user all rows which have a timestamp that is in df_merged["timestamp_merged"]
+            df_tomerge_user = df_tomerge_user[~df_tomerge_user['timestamp_merged'].isin(df_merged["timestamp_merged"])]
+            print("df_tomerge_user.shape after deleting rows that are already in df_merged: ", df_tomerge_user.shape)
+
+            #concatenate df_merged and df_tomerge_user
+            df_merged = pd.concat([df_merged, df_tomerge_user], axis=0)
 
             # concatenate df_merged to df_final
             df_final = pd.concat([df_final, df_merged], axis=0)
 
-            print("Time for User " + str(user_count) + "/" + str(total_users) + " was " + str((time.time()-time_start)/60) + " minutes")
+            #print("Time for User " + str(user_count) + "/" + str(total_users) + " was " + str((time.time()-time_start)/60) + " minutes")
             user_count += 1
+
+        # if sensor timeseries are merged: add prefix to "timestamp_merged" column
+        if sensor_timeseries_are_merged == True:
+            df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
         return df_final
 
     # delete rows with missing values
@@ -87,7 +108,8 @@ class Merge_and_Impute:
     # - fill by mean
 
 
-
+#testsection
+df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/linear_accelerometer/activity-label_human motion - general_sensor-linear_accelerometer_timeperiod-30 s_featureselection.pkl")
 
 # region create merged timeseries
 #TODO integrate these functions into "Merge_and_Impute" class (more exact: check if Merge_and_Impute class works for timeseries merging)
