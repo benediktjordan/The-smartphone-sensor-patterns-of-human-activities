@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected...">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -141,6 +140,9 @@
       <module name="MasterThesis_Iteration01" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
@@ -278,6 +280,8 @@
       <workItem from="1671793357747" duration="417000" />
       <workItem from="1672742421796" duration="9826000" />
       <workItem from="1672778185855" duration="21590000" />
+      <workItem from="1673008796918" duration="409000" />
+      <workItem from="1673009279484" duration="1636000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -594,7 +598,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673004515762</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit">
+      <created>1673007372570</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1673007372570</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -632,7 +643,8 @@
     <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors" />
     <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!" />
     <MESSAGE value="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected..." />
-    <option name="LAST_COMMIT_MESSAGE" value="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected..." />
+    <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -689,7 +701,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>730</line>
+          <line>791</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -709,7 +721,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>572</line>
+          <line>633</line>
           <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>

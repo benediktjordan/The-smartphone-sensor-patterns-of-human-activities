@@ -447,7 +447,7 @@ df_lin_fft_features = df_test[lin_fft_features]
 
 #region modeling with decision forest for human motion
 ### initialize parameters
-parameter_segments = [2] #in seconds; define length of segments of parameters (over which duration they have been created)
+parameter_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
 #combinations_sensors = [["highfrequencysensors-all", "GPS"],
 #                        ["linear_accelerometer", "rotation", "GPS"],
 #                        ["linear_accelerometer", "GPS"]]  # define which sensor combinations should be considered
@@ -455,10 +455,24 @@ combinations_sensors = [["highfrequency-sensors"]]
 
 label_column_name = "label_human motion - general"
 n_permutations = 2 # define number of permutations; better 1000
-label_segment = 45 #define how much data around each event will be considered
-label_classes = ["standing", "lying", "sitting", "walking", "cycling"] # which label classes should be considered
+label_segment = 90 #define how much data around each event will be considered
+label_classes = ["standing", "sitting_attable_phoneinhand", "lying_phoneinfront_onback", "wallking", "running", "cycling"]
+#label_classes = ["walking", "walking_mediumspeed", "walking_fastspeed", "running", "cycling"] # which label classes should be considered
+#label_classes = ["standing", "sitting_attable_phoneinhand", "sitting_attable_phoneontable", "lying_ontheside",
+                 "lying_phoneinfront_onback"]
+
+# label_classes_all_possible =['sitting_attable_phoneinhand', 'standing', 'on_the_toilet',
+#        'cycling', 'running', 'walking', 'walking_fastspeed',
+#        'cycling_includingstops', 'lying_phoneoverhead',
+#        'lying_phoneonbed', 'sitting_attable_phoneontable',
+#        'walking_mediumspeed', 'sitting_on_the_toilet', 'lying_ontheside',
+#        'walking_lowspeed', 'on the toilet', 'lying_phoneinfront_onback']
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
-drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
+drop_cols = [] # columns that should be dropped
+
+#testarea
+#get unique labels from label_column_name
+
 
 # if parameter tuning is true, define search space
 n_estimators = [50, 100, 500, 800]  # default 500
@@ -473,6 +487,7 @@ grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_sam
 # select only data which are in the label_segment around ESM_event & drop columns
 df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
                                              "Precision", "Recall", "Sensor Combination", "Parameter Segments"])
+
 for combination_sensors in combinations_sensors:
     for parameter_segment in parameter_segments:
         t0 = time.time()
@@ -480,12 +495,12 @@ for combination_sensors in combinations_sensors:
         path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/Data/data_analysis/decision_forest/label_human motion - general/sensor-"+ combination_sensors[0]+"("+ str(parameter_segment) +"seconds)/"
         if not os.path.exists(path_storage):
             os.makedirs(path_storage)
-        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/Data/data_preparation/features/activity-"+ label_column_name +"_"+ combination_sensors[0]+ "_feature-segment-"+ str(parameter_segment) +"s_tsfresh-features-extracted_selected.pkl"
+        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/activity-"+ label_column_name +"_"+ combination_sensors[0]+ "_feature-segment-"+ str(parameter_segment) +" s_tsfresh-features-exctracted_featuresselected.pkl"
         df = pd.read_pickle(path_dataset)
         #if len(combination_sensors) == 3: #this is necessary to make the code work for the case with three merged sensors
         #    df = df.rename(columns={"timestamp_merged_x": "timestamp_merged", "label_human motion - general_x": "label_human motion - general"})
         #    df = df.drop(columns=["timestamp_merged_y", "label_human motion - general_y"])
-
+        df = df.rename(columns={"sensor_timestamp": "timestamp"})
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
         df = df.drop(columns=drop_cols)
@@ -506,7 +521,7 @@ for combination_sensors in combinations_sensors:
         df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
             label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
         print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
-df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/parameter_tuning-" + parameter_tuning + "_results_overall.csv")
+df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_analysis/decision_forest/label_human motion - general/parameter_tuning-" + parameter_tuning + "_results_overall.csv")
 
 
 #endregion
