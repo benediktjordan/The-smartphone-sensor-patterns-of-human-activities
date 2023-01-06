@@ -40,6 +40,11 @@ class InitialTransforms_Iteration02:
                     "end_session"]), "label_human motion - general"] = activity
             #get the number or rows for that activity
             print("Number of entries for activity" + activity + " are: " + str(len(df_sensor.loc[(df_sensor["timestamp_datetime"] >= dict_label[activity]["start_session"]) & (df_sensor["timestamp_datetime"] <= dict_label[activity]["end_session"])])) + "with start time " + str(dict_label[activity]["start_session"]) + "and end time " + str(dict_label[activity]["end_session"]))
+
+        #delete first three letters of every label (since "xx_" has been added in dict_label as prefix to
+        # distinguish between activities with the same name but performed at different time segments)
+        df_sensor["label_human motion - general"] = df_sensor["label_human motion - general"].str[3:]
+
         # delete all rows with nan as label
         df_sensor = df_sensor.dropna(subset=["label_human motion - general"])
 
@@ -53,6 +58,7 @@ class InitialTransforms_Iteration02:
 
         # iterate through dict_label and create a list of all events (=ESM_timestamps)
         df_sensor["ESM_timestamp"] = ""
+        dict_label_esm = {}
         for key in dict_label.keys():
             #print("start with key " + str(key))
             # create list of times: every "time_period" second from start_session ongoing one timestamp (until end_session)
@@ -74,5 +80,14 @@ class InitialTransforms_Iteration02:
                         df_sensor.at[index, "ESM_timestamp"] = event_time
                     row_count += 1
 
-        return df_sensor
+            # create dict_label which maps ESM_timestamps to label_human motion - general
+            ## Note: this is necessary for things like feature selection (in order to reuse the same code of iteration 01)
+            for event_time in event_times:
+                # get label_human motion - general for that event_time
+                #check if there is a label for that event time
+                if len(df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]) > 0:
+                    label = df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]["label_human motion - general"].iloc[0]
+                    dict_label_esm[event_time] = label
+
+        return df_sensor, dict_label_esm
 

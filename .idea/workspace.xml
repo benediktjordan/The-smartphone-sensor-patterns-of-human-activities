@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,9 +142,6 @@
       <module name="MasterThesis_Iteration01" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
@@ -581,7 +581,14 @@
       <option name="project" value="LOCAL" />
       <updated>1672993498751</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!">
+      <created>1672996851714</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1672996851714</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -617,7 +624,8 @@
     <MESSAGE value="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(" />
     <MESSAGE value="Three Tasks accomplished: &#10;1. merge sensordata of same participant &#10;--&gt; this was necessary for sensordata of Benedikt as he had several times saved his sensordata &#10;&#10;2. Add ESM_timestamps&#10;--&gt; the labeled sensordata was segmented into &quot;ESM events&quot; of 90 seconds length (= ESM_timestamp column added) &#10;--&gt; this is necessary to be able to easily reuse all functions from the iteration 01 code &#10;&#10;3. Merge sensordata of different participants of same sensors &#10;--&gt; after this step we now have for every sensor one sensorfile include all the labeled and ESM_timestamped sensordata from all participants" />
     <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors" />
+    <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -674,7 +682,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>644</line>
+          <line>664</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -694,8 +702,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>486</line>
+          <line>506</line>
           <option name="timeStamp" value="48" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py</url>
+          <line>53</line>
+          <option name="timeStamp" value="60" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

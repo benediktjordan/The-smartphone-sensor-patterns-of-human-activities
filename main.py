@@ -2,7 +2,7 @@
 #region import
 import pickle
 #import tensorflow_decision_forests as tfdf
-
+import datetime
 import os
 import random
 import numpy as np
@@ -161,6 +161,8 @@ for sensor in sensor_list:
 # label sensordata & add ESM timestamp
 length_of_esm_events = 90 # in seconds; this is the length of the ESM events in which the sensor data will be segmented
 dir_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+dicts_esm_labels = dict()
+
 for index, user in users_iteration02.iterrows():
     for index2, sensor in sensors_and_frequencies.iterrows():
         print("User: " + str(user["Name"]) + " - Sensor: " + str(sensor["Sensor"]))
@@ -172,15 +174,26 @@ for index, user in users_iteration02.iterrows():
         df_sensor = InitialTransforms_Iteration02.label_sensor_data(path_sensorfile, dict_label) #calculate labels
         if df_sensor is None or df_sensor.empty: #check if sensorfile is empty
             continue
+        #analtics: compare number of unique labels with number of labels in dict_label
         df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled.csv", index=False)
-        df_sensor = InitialTransforms_Iteration02.add_esm_timestamps(df_sensor, dict_label, length_of_esm_events) #add ESM_timestamp
-        if int(sensor["Frequency (in Hz)"]) is not 0:# analytics: find out how many labeled sensor minutes are in df_sensor and how many of those minutes are in ESM-events
+        df_sensor, dict_esm_labels = InitialTransforms_Iteration02.add_esm_timestamps(df_sensor, dict_label, length_of_esm_events) #add ESM_timestamp
+        #analytics: find how many ESM_timestamps are in the dataset and how many are included in dict_esm_labels
+        print("Number of ESM_timestamps in dataset: " + str(len(df_sensor["ESM_timestamp"].unique())))
+        print("Number of ESM_timestamps in dict_esm_labels: " + str(len(dict_esm_labels)))
+        print("Percentage of ESM_timestamps in dict_esm_labels: " + str(len(dict_esm_labels)/len(df_sensor["ESM_timestamp"].unique())))
+        if int(sensor["Frequency (in Hz)"]) != 0:# analytics: find out how many labeled sensor minutes are in df_sensor and how many of those minutes are in ESM-events
             num_minutes = len(df_sensor["timestamp"]) / sensor["Frequency (in Hz)"] / 60
             print("Number of labeled sensor minutes for user " + user["Name"] + ": " + str(num_minutes) + " minutes")
             esm_events_total_length = (len(df_sensor["ESM_timestamp"].unique()) * length_of_esm_events)/60
             print("Percentage of labeled sensor minutes that are in ESM events: " + str(esm_events_total_length/num_minutes * 100) + "%")
         df_sensor.to_csv(dir_dataset + user["Name"] + "/" + sensor["Sensor"]  + "_labeled_esm_timestamps.csv", index=False)
+        #merge dict_esm_labels to dicts_esm_labels
+        dicts_esm_labels.update(dict_esm_labels)
+        print("Lenght of dicts_esm_labels after completing user" + user["Name"]  + " and sensor " + sensor["Sensor"] + ":" + str(len(dicts_esm_labels)))
         print("Sensorfile labeled and ESM_timestamps added for user " + user["Name"] + " and sensor " + sensor["Sensor"])
+#save dicts_esm_labels as pickle
+with open(dir_dataset + "dicts_esmtimestamp-label-mapping.pkl", "wb") as f:
+    pickle.dump(dicts_esm_labels, f)
 
 # merge sensorfiles of different users
 path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
@@ -225,7 +238,7 @@ for sensor in sensors_high_frequency:
 #save to csv
 df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/highfrequencysensors_allparticipants.csv", index=False)
 
-# feature creation & selection: tsfresh features for high-frequency sensors
+#region feature extraction: tsfresh features for high-frequency sensors
 ##NOTE: the following code regarding feature extraction and selection with tsfresh is copied from "pythonProject", as the
 ## code can only be deployed there (due to requirements of tsfresh); therefore this code needs to be updated regularly
 
@@ -236,31 +249,6 @@ feature_segments = [30, 1,2,5,10] #in seconds
 frequency = 10 #in Hz
 path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/highfrequencysensors_allparticipants.csv"
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/"
-
-#feature extraction in one run -> didn´t work, always crushed!
-for feature_segment in tqdm(feature_segments):
-    time.start = time.time()
-    df_sensor = pd.read_csv(path_sensorfile)
-
-    df_features = computeFeatures.feature_extraction(df_sensor, sensor_columns, feature_segment, time_column_name = "timestamp", ESM_event_column_name = "ESM_timestamp")
-
-    # check if df_features is an empty DataFrame;
-    if df_features.empty:
-        print("df_features is empty in time_period ", seconds)
-        continue
-
-    #print(f"date: {datetime.datetime.now()}")
-    print("Time for feature segment " + str(feature_segment) + ": " + str((time.time() - time.start)/60) + " minutes - without saving")
-
-    # save features with pickle
-    path_features = path_storage + "highfrequency-sensors_timeperiod-" + str(feature_segment) + "_tsfresh-features-extracted.pkl"
-    with open(path_features, 'wb') as f:
-        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
-
-    #df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
-    print("Time for feature segment " + str(feature_segment) + " seconds:" + str((time.time() - time.start)/60) + "minutes - with saving")
-    # print shape of df_features
-    print(df_features.shape)
 
 #feature extraction in chunks for every sensor separately
 ## note: calculating features for every sensor separately is a major improvement since it uses all
@@ -392,11 +380,13 @@ for feature_segment in feature_segments:
     path_features = path_storage + "highfrequency-sensors_feature-segment-" + str(feature_segment) + "s_tsfresh-features-extracted.pkl"
     with open(path_features, 'wb') as f:
         pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+#endregion
 
+#feature selection of high frequency sensors: data driven approach
 
 # feature creation for GPS data
 
-# select features for hypothesis-driven feature selection
+# feature selection of high frequency sensors and GPS data: hypothesis driven approach
 highfrequency_features_list = ()
 
 #testcase
