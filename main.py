@@ -94,16 +94,123 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
 #endregion
 
-# region data transformation
+# region general data transformation
 #TODO merge ID´s if they are from the same participant for "xmin around events" and "merged timeseries" files
 
+#region label transformation
+# create csv and dictionary which maps users answers to activity classes
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed.csv")
 
-# region general data preparation (same for all activities)
-## location data preparation
+#create .csv
+df_esm_including_activity_classes = label_transformation.create_activity_dataframe(df_esm, humanmotion_general, humanmotion_specific, before_after_sleep,
+                                                        on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
+                                                        location, smartphonelocation, aligned)
+df_esm_including_activity_classes.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+
+#create dictionary
+dict_esm_including_activity_classes = label_transformation.create_activity_dictionary_from_dataframe(df_esm_including_activity_classes)
+
+with open(
+        "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl",
+        'wb') as f:
+    pickle.dump(dict_esm_including_activity_classes, f, pickle.HIGHEST_PROTOCOL)
+
+#endregion
+
+# region sensor transformation
+# TEMPORARY join all locations sensorfiles -> just double checking if my 5-min-around-event Location
+# file contains everything!
+dir_databases = "/Volumes/INTENSO/In Usage new/Databases/"
+sensor = "locations"
+df_sensors_all = Merge_Transform.join_sensor_files(dir_databases, sensor, sensor_appendix = None)
+df_sensors_all.to_csv(dir_databases + "locations_all.csv")
+# save as pickle
+with open(dir_databases + "locations_all.pkl", 'wb') as f:
+    pickle.dump(df_sensors_all, f, pickle.HIGHEST_PROTOCOL)
+
+##analytics: find out how many events have sensordata in 90 second segments around event time
+# get dataframe with all ESM timestamps
+df_sensors_all = pd.read_csv(dir_databases + "locations_all.csv")
+print(df_sensors_all["1"].head()) #analytics
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+# create ESM_timestamp column which is in datetime format from timestamp column
+df_esm["ESM_timestamp"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+df_esm = df_esm[["ESM_timestamp", "device_id"]]
+
+time_period = 90
+df_sensors_all["timestamp"] = pd.to_datetime(df_sensors_all["1"], unit = "ms")
+# iterate through ESM_timestamps in df_esm
+df_results = pd.DataFrame()
+for index, row in df_esm.iterrows():
+    # find data in time_period around ESM_timestamp in df_sensors_all
+    event_time = row["ESM_timestamp"]
+    device_id = row["device_id"]
+
+    df_temporary = df_sensors_all[(df_sensors_all['timestamp'] >= event_time - pd.Timedelta(seconds=(time_period / 2))) & (
+            df_sensors_all['timestamp'] <= event_time + pd.Timedelta(seconds=(time_period / 2))) & (df_sensors_all["2"] == device_id)]
+    df_temporary["ESM_timestamp"] = row["ESM_timestamp"]
+
+    #concatenate df_results with df_temporary
+    df_results = pd.concat([df_results, df_temporary])
+
+# merge participant IDs
+#df_results = merge_participantIDs(df_results, users, device_id_col = "2", include_cities = False)
+
+print("Unique ESM_timestamp values after cutting to 90 seconds around events for locations: " + str(df_results["ESM_timestamp"].nunique()))
+#double check
+df_test = df_results[df_results["ESM_timestamp"] == df_results["ESM_timestamp"].iloc[0]]
+# find out how many records for every unique ESM_timestamp
+test= df_results.groupby("ESM_timestamp")["ESM_timestamp"].count()
+
+#endregion
+#endregion
+
+#region general data exploration
+# visualize label data
+path_esm = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv"
+dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+
+df_esm = data_exploration_labels.load_esm(path_esm)
+## visualize for every answer and every activity the number of classes
+data_exploration_labels.visualize_esm_activities_all(dir_results,df_esm)
+# visualize in one plot the number of labels per activity (bar plot)
+data_exploration_labels.visualize_esm_notNaN(dir_results, df_esm)
+
+# calculate mean/std & max of GPS and linear accelerometerdata (over different time periods)
+# Note: this data is relevant for, for example, public transport -> data exploration -> visualizing mean & std of GPS data
+## calculate summary stats for GPS
+dir_sensors = "/Users/benediktjordan/Downloads/"
+dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/"
+sensors = ["GPS", "linear_accelerometer"]
+sensors = [ "linear_accelerometer"]
+test = pd.read_pickle("/Users/benediktjordan/Downloads/linear_accelerometer_esm_timeperiod_5 min.csv_JSONconverted.pkl")
+
+gps_accuracy_min_list = [35]
+time_periods = [10,20,40, 90, 180]
+for sensor in sensors:
+    for time_period in time_periods:
+        for gps_accuracy_min in gps_accuracy_min_list:
+            if sensor == "GPS":
+                path_sensor = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
+            else:
+                path_sensor = dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+
+            print("Started with time period: " + str(time_period))
+            summary_statistics, missing_sensordata = data_exploration_sensors.create_summary_statistics_for_sensors(path_sensor, sensor, time_period, dir_results)
+            missing_sensordata_df = pd.DataFrame(missing_sensordata)
+            if sensor == "GPS":
+                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv",
+                                          index=False)
+                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_missing_sensordata.csv", index=False)
+            else:
+                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv", index=False)
+                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_missing_sensordata.csv", index=False)
+
+#endregion
 
 #region calcualate distance, speed & acceleration
 # load data around events
-df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
+df_locations_events = pd.read_pickle("/Users/benediktjordan/Downloads/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
 
 #drop duplicates (this step should be integrated into data preparation)
 df_locations_events = df_locations_events.drop(columns=["Unnamed: 0", "0"])
@@ -113,13 +220,17 @@ df_locations_events = df_locations_events.drop_duplicates()
 df_features = FeatureExtraction_GPS().calculate_distance_speed_acceleration(df_locations_events)
 
 # drop rows where distance, speed or acceleration contain NaN (they contain NaN if it is first entry of every event)
-df_features = df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (m/s^2)"])
-# drop rows with unrealistic speed values
+df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (m/s^2)"])
+# drop rows with unrealistic speed values  & GPS accuracy values
 df_features = df_features[df_features["speed (km/h)"] < 300]
-df_features = df_features.reset_index(drop=True)
-
-#save to csv
-df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/locations-aroundevents_features-distance-speed-acceleration.csv")
+# create different GPS accuracy thresholds
+accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
+for accuracy_threshold in accuracy_thresholds:
+    df_features_final = df_features[df_features["loc_accuracy"] < accuracy_threshold]
+    df_features_final = df_features_final.reset_index(drop=True)
+    print("Number of rows with accuracy < " + str(accuracy_threshold) + "m: " + str(len(df_features_final)))
+    #save to csv
+    df_features_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + ".csv")
 #endregion
 
 #region different activities
@@ -458,8 +569,7 @@ n_permutations = 2 # define number of permutations; better 1000
 label_segment = 90 #define how much data around each event will be considered
 label_classes = ["standing", "sitting_attable_phoneinhand", "lying_phoneinfront_onback", "wallking", "running", "cycling"]
 #label_classes = ["walking", "walking_mediumspeed", "walking_fastspeed", "running", "cycling"] # which label classes should be considered
-#label_classes = ["standing", "sitting_attable_phoneinhand", "sitting_attable_phoneontable", "lying_ontheside",
-                 "lying_phoneinfront_onback"]
+#label_classes = ["standing", "sitting_attable_phoneinhand", "sitting_attable_phoneontable", "lying_ontheside","lying_phoneinfront_onback"]
 
 # label_classes_all_possible =['sitting_attable_phoneinhand', 'standing', 'on_the_toilet',
 #        'cycling', 'running', 'walking', 'walking_fastspeed',
@@ -529,6 +639,34 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 
 #endregion
 
+#region Naturalistic Data
+
+#region data exploration for human motion
+#region data exploration labels
+label_column_name = "label_human motion"
+df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+
+## create barplot with label classes: stationary, walking, running, cycling, public transport, car
+df_labels_publictransport = df_labels.copy()
+df_labels_publictransport["label_public transport"] = df_labels_publictransport["label_public transport"].replace("train", "public transport")
+df_labels_publictransport = df_labels_publictransport[~df_labels_publictransport["label_public transport"].isin(["car/bus/train/tram"])]
+fig = data_exploration_labels.visualize_esm_activity(df_labels_publictransport, "label_public transport", "Transportation Mode - Number of Answers per Class")
+fig.savefig(path_storage + "public_transport_publictransport-and-train-combined_car-bus-train-deleted.png")
+
+##create table with users x label classes
+df_labels_publictransport =  Merge_Transform.merge_participantIDs(df_labels_publictransport, users, include_cities = True)
+df_label_counts = data_exploration_labels.create_table_user_activity(df_labels_publictransport, "label_public transport")
+df_label_counts.to_csv(path_storage + "public_transport_publictransport-and-train-combined_car-bus-train-deleted_participant-labels-overview.csv")
+
+
+# testarea
+#count the different smartphonelocations grouped by the bodyposition
+df_labels_smartphonelocation = df_labels.copy()
+df_labels_smartphonelocation = df_labels_smartphonelocation[~df_labels_smartphonelocation["label_smartphone location"].isin(["not available"])]
+#endregion
+#endregion
+
 #region data preparation for human motion
 label_column_name = "label_human motion - general"
 # load labels
@@ -580,7 +718,7 @@ label_column_name = "label_human motion - general"
 path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/activity-label_human motion - general_sensor-highfrequencysensors-all(1seconds)-and-GPS(1seconds).pkl"
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/labelsegments_comparison/features-highfrequencysensors-all-1s-gps-1s/"
 n_permutations = 2 # define number of permutations; better 1000
-label_segments = list(range(30, 121, 1)) #in seconds; defines label segments to test
+label_segments = list(range(56, 121, 1)) #in seconds; defines label segments to test
 label_classes = ["standing", "lying", "sitting", "walking", "cycling"] # which label classes should be considered
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
 drop_cols = ["Unnamed: 0", "1", "3", "loc_accuracy", "loc_provider", "loc_device_id", "timestamp_merged"] # columns that should be dropped
@@ -592,8 +730,8 @@ df = df.drop(columns=drop_cols)
 df = Merge_Transform.merge_participantIDs(df, users) #temporary: merge participant ids
 df = df[df[label_column_name].isin(label_classes)] # drop rows which don´t contain labels which are in label_classes
 
-df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
-                                             "Precision", "Recall"])
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1", "Precision", "Recall"])
+
 for label_segment in label_segments:
     #check if label_segment is 40 or 50 or 60 seconds; if so, continue
     if label_segment == 40 or label_segment == 50 or label_segment == 60 or label_segment == 70 or label_segment == 80 or label_segment == 90 or label_segment == 100 or label_segment == 110 or label_segment == 120:
@@ -706,6 +844,7 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 #endregion
 
 #endregion
+#endregion
 
 
 #region public transport
@@ -714,9 +853,264 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 #TODO train LSTM on GPS data (and maybe motion data)
 #TODO add further control-group labels
 
+#region data exploration for public transport
+
+#region data exploration labels
 label_column_name = "label_public transport"
-# load labels
+df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+
+## create barplot with label classes: stationary, walking, running, cycling, public transport, car
+df_labels_publictransport = df_labels.copy()
+df_labels_publictransport["label_public transport"] = df_labels_publictransport["label_public transport"].replace("train", "public transport")
+df_labels_publictransport = df_labels_publictransport[~df_labels_publictransport["label_public transport"].isin(["car/bus/train/tram"])]
+fig = data_exploration_labels.visualize_esm_activity(df_labels_publictransport, "label_public transport", "Transportation Mode - Number of Answers per Class")
+fig.savefig(path_storage + "public_transport_publictransport-and-train-combined_car-bus-train-deleted.png")
+
+##create table with users x label classes
+df_labels_publictransport =  Merge_Transform.merge_participantIDs(df_labels_publictransport, users, include_cities = True)
+df_label_counts = data_exploration_labels.create_table_user_activity(df_labels_publictransport, "label_public transport")
+df_label_counts.to_csv(path_storage + "public_transport_publictransport-and-train-combined_car-bus-train-deleted_participant-labels-overview.csv")
+
+#endregion
+
+#region data exploration sensors
+
+# find out how many labels have sensor data -> ##temporary -> make later into function!
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+# create ESM_timestamp column which is in datetime format from timestamp column
+df_esm["ESM_timestamp"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+df_esm = df_esm[["ESM_timestamp", "device_id"]]
+gps_accuracy_min = 35
+
+sensors = ["linear_accelerometer", "locations"]
+for sensor in sensors:
+    path_sensorfile = "/Users/benediktjordan/Downloads/" + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+    df_sensor = pd.read_pickle(path_sensorfile)
+    # only retain sensor data which is in 90 seconds around ESM timestamp
+    time_period = 90
+    df_sensor["ESM_timestamp"] = pd.to_datetime(df_sensor["ESM_timestamp"])
+    df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+    if sensor == "locations":
+        # delete all rows from df_sensor which have accuracy > 35
+        df_sensor = df_sensor[df_sensor["loc_accuracy"] <= gps_accuracy_min]
+    df_sensor = df_sensor[(df_sensor['timestamp'] >= df_sensor['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
+            df_sensor['timestamp'] <= df_sensor['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
+    print("Unique ESM_timestamp values after cutting to 90 seconds around events for sensor: " + sensor + ": " + str(df_sensor["ESM_timestamp"].nunique()))
+    # iterate through unique ESM_timestamps in df_esm and check if there is sensor data for this timestamp; than save number of sensor data points in new dataframe
+    df_esm[sensor] = 0
+    for index, row in df_esm.iterrows():
+        #print(index)
+        df_esm.loc[index, sensor] = df_sensor[df_sensor["ESM_timestamp"] == row["ESM_timestamp"]].shape[0]
+
+# add label column to df_esm
+label_column_name = "label_public transport"
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_esm = labeling_sensor_df(df_esm, dict_label, label_column_name , ESM_identifier_column = "ESM_timestamp")
+#drop any NaN values in label_public transport
+df_esm = df_esm.dropna(subset = [label_column_name])
+
+# count number of "ESM_timestamps" for which there is sensor data
+for sensor in sensors:
+    print("Number of ESM_timestamps for which there is sensor data for sensor: " + sensor + ": " + str(df_esm[df_esm[sensor] > 0].shape[0]))
+# get number of rows for which there is not 0 values in row["linear_accelerometer"] and row["locations"]
+print("Number of ESM_timestamps for which there is sensor data for both sensors: " + str(df_esm[(df_esm["linear_accelerometer"] > 0) & (df_esm["locations"] > 0)].shape[0]))
+
+# get table showing number of events per participant & transportation mode class
+df_esm = Merge_Transform.merge_participantIDs(df_esm, users, include_cities = True)
+# drop all rows with 0 values in either linear_accelerometer or locations
+df_esm = df_esm[(df_esm["linear_accelerometer"] > 0) & (df_esm["locations"] > 0)]
+
+#combine public transport and train and #delete car/bus/train/tram
+df_esm["label_public transport"] = df_esm["label_public transport"].replace("train", "public transport")
+df_esm = df_esm[~df_esm["label_public transport"].isin(["car/bus/train/tram"])]
+#count ESM_timestamps
+df_esm["ESM_timestamp"].nunique()
+# make a table which shows participants x count of events per label class; use groupby
+df_esm_label_counts = data_exploration_labels.create_table_user_activity(df_esm, "label_public transport")
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+df_esm_label_counts.to_csv(path_storage + "public_transport_publictransport-and-train-combined_car-bus-train-deleted_participant-labels-overview-for-which-linacc-and-gps-available_and-after-noise-cleaning.csv")
+
+
+# create plots for all events visualizing linear accelerometer & GPS features (speed & acceleration)
+label_column_name = "label_public transport"
+time_period = 600  # seconds; timeperiod around event which should be visualized
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/"
+path_sensordata = "/Users/benediktjordan/Downloads/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+axs_limitations = "general"
+label_data = True
+gps_accuracy_min = 10 # meters
+figure_title = ""
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS", ""]]
+list_sensors = [["GPS", ""]]
+event_times = []
+for key in dict_label.keys():
+    event_times.append(key)
+num_events = 1
+sensor_names = ""
+for sensor in list_sensors:
+    sensor_names += sensor[0] + "_"
+path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
+
+for event_time in event_times:
+    time0 = time.time()
+    # TEMPORARY check if figure has already been saved; if yes, skip
+    #list_files = []
+    #for root, dirs, files in os.walk(path_to_save):
+    #    for file in files:
+    #        if file.endswith(".png"):
+    #            list_files.append(os.path.join(root, file))
+    # check if event_time is already in any element of list_files
+    #if any(str(event_time) in s for s in list_files):
+    #    print("Figure already saved for event_time: " + str(event_time))
+    #    num_events += 1
+    #    continue
+
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period,
+                                                                           label_column_name, path_sensordata, axs_limitations, label_data = label_data,
+                                                                                             path_GPS_features = path_GPS_features)
+    # check if fig is None: if yes, continue with next event_time
+    if fig is None:
+        num_events += 1
+        continue
+
+    # find out if path exists
+    #NOte: reason for this is that there was a problem with this case
+    if activity_name == "car/bus/train/tram":
+        activity_name = "car-bus-train-tram"
+
+    # if path_to save doesnt exist, create it with mkdir
+    if not os.path.exists(path_to_save + activity_name + "/"):
+        os.makedirs(path_to_save + activity_name + "/")
+
+    fig.savefig(
+        path_to_save + activity_name + "/gps-accuracy-min-" + str(gps_accuracy_min) + "_" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + ".png")
+    plt.close(fig)
+    # print progress
+    print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
+    num_events += 1
+
+# visualize mean/std x max x public transport class in scatterplot for GPS and accelerometer data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+time_periods = [10,20,40, 90, 180]
+list_activities = ["stationary", "walking", "public transport", "car"]
+visualize_participants = "no"
+gps_accuracy_min = 35 # minimum accuracy of GPS data to be included in analysis
+sensors = ["linear_accelerometer", "GPS"]
+sensors = ["GPS"]
+
+for sensor in sensors:
+    for time_period in time_periods:
+        if sensor == "GPS":
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv")
+            # add label public transport
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
+                                                  ESM_identifier_column="ESM_timestamp")
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,
+                                    "Figure Title", visualize_participants)
+            fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                        + str(time_period) + "s_scatterplot.png")
+        else:
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
+            # add label public transport
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
+                                                  ESM_identifier_column="ESM_timestamp")
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,"Figure Title", visualize_participants)
+            fig.savefig(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/" + sensor + "_std_max_activities-included-" + str(
+                    list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                + str(time_period) + "s_scatterplot.png")
+
+
+# UPDATED APPROACH 2: visualize mean x max x public transport class in scatterplot for GPS data BUT THIS TIME COMBINE ALL PUBLIC TRANSPORT CLASSES
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+time_periods = [10,20,40, 90, 180]
+sensors = ["linear_accelerometer", "GPS"]
+list_activities = ["stationary", "walking", "public transport", "car", "running", "cycling"]
+visualize_participants = "no"
+gps_accuracy_min = 35 # minimum accuracy of GPS data to be included in analysis
+for sensor in sensors:
+    for time_period in time_periods:
+        if sensor == "GPS":
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv")
+            # add label public transport
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
+                                                  ESM_identifier_column="ESM_timestamp")
+            # combine all public transport classes
+            df_summary_stats["label_public transport"] = df_summary_stats["label_public transport"].replace(
+                ["train", "car/bus/train/tram"], "public transport")
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,
+                                    "Mean and Speed of Transportation Mode Events", visualize_participants)
+            fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                        + str(time_period) + "s_scatterplot.png")
+        else:
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
+            # add label public transport
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+            # combine all public transport classes
+            df_summary_stats["label_public transport"] = df_summary_stats["label_public transport"].replace(
+                ["train", "car/bus/train/tram"], "public transport")
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor, "label_public transport", list_activities,"Mean and Maxima of the Linear Accelerometer of Transportation Mode Events", visualize_participants)
+            fig.savefig(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/" + sensor + "_std_max_activities-included-" + str(
+                    list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                + str(time_period) + "s_scatterplot.png")
+
+# get unique ESM_timestamp values
+df_summary_stats["ESM_timestamp"].nunique()
+
+
+
+
+#testarea for location data
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration.csv")
+#label data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+# delete rows with nan values in label_public transport
+df_locations = df_locations.dropna(subset=["label_public transport"])
+
+#calculate summary stats for column accuracy
+df_locations["loc_accuracy"].describe()
+
+# only retain rows with accuracy < 35
+df_locations_new = df_locations[df_locations["loc_accuracy"] < 35]
+#count number of unique ESM_timestamps
+df_locations["ESM_timestamp"].nunique()
+df_locations_new["ESM_timestamp"].nunique()
+
+#retain only data which is in 90s time period around ESM_timestamp
+time_period = 90
+#convert timestamp to datetime
+df_locations_new["ESM_timestamp"] = pd.to_datetime(df_locations_new["ESM_timestamp"])
+df_locations_new["timestamp"] = pd.to_datetime(df_locations_new["timestamp"])
+df_locations_new = df_locations_new[(df_locations_new['timestamp'] >= df_locations_new['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
+        df_locations_new['timestamp'] <= df_locations_new['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
+
+df_locations_new["ESM_timestamp"].nunique()
+# take only the unique ESM_timestamps and count from them the number of label_public transport
+df_locations_new_unique_ESM_timestamps = df_locations_new.drop_duplicates(subset=["ESM_timestamp"])
+df_locations_new_unique_ESM_timestamps["label_public transport"].value_counts()
+
+
+
+
+
+# add labels
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+#delete NaN values in label_public transport
+df_locations = df_locations[df_locations["label_public transport"].notna()]
+#get only data from user with loc_device_id = 590f0faf-d932-4a57-998d-e3da667a91dc
+df_locations_user = df_locations[df_locations["loc_device_id"] == "b7b013b7-f78c-4325-a7ab-2dfc128fba27"]
+
+
 
 #get overview over public transport labels
 ## create df from dict_label with location_labels
@@ -724,6 +1118,9 @@ df_labels = pd.DataFrame.from_dict(dict_label, orient='index')
 df_label_counts = df_labels.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
 df_label_counts["total"] = df_label_counts.sum(axis=1)
 df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+
+
+
 
 ## load data & some preprocessing
 #timedelta = "1000ms" # the time which merged points can be apart; has to be in a format compatible with pd.TimeDelta()
@@ -778,6 +1175,10 @@ for label_segment in label_segments:
     df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, grid_search_space, n_permutations, path_storage, parameter_tuning)
     df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
 
+
+#endregion
+
+#endregion
 
 #endregion
 

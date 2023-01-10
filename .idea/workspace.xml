@@ -4,8 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -281,7 +288,10 @@
       <workItem from="1672742421796" duration="9826000" />
       <workItem from="1672778185855" duration="21590000" />
       <workItem from="1673008796918" duration="409000" />
-      <workItem from="1673009279484" duration="1636000" />
+      <workItem from="1673009279484" duration="7406000" />
+      <workItem from="1673075071491" duration="23340000" />
+      <workItem from="1673168218066" duration="43470000" />
+      <workItem from="1673349277808" duration="1407000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -605,7 +615,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673007372570</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)">
+      <created>1673010964265</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1673010964265</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -644,7 +661,8 @@
     <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!" />
     <MESSAGE value="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected..." />
     <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
+    <MESSAGE value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -690,19 +708,9 @@
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_Data Preparation/label_transformation.py</url>
-          <line>21</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
           <line>2</line>
           <option name="timeStamp" value="32" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>791</line>
-          <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py</url>
@@ -710,19 +718,14 @@
           <option name="timeStamp" value="36" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
-          <line>300</line>
-          <option name="timeStamp" value="40" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
           <line>381</line>
           <option name="timeStamp" value="42" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>633</line>
-          <option name="timeStamp" value="48" />
+          <url>file://$PROJECT_DIR$/01_Data Collection/initial_transforms class.py</url>
+          <line>46</line>
+          <option name="timeStamp" value="50" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

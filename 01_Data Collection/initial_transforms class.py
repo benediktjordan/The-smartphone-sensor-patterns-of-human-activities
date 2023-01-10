@@ -54,10 +54,11 @@ class Merge_Transform:
         counter = 0
         for root, dirs, files in os.walk(dir_databases):  # iterate through different subfolders
             for subfolder in dirs:
-                path_sensor = dir_databases + "/" + subfolder + "/" + sensor + ".csv"
+                path_sensor = dir_databases + subfolder + "/" + sensor + ".csv"
                 if sensor_appendix != None:
-                    path_sensor = dir_databases + "/" + subfolder + "/" + sensor + sensor_appendix + ".csv"
+                    path_sensor = dir_databases + subfolder + "/" + sensor + sensor_appendix + ".csv"
                 if os.path.exists(path_sensor):
+                    print("In Subfolder " + subfolder + " the file " + sensor + " exists")
                     if counter == 0:
                         sensor_all = pd.read_csv(path_sensor)
                         counter += 1
@@ -112,7 +113,7 @@ class Merge_Transform:
         return df
 
     # merge IDs of participants which have several IDs
-    def merge_participantIDs(df, user_database, device_id_col = None):
+    def merge_participantIDs(df, user_database, device_id_col = None, include_cities = False):
         # if there is no column "device_id" in df, find the column that contains the device_id
         if device_id_col == None:
             if "device_id" not in df.columns:
@@ -128,6 +129,11 @@ class Merge_Transform:
         # replace UserIDs in "device_id" column based on mapping in user_databases (ID -> new_ID)
         df[device_id_col] = df[device_id_col].replace(user_database["ID"].values, user_database["new_ID"].values)
         df[device_id_col] = df[device_id_col].astype(int)
+
+        # if include_cities = True: add column "city" to df based on mapping in user_databases (ID -> city)
+        if include_cities == True:
+            df["city"] = df[device_id_col].replace(user_database["new_ID"].values, user_database["City"].values)
+
         return df
 
     # label sensor data with ESM data

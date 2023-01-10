@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 import datetime
+import os
 #from matplotlib import rc
 #rc('text', usetex=True)
 #endregion
@@ -127,7 +128,7 @@ class data_exploration_sensors:
     # -> think what other adaptations need to be done
     # -> visualize also GPS feature speed
     # -> compare (in another function) activity recognition quality of Google automatic activity recognition
-    def vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period, label_column_name, path_sensordata, axs_limitations, label_data = False):
+    def vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period, label_column_name, path_sensordata, axs_limitations, label_data = False, path_GPS_features = None, figure_title = None):
         """
         :param list_sensors: list of sensors to visualize
         :param event_time:
@@ -147,14 +148,22 @@ class data_exploration_sensors:
         for sensor in list_sensors:
             time0 = time.time()
             #load sensor data
-            # replace "INSERT" in path_sensordata with sensor name
-            path_sensordata_adapted = path_sensordata.replace("INSERT", sensor[1])
-            df_sensor = data_exploration_sensors.load_sensordata(path_sensordata_adapted)
+
+            #check if sensor is GPS or not
+            if sensor[0] == "GPS":
+                df_sensor = pd.read_csv(path_GPS_features)
+                df_sensor = df_sensor.rename(columns={"loc_device_id": "device_id"})
+
+            else:
+                # replace "INSERT" in path_sensordata with sensor name
+                path_sensordata_adapted = path_sensordata.replace("INSERT", sensor[1])
+                df_sensor = data_exploration_sensors.load_sensordata(path_sensordata_adapted)
 
             #preprocessing
             df_sensor = Merge_Transform.merge_participantIDs(df_sensor, users)  # merge participant IDs
             if label_data == True: #only if data from first iteration, labelling of sensordata is needed
                 df_sensor = labeling_sensor_df(df_sensor, dict_label, label_column_name)
+
             df_sensor = df_sensor.dropna(subset=[label_column_name])  # delete all rows which contain NaN values in the label column
 
             # find names of sensor columns and rename columns
@@ -178,23 +187,37 @@ class data_exploration_sensors:
 
             #create axis limitations for every sensor
             dict_axs[sensor[0]] = {}
-            if axs_limitations == "general":
-                # get 1% and 99% quantiles of x, y and z axis and put in dictionary
-                dict_axs[sensor[0]]["x_01"] = df_sensor["x-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["x_99"] = df_sensor["x-axis"].quantile(0.99)
-                dict_axs[sensor[0]]["y_01"] = df_sensor["y-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["y_99"] = df_sensor["y-axis"].quantile(0.99)
-                dict_axs[sensor[0]]["z_01"] = df_sensor["z-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["z_99"] = df_sensor["z-axis"].quantile(0.99)
+            # check if sensor is GPS or not
+            if sensor[0] == "GPS":
+                if axs_limitations == "general":
+                    # get 1% and 99% quantiles of speed and acceleration and put in dictionary
+                    dict_axs[sensor[0]]["speed_01"] = df_sensor["speed (km/h)"].quantile(0.01)
+                    dict_axs[sensor[0]]["speed_99"] = df_sensor["speed (km/h)"].quantile(0.99)
+                    dict_axs[sensor[0]]["acceleration_01"] = df_sensor["acceleration (m/s^2)"].quantile(0.01)
+                    dict_axs[sensor[0]]["acceleration_99"] = df_sensor["acceleration (m/s^2)"].quantile(0.99)
+                elif axs_limitations == "event":
+                    # get 1% and 99% quantiles of speed and acceleration and put in dictionary
+                    dict_axs[sensor[0]]["speed_01"]  = df_event["speed (km/h)"].quantile(0.01)
+                    dict_axs[sensor[0]]["speed_99"] = df_event["speed (km/h)"].quantile(0.99)
 
-            elif axs_limitations == "event":
-                # get 1% and 99% quantiles of x, y and z axis and put in dictionary
-                dict_axs[sensor[0]]["x_01"] = df_event["x-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["x_99"] = df_event["x-axis"].quantile(0.99)
-                dict_axs[sensor[0]]["y_01"] = df_event["y-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["y_99"] = df_event["y-axis"].quantile(0.99)
-                dict_axs[sensor[0]]["z_01"] = df_event["z-axis"].quantile(0.01)
-                dict_axs[sensor[0]]["z_99"] = df_event["z-axis"].quantile(0.99)
+            else:
+                if axs_limitations == "general":
+                    # get 1% and 99% quantiles of x, y and z axis and put in dictionary
+                    dict_axs[sensor[0]]["x_01"] = df_sensor["x-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["x_99"] = df_sensor["x-axis"].quantile(0.99)
+                    dict_axs[sensor[0]]["y_01"] = df_sensor["y-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["y_99"] = df_sensor["y-axis"].quantile(0.99)
+                    dict_axs[sensor[0]]["z_01"] = df_sensor["z-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["z_99"] = df_sensor["z-axis"].quantile(0.99)
+
+                elif axs_limitations == "event":
+                    # get 1% and 99% quantiles of x, y and z axis and put in dictionary
+                    dict_axs[sensor[0]]["x_01"] = df_event["x-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["x_99"] = df_event["x-axis"].quantile(0.99)
+                    dict_axs[sensor[0]]["y_01"] = df_event["y-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["y_99"] = df_event["y-axis"].quantile(0.99)
+                    dict_axs[sensor[0]]["z_01"] = df_event["z-axis"].quantile(0.01)
+                    dict_axs[sensor[0]]["z_99"] = df_event["z-axis"].quantile(0.99)
 
             # check if df_event is empty: if yes, break function and return None
             if df_event.empty:
@@ -219,7 +242,73 @@ class data_exploration_sensors:
 
         # visualize all df_events in one plot
         ## create number of subplots based on number of sensors
-        if len(list_sensors) == 4 or len(list_sensors) == 3:
+        if len(list_sensors) == 1:
+            #check if in any of the objects in list_sensors the first element is "GPS"; if so, plot for that also
+            if any("GPS" in sublist for sublist in list_sensors):
+                fig, axs = plt.subplots(2, 1, figsize=(15, 10))
+
+                # plot sensordata from first sensor in dict_df_event on first three subplots
+                axs[0].set_title(list_sensors[0][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="speed (km/h)", data=dict_df_event[list_sensors[0][0]],
+                             ax=axs[0])
+                sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)", data=dict_df_event[list_sensors[0][0]],
+                             ax=axs[1])
+                # limit axes
+                axs[0].set_ylim(dict_axs[list_sensors[0][0]]["speed_01"], dict_axs[list_sensors[0][0]]["speed_99"])
+                axs[1].set_ylim(dict_axs[list_sensors[0][0]]["acceleration_01"], dict_axs[list_sensors[0][0]]["acceleration_99"])
+
+        elif len(list_sensors) == 2:
+            # check if in any of the objects in list_sensors the first element is "GPS"; if so, plot for that also
+            if any("GPS" in sublist for sublist in list_sensors):
+                fig, axs = plt.subplots(3, 2, figsize=(15, 10))
+
+                # plot sensordata from first sensor, which is high-frequency sensor, in dict_df_event on first subplots
+                axs[0, 0].set_title(list_sensors[0][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[0, 0])
+                sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[1, 0])
+                sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[2, 0])
+                # limit axes
+                axs[0, 0].set_ylim(dict_axs[list_sensors[0][0]]["x_01"], dict_axs[list_sensors[0][0]]["x_99"])
+                axs[1, 0].set_ylim(dict_axs[list_sensors[0][0]]["y_01"], dict_axs[list_sensors[0][0]]["y_99"])
+                axs[2, 0].set_ylim(dict_axs[list_sensors[0][0]]["z_01"], dict_axs[list_sensors[0][0]]["z_99"])
+
+                # plot sensordata from second sensor, which is GPS sensor, in dict_df_event on first three subplots
+                axs[0, 1].set_title(list_sensors[1][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="speed (km/h)",
+                             data=dict_df_event[list_sensors[1][0]],
+                             ax=axs[0, 1])
+                sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)",
+                             data=dict_df_event[list_sensors[1][0]],
+                             ax=axs[1, 1])
+                # limit axes
+                axs[0, 1].set_ylim(dict_axs[list_sensors[1][0]]["speed_01"],
+                                   dict_axs[list_sensors[1][0]]["speed_99"])
+                axs[1, 1].set_ylim(dict_axs[list_sensors[1][0]]["acceleration_01"],
+                                   dict_axs[list_sensors[1][0]]["acceleration_99"])
+
+            else:
+                fig, axs = plt.subplots(3, 2, figsize=(15, 10))
+                # plot sensordata from first sensor in dict_df_event on first three subplots
+                axs[0, 0].set_title(list_sensors[0][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[0, 0])
+                sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[1, 0])
+                sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[2, 0])
+                # limit axes
+                axs[0, 0].set_ylim(dict_axs[list_sensors[0][0]]["x_01"], dict_axs[list_sensors[0][0]]["x_99"])
+                axs[1, 0].set_ylim(dict_axs[list_sensors[0][0]]["y_01"], dict_axs[list_sensors[0][0]]["y_99"])
+                axs[2, 0].set_ylim(dict_axs[list_sensors[0][0]]["z_01"], dict_axs[list_sensors[0][0]]["z_99"])
+
+                # plot sensordata from second sensor in dict_df_event on second three subplots
+                axs[0, 1].set_title(list_sensors[1][0], fontsize=15)
+                sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[0, 1])
+                sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[1, 1])
+                sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[2, 1])
+                # limit axes
+                axs[0, 1].set_ylim(dict_axs[list_sensors[1][0]]["x_01"], dict_axs[list_sensors[1][0]]["x_99"])
+                axs[1, 1].set_ylim(dict_axs[list_sensors[1][0]]["y_01"], dict_axs[list_sensors[1][0]]["y_99"])
+                axs[2, 1].set_ylim(dict_axs[list_sensors[1][0]]["z_01"], dict_axs[list_sensors[1][0]]["z_99"])
+
+        elif len(list_sensors) == 4 or len(list_sensors) == 3:
             fig, axs = plt.subplots(6, 2, figsize=(15, 10))
             # plot sensordata from first sensor in dict_df_event on first subplot
             # create title for first subplot
@@ -263,9 +352,12 @@ class data_exploration_sensors:
                 axs[4, 1].set_ylim(dict_axs[list_sensors[3][0]]["y_01"], dict_axs[list_sensors[3][0]]["y_99"])
                 axs[5, 1].set_ylim(dict_axs[list_sensors[3][0]]["z_01"], dict_axs[list_sensors[3][0]]["z_99"])
 
-        elif len(list_sensors) == 2:
-            fig, axs = plt.subplots(3, 2, figsize=(15, 10))
-            # plot sensordata from first sensor in dict_df_event on first three subplots
+        # this case is meant ONLY for the case when there are 4 high-frequency sensors and 1 GPS sensor
+        elif len(list_sensors) == 5:
+
+            fig, axs = plt.subplots(8, 2, figsize=(15, 10))
+            # plot sensordata from first sensor in dict_df_event on first subplot
+            # create title for first subplot
             axs[0, 0].set_title(list_sensors[0][0], fontsize=15)
             sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[0, 0])
             sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[0][0]], ax=axs[1, 0])
@@ -274,7 +366,8 @@ class data_exploration_sensors:
             axs[0, 0].set_ylim(dict_axs[list_sensors[0][0]]["x_01"], dict_axs[list_sensors[0][0]]["x_99"])
             axs[1, 0].set_ylim(dict_axs[list_sensors[0][0]]["y_01"], dict_axs[list_sensors[0][0]]["y_99"])
             axs[2, 0].set_ylim(dict_axs[list_sensors[0][0]]["z_01"], dict_axs[list_sensors[0][0]]["z_99"])
-            # plot sensordata from second sensor in dict_df_event on second three subplots
+
+            # plot sensordata from second sensor in dict_df_event on second  subplots
             axs[0, 1].set_title(list_sensors[1][0], fontsize=15)
             sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[0, 1])
             sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[1][0]], ax=axs[1, 1])
@@ -284,14 +377,279 @@ class data_exploration_sensors:
             axs[1, 1].set_ylim(dict_axs[list_sensors[1][0]]["y_01"], dict_axs[list_sensors[1][0]]["y_99"])
             axs[2, 1].set_ylim(dict_axs[list_sensors[1][0]]["z_01"], dict_axs[list_sensors[1][0]]["z_99"])
 
+            # plot sensordata from third sensor in dict_df_event on third subplots
+            axs[3, 0].set_title(list_sensors[2][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[3, 0])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[4, 0])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[2][0]], ax=axs[5, 0])
+            # limit axes
+            axs[3, 0].set_ylim(dict_axs[list_sensors[2][0]]["x_01"], dict_axs[list_sensors[2][0]]["x_99"])
+            axs[4, 0].set_ylim(dict_axs[list_sensors[2][0]]["y_01"], dict_axs[list_sensors[2][0]]["y_99"])
+            axs[5, 0].set_ylim(dict_axs[list_sensors[2][0]]["z_01"], dict_axs[list_sensors[2][0]]["z_99"])
+
+            # if there are four sensors, plot sensordata from fourth sensor in dict_df_event on fourth subplots
+            axs[3, 1].set_title(list_sensors[3][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="x-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[3, 1])
+            sns.lineplot(x="time relative to event (s)", y="y-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[4, 1])
+            sns.lineplot(x="time relative to event (s)", y="z-axis", data=dict_df_event[list_sensors[3][0]], ax=axs[5, 1])
+            # limit axes
+            axs[3, 1].set_ylim(dict_axs[list_sensors[3][0]]["x_01"], dict_axs[list_sensors[3][0]]["x_99"])
+            axs[4, 1].set_ylim(dict_axs[list_sensors[3][0]]["y_01"], dict_axs[list_sensors[3][0]]["y_99"])
+            axs[5, 1].set_ylim(dict_axs[list_sensors[3][0]]["z_01"], dict_axs[list_sensors[3][0]]["z_99"])
+
+            # plot sensordata from fifth sensor, which is GPS sensor, in dict_df_event on last two subplots
+            axs[6, 0].set_title(list_sensors[0][0], fontsize=15)
+            sns.lineplot(x="time relative to event (s)", y="speed (km/h)",
+                         data=dict_df_event[list_sensors[1][0]],
+                         ax=axs[6, 0])
+            sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)",
+                         data=dict_df_event[list_sensors[1][0]],
+                         ax=axs[7, 0])
+            # limit axes
+            axs[6, 0].set_ylim(dict_axs[list_sensors[1][0]]["speed_01"],
+                               dict_axs[list_sensors[1][0]]["speed_99"])
+            axs[7, 0].set_ylim(dict_axs[list_sensors[1][0]]["acceleration_01"],
+                               dict_axs[list_sensors[1][0]]["acceleration_99"])
+
         # set title for whole plot
-        plt.suptitle("Sensordata around Activity " + activity_name +
-                     "\n(Participant " + str(participant_id) + " at " + str(event_time) + " with axis based on " + axs_limitations + " data)", fontsize=20)
+        if figure_title == None:
+            plt.suptitle("Sensordata around Activity " + activity_name +
+                         "\n(Participant " + str(participant_id) + " at " + str(event_time) + " with axis based on " + axs_limitations + " data)", fontsize=20)
+        else:
+            plt.suptitle(figure_title, fontsize=20)
         fig.tight_layout()
         fig.subplots_adjust(top=0.88)
-        # plt.show()
+        plt.show()
 
         return fig, activity_name
+
+    # calculate mean & std & max value (for GPS data) for sensor for all events
+    def create_summary_statistics_for_sensors(path_sensor, sensor, time_period, dir_results):
+        # create summary stats dataframe
+        device_id = []
+        ESM_timestamp = []
+        ESM_label_column = []
+
+        if sensor == "GPS":
+            speed_mean = []
+            speed_std = []
+            speed_max = []
+            acceleration_mean = []
+            acceleration_std = []
+            acceleration_max = []
+
+        else:
+            double_values_0_mean = []
+            double_values_0_std = []
+            double_values_1_mean = []
+            double_values_1_std = []
+            double_values_2_mean = []
+            double_values_2_std = []
+            double_values_3_mean = []
+            double_values_3_std = []
+            accuracy_mean = []
+            accuracy_std = []
+
+
+        # track missing sensordata around events
+        missing_sensordata = []
+
+        summary_stats = pd.DataFrame()
+
+        # load sensor data
+        # check if .csv or .pkl
+        if path_sensor.endswith(".csv"):
+            df_sensor = pd.read_csv(path_sensor)
+        elif path_sensor.endswith(".pkl"):
+            df_sensor = pd.read_pickle(path_sensor)
+
+        # aligh device_id column name
+        # rename any column names
+        for column in df_sensor.columns:
+            if "device_id" in column:
+                df_sensor = df_sensor.rename(columns={column: "device_id"})
+            if "double_values_0" in column:
+                df_sensor = df_sensor.rename(columns={column: "double_values_0"})
+            if "double_values_1" in column:
+                df_sensor = df_sensor.rename(columns={column: "double_values_1"})
+            if "double_values_2" in column:
+                df_sensor = df_sensor.rename(columns={column: "double_values_2"})
+            if "accuracy" in column:
+                df_sensor = df_sensor.rename(columns={column: "accuracy"})
+
+        # iterate through esm events
+        esm_events = df_sensor["ESM_timestamp"].unique()
+
+        counter = 1
+        for esm_event in esm_events:
+            print("esm_event: " + str(esm_event))
+
+            # make sure that timestamp columns are datetime format
+            df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+            df_sensor["ESM_timestamp"] = pd.to_datetime(df_sensor["ESM_timestamp"])
+            esm_event = pd.to_datetime(esm_event)
+
+            # create df with sensor data around event_time of the event and participant
+            df_event = df_sensor[df_sensor["ESM_timestamp"] == esm_event].copy()
+            df_event = df_event[(df_event['timestamp'] >= esm_event - pd.Timedelta(seconds=(time_period / 2))) & (
+                    df_event['timestamp'] <= esm_event + pd.Timedelta(seconds=(time_period / 2)))]
+
+            if len(df_event) > 0:
+                # create summary stats for every esm event
+                summary_stats_esm_event = df_event.describe()
+
+                # add esm event to summary stats lists
+                device_id.append(df_event["device_id"].iloc[0])
+                ESM_timestamp.append(esm_event)
+
+                # differentiate between sensor types
+                if sensor in ["accelerometer", "linear_accelerometer",  "magnetometer", "rotations"]:
+                    accuracy_mean.append(summary_stats_esm_event["accuracy"]["mean"])
+                    accuracy_std.append(summary_stats_esm_event["accuracy"]["std"])
+                    double_values_0_mean.append(summary_stats_esm_event["double_values_0"]["mean"])
+                    double_values_0_std.append(summary_stats_esm_event["double_values_0"]["std"])
+                    double_values_1_mean.append(summary_stats_esm_event["double_values_1"]["mean"])
+                    double_values_1_std.append(summary_stats_esm_event["double_values_1"]["std"])
+                    double_values_2_mean.append(summary_stats_esm_event["double_values_2"]["mean"])
+                    double_values_2_std.append(summary_stats_esm_event["double_values_2"]["std"])
+
+                elif sensor in ["barometer"]:
+                    accuracy_mean.append(summary_stats_esm_event["accuracy"]["mean"])
+                    accuracy_std.append(summary_stats_esm_event["accuracy"]["std"])
+                    double_values_0_mean.append(summary_stats_esm_event["double_values_0"]["mean"])
+                    double_values_0_std.append(summary_stats_esm_event["double_values_0"]["std"])
+
+                elif sensor in ["GPS"]:
+                    speed_mean.append(summary_stats_esm_event["speed (km/h)"]["mean"])
+                    speed_std.append(summary_stats_esm_event["speed (km/h)"]["std"])
+                    speed_max.append(summary_stats_esm_event["speed (km/h)"]["max"])
+                    acceleration_mean.append(summary_stats_esm_event["acceleration (m/s^2)"]["mean"])
+                    acceleration_std.append(summary_stats_esm_event["acceleration (m/s^2)"]["std"])
+                    acceleration_max.append(summary_stats_esm_event["acceleration (m/s^2)"]["max"])
+
+                # print("Progress: " + str(esm_events.tolist().index(str(esm_event))) + "/" + str(len(esm_events)))
+                print("Progress " + str(counter) + "/" + str(len(esm_events)))
+                counter += 1
+
+            else:
+                missing_sensordata.append(esm_event)
+                print("missing sensordata for esm event: " + str(esm_event))
+
+        # create summary stats dataframe
+        summary_stats["ESM_timestamp"] = ESM_timestamp
+        summary_stats["device_id"] = device_id
+
+        if sensor in ["accelerometer", "linear_accelerometer", "magnetometer", "rotations"]:
+            summary_stats["double_values_0_mean"] = double_values_0_mean
+            summary_stats["double_values_0_std"] = double_values_0_std
+            summary_stats["double_values_1_mean"] = double_values_1_mean
+            summary_stats["double_values_1_std"] = double_values_1_std
+            summary_stats["double_values_2_mean"] = double_values_2_mean
+            summary_stats["double_values_2_std"] = double_values_2_std
+            summary_stats["accuracy_mean"] = accuracy_mean
+            summary_stats["accuracy_std"] = accuracy_std
+
+        if sensor in ["barometer"]:
+            summary_stats["double_values_0_mean"] = double_values_0_mean
+            summary_stats["double_values_0_std"] = double_values_0_std
+            summary_stats["accuracy_mean"] = accuracy_mean
+            summary_stats["accuracy_std"] = accuracy_std
+
+        if sensor in ["GPS"]:
+            summary_stats["speed_mean"] = speed_mean
+            summary_stats["speed_std"] = speed_std
+            summary_stats["speed_max"] = speed_max
+            summary_stats["acceleration_mean"] = acceleration_mean
+            summary_stats["acceleration_std"] = acceleration_std
+            summary_stats["acceleration_max"] = acceleration_max
+
+        return summary_stats, missing_sensordata
+
+    # visualize mean & std of sensor in scatterplot for specific sensor and list of classes
+    def vis_summary_stats(df_summary_stats, sensor_name, label_column_name, list_activities,
+                          figure_title, visualize_participants=False):
+
+        summary_stats = df_summary_stats.copy()
+
+        # create dataframe including only the relevant activities
+        df_summary_stats = df_summary_stats[df_summary_stats[label_column_name].isin(list_activities)]
+
+        # rename device_id to participant
+        df_summary_stats = df_summary_stats.rename(columns={"device_id": "participant"})
+        # replace participant id with last three digits
+        df_summary_stats["participant"] = df_summary_stats["participant"].str[-3:]
+
+        # visualize four dimensional scatterplot with seaborn: mean x std x participant x activity
+        if sensor_name == "GPS":
+            # check if participants should be visualized as fourth dimension or not
+            if visualize_participants == "no":
+                fig, axs = plt.subplots(1, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="speed_mean", y="speed_max", style=label_column_name,
+                                data=df_summary_stats, ax=axs)
+                #sns.scatterplot(x="acceleration_mean", y="acceleration_max", style=label_column_name,
+                #                data=df_summary_stats, ax=axs[1])
+
+            elif visualize_participants == "yes":
+                fig, axs = plt.subplots(2, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="speed_mean", y="speed_max", style=label_column_name, hue="participant",
+                                data=df_summary_stats, ax=axs)
+                #sns.scatterplot(x="acceleration_mean", y="acceleration_max", style=label_column_name, hue="participant",
+                #                data=df_summary_stats, ax=axs[1])
+
+            # set x and y limits
+            axs.set_xlim(df_summary_stats["speed_mean"].quantile(0.01),
+                            df_summary_stats["speed_mean"].quantile(0.99))
+            axs.set_ylim(df_summary_stats["speed_max"].quantile(0.01),
+                            df_summary_stats["speed_max"].quantile(0.99))
+
+            #xs[1].set_xlim(df_summary_stats["acceleration_mean"].quantile(0.01),
+            #                df_summary_stats["acceleration_mean"].quantile(0.99))
+            #axs[1].set_ylim(df_summary_stats["acceleration_max"].quantile(0.01),
+            #                df_summary_stats["acceleration_max"].quantile(0.99))
+
+        # if sensor is something else than GPS (i.e. high frequency sensors)
+        else:
+            # check if participants should be visualized as fourth dimension or not
+            if visualize_participants == "no":
+                fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="double_values_0_mean", y="double_values_0_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="double_values_1_mean", y="double_values_1_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="double_values_2_mean", y="double_values_2_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[2])
+            elif visualize_participants == "yes":
+                fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="double_values_0_mean", y="double_values_0_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="double_values_1_mean", y="double_values_1_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="double_values_2_mean", y="double_values_2_std", style=label_column_name,
+                                data=df_summary_stats, ax=axs[2])
+
+            # set x and y limits: all axis will be set with the minimum and max values of the x-axis
+            axs[0].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
+                            df_summary_stats["double_values_0_mean"].quantile(0.99))
+            axs[0].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
+                            df_summary_stats["double_values_0_std"].quantile(0.99))
+
+            axs[1].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
+                            df_summary_stats["double_values_0_mean"].quantile(0.99))
+            axs[1].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
+                            df_summary_stats["double_values_0_std"].quantile(0.99))
+
+            axs[2].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
+                            df_summary_stats["double_values_0_mean"].quantile(0.99))
+            axs[2].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
+                            df_summary_stats["double_values_0_std"].quantile(0.99))
+
+        plt.show()
+
+        return fig
 
 
 #region Iteration 01
@@ -338,12 +696,12 @@ plt.show()
 
 #region event-based_ visualize data around events: one plot per event & several sensors: for all events
 path_sensordata = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
-list_sensors =  ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations","plugin_ios_activity_recognition"]
+sensor_list =  ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations","plugin_ios_activity_recognition"]
 path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/human_motion_general/"
 axs_limitations = "general"
 label_data = True
 
-sensor_list = [["Linear Accelerometer", "linear_accelerometer"],
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
                ["Gyroscope", "gyroscope"],
                ["Magnetometer", "magnetometer"],
                 ["Rotation", "rotation"]]
@@ -356,11 +714,12 @@ for key in dict_label.keys():
 # apply vis_sensordata_around_event for every event time in event_times
 num_events = 1
 sensor_names = ""
-for sensor in sensor_list:
+for sensor in list_sensors:
     sensor_names += sensor[1] + "_"
+
 for event_time in event_times:
     time0 = time.time()
-    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(sensor_list, event_time, time_period,
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period,
                                                                            label_column_name, path_sensordata,axs_limitations, label_data)
     # check if fig is None: if yes, continue with next event_time
     if fig is None:
@@ -372,6 +731,11 @@ for event_time in event_times:
     # print progress
     print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
     num_events += 1
+
+
+
+#endregion
+
 #endregion
 
 #region event-based_ visualize data around events: single event (one plot per event & several sensors)
@@ -761,7 +1125,9 @@ for event_time in event_time_list:
 
 # endregion
 
-# region create summary statistics for every sensor for different time periods around ESM events
+# region OUTDATED create summary statistics for every sensor for different time periods around ESM events
+# Note: this functino works with old data and is not so useful anymore; an updated version was integrated into
+# the class "data_exploration_sensors"
 def create_summary_statistics_for_sensors(path_sensor, sensor, time_period, dir_results):
     # create summary stats dataframe
     device_id = []
@@ -910,7 +1276,6 @@ def create_summary_statistics_for_sensors(path_sensor, sensor, time_period, dir_
     return summary_stats, missing_sensordata
 
 path_sensor = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/FINAL_barometer_esm_timeperiod_5 min.csv"
-test_df = pd.read_csv(path_sensor, dtype={"0": 'int64', "1": 'float64', "2": object, "3": object}, nrows=100)
 
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Results/summary_stats"
 sensor_list = ["locations", "rotation"]
@@ -949,8 +1314,8 @@ print("Time: " + str(time_end - time_begin))
 
 # endregion
 
-# region visualize summary statistics: mean (sensordata) x std (sensordata) x participant x activity for every sensor
-
+# region OUTDATED visualize summary statistics: mean (sensordata) x std (sensordata) x participant x activity for every sensor
+# NOTE: this function is using old data; updated function is in class "data_exploration_sensors" (Stand: 08.01.2022)
 def vis_summary_stats(path_summary_stats, sensor, time_period, activity_type, activity_name, list_activities,
                       dir_results):
     # load summary stats
@@ -1018,6 +1383,7 @@ def vis_summary_stats(path_summary_stats, sensor, time_period, activity_type, ac
     # plt.show()
 
     return fig
+
 
 # body positions
 list_activities = ["walking", "running", "cycling", "sitting: at a table", "standing", "lying"]
