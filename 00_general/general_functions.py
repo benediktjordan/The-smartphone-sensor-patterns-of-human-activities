@@ -13,6 +13,7 @@ def labeling_sensor_df(df_sensor, dict_label, label_column_name, ESM_identifier_
     # create dataframe with onl ESM_identifier_column and label_column_name
     df_label = pd.DataFrame()
     df_label[ESM_identifier_column] = df_sensor[ESM_identifier_column].copy()
+
     # convert df_label to DataFrame
     # iterate through df_sensor and find labels for each row
     df_label[label_column_name] = np.nan

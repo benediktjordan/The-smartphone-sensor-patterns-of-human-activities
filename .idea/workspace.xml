@@ -4,15 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -291,7 +290,7 @@
       <workItem from="1673009279484" duration="7406000" />
       <workItem from="1673075071491" duration="23340000" />
       <workItem from="1673168218066" duration="43470000" />
-      <workItem from="1673349277808" duration="1407000" />
+      <workItem from="1673349277808" duration="45825000" />
     </task>
     <task id="LOCAL-00001" summary="This is the first commit message">
       <created>1664546704490</created>
@@ -622,7 +621,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673010964265</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
+      <created>1673355945757</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1673355945757</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,7 +668,8 @@
     <MESSAGE value="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected..." />
     <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
     <MESSAGE value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
+    <MESSAGE value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
+    <option name="LAST_COMMIT_MESSAGE" value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -726,6 +733,26 @@
           <url>file://$PROJECT_DIR$/01_Data Collection/initial_transforms class.py</url>
           <line>46</line>
           <option name="timeStamp" value="50" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py</url>
+          <line>95</line>
+          <option name="timeStamp" value="53" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>652</line>
+          <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>1044</line>
+          <option name="timeStamp" value="60" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="61" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

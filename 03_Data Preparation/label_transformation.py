@@ -19,9 +19,30 @@ df_esm["bodyposition"].value_counts().sum()
 # create dictionary which maps activities to different activity levels
 
 class label_transformation:
-    def create_activity_dataframe(df_esm, humanmotion_general, humanmotion_specific, before_after_sleep,
+    def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep,
                                   on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
                                   location, smartphonelocation, aligned):
+
+        # special case for "human_motion", since more than one column in df_esm have to be evaluated to create each label
+        #iterate through dictionary human_motion
+        df_esm["label_human motion"] = np.nan
+        for key in human_motion:
+            df_map = human_motion[key]
+            # iterate through dataframe
+            for index, row in df_map.iterrows():
+                if len(row) == 1:
+                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]), "label_human motion"] = key
+
+                if len(row) == 2:
+                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]) & (df_esm[df_map.columns[1]] == row.iloc[1]), "label_human motion"] = key
+
+                if len(row) == 3:
+                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]) & (df_esm[df_map.columns[1]] == row.iloc[1]) & (df_esm[df_map.columns[2]] == row.iloc[2]), "label_human motion"] = key
+
+
         # create dataframe with details of new columns
         new_columns = [["label_human motion - general", "humanmotion_general", "bodyposition"],
                        ["label_human motion - specific", "humanmotion_specific", "bodyposition"],

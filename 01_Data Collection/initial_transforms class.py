@@ -45,9 +45,6 @@ import pyarrow.feather as feather
 
 # create class
 class Merge_Transform:
-    def __init__(self, dir_databases, sensor):
-        self.dir_databases = dir_databases
-        self.sensor = sensor
 
     # join sensorfiles from different databases
     def join_sensor_files(dir_databases, sensor, sensor_appendix = None):
@@ -79,12 +76,12 @@ class Merge_Transform:
         return sensor_all
 
     # transform JSON column into multiple columns
-    def convert_json_to_columns(self, df):
+    def convert_json_to_columns(df, sensor):
         # create prefix from first three letters of sensor and, if "_" is in sensor, add the part after "_"
-        if "_" in self.sensor:
-            prefix = self.sensor[:3] + "_" + self.sensor.split("_")[1]
+        if "_" in sensor:
+            prefix = sensor[:3] + "_" + sensor.split("_")[1]
         else:
-            prefix = self.sensor[:3]
+            prefix = sensor[:3]
 
         # if len(df) > 1000000: convert JSON in chunks
         if len(df) > 1000000:
@@ -135,6 +132,53 @@ class Merge_Transform:
             df["city"] = df[device_id_col].replace(user_database["new_ID"].values, user_database["City"].values)
 
         return df
+
+    # add beginning, end, and duration of smartphone session around each ESM event
+    def add_smartphone_session_start_end_to_esm(df_esm, df_screen):
+        df_esm["session_start"] = None
+        df_esm["session_end"] = None
+        # convert timestamp columns to datetime and rename to src_timestamp to "timestamp"
+        df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit="ms")
+        df_screen["timestamp"] = pd.to_datetime(df_screen["scr_timestamp"], unit="ms")
+        df_screen = df_screen.drop(columns=["scr_timestamp"])
+        for index, row in df_esm.iterrows():
+            # only use screen-sensor data from the same user_id
+            df_screen_user = df_screen[df_screen["2"] == row["device_id"]]
+
+            # get the record of the screen sensor which is closest before the ESM event and the "scr_screen_status" == 3 with merge_asof
+            # check if if row["location_time"] is empty
+            if pd.isnull(row["location_time"]):
+                df_screen_before = df_screen_user[df_screen_user["timestamp"] <= row["timestamp"]]
+            else:
+                df_screen_before = df_screen_user[df_screen_user["timestamp"] <= row["location_time"]]
+            df_screen_before = df_screen_before[df_screen_before["scr_screen_status"] == 3]
+            df_screen_before = df_screen_before.sort_values(by="timestamp", ascending=False)
+            df_screen_before = df_screen_before.head(1)
+            # get the record of the screen sensor which is closest after the ESM event and the "scr_screen_status" == 3 with merge_asof
+            if pd.isnull(row["location_time"]):
+                df_screen_after = df_screen_user[df_screen_user["timestamp"] >= row["timestamp"]]
+            else:
+                df_screen_after = df_screen_user[df_screen_user["timestamp"] >= row["location_time"]]
+            df_screen_after = df_screen_after[df_screen_after["scr_screen_status"] == 3]
+            df_screen_after = df_screen_after.sort_values(by="timestamp", ascending=True)
+            df_screen_after = df_screen_after.head(1)
+
+            # add the session start and end to the ESM event (and check first if there is actually a start and end time)
+            if df_screen_before.empty:
+                df_esm.at[index, "session_start"] = np.nan
+                df_esm.at[index, "session_end"] = df_screen_after["timestamp"].values[0]
+            elif df_screen_after.empty:
+                df_esm.at[index, "session_end"] = np.nan
+                df_esm.at[index, "session_start"] = df_screen_before["timestamp"].values[0]
+            else:
+                df_esm.at[index, "session_start"] = df_screen_before["timestamp"].values[0]
+                df_esm.at[index, "session_end"] = df_screen_after["timestamp"].values[0]
+
+        # compute the duration of the smartphone session
+        df_esm["smartphone_session_duration (s)"] = (df_esm["session_end"] - df_esm["session_start"]) / np.timedelta64(
+            1, 's')
+
+        return df_esm
 
     # label sensor data with ESM data
 

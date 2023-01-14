@@ -1,9 +1,86 @@
 # user and sensor database
+import numpy as np
 import pandas as pd
 import os
 
 #region activity database: matching user answers to activity classes
 # region human motion
+
+human_motion = {
+    "sitting: at a table (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table", "sitting: at a table"],
+                "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: at a table (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table"],
+                "smartphonelocation": ["in two hands"]}),
+    "sitting: at a table (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "sitting: on the couch (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: on the couch", "sitting: on the couch"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: on the couch (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: on the couch"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "sitting: somewhere else (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: somewhere else", "sitting: somewhere else"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: somewhere else (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: somewhere else"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "standing (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["standing", "standing"],
+                "smartphonelocation": ["in one hand", "In my hand"]}),
+    "standing (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["standing"],
+                "smartphonelocation": ["in two hands"]}),
+    "standing (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["standing"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "lying (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["lying", "lying"],
+                "smartphonelocation": ["in one hand", "In my hand"]}),
+    "lying (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["lying"],
+                "smartphonelocation": ["in two hands"]}),
+    "lying (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["lying"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "walking (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["walking", "walking"],
+              "smartphonelocation": ["In my hand", "in one hand"],
+              "location": ["on the way: walking\/cycling", "on the way: walking\/cycling"]}),
+    "walking (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["walking"],
+              "smartphonelocation": ["in two hands"],
+              "location": ["on the way: walking\/cycling"]}),
+
+    "running (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["running", "running"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "running (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["running"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "cycling (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["cycling", "cycling"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "cycling (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["cycling"],
+              "smartphonelocation": ["in two hands"]}),
+
+    np.nan: pd.DataFrame(
+        data={"location": ["on the way: in train", "on the way: other means of transport",
+                           "on the way: in public transport", "on the way: in car\/bus\/train\/tram"]})
+
+}
+
+
 humanmotion_general = {
     "sitting: in car\/bus\/tram\/train": ["sitting"],
     "sitting: somewhere else": ["sitting"],
@@ -73,7 +150,10 @@ publictransport = {
 
     "on the way: in a car": ["car"],
 
-    "on the way: in car\/bus\/train\/tram": ["car/bus/train/tram"]
+    "on the way: in car\/bus\/train\/tram": ["car/bus/train/tram"],
+
+    "at home": ["exclude"] # because in 15 cases, the person was "walking" "at home" which is not a good
+    # representation of walking!
 }
 
 

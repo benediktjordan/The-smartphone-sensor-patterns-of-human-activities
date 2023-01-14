@@ -79,11 +79,14 @@ class data_exploration_labels:
 
         fig = plt.figure(figsize=(15, 10))
         plt.title(fig_title)
-        sns.barplot(x=df_esm[column_name].value_counts()[0:10].index, y=df_esm[column_name].value_counts()[0:10].values,
+        sns.barplot(x=df_esm[column_name].value_counts()[0:20].index, y=df_esm[column_name].value_counts()[0:20].values,
                     palette="Blues_d")
-        plt.xticks(rotation=15)
+        if len(df_esm[column_name].value_counts()[0:20].index) > 10:
+            plt.xticks(rotation=20)
+        else:
+            plt.xticks(rotation=15)
         # include actual number of events in bar plot
-        for i, v in enumerate(df_esm[column_name].value_counts()[0:10].values):
+        for i, v in enumerate(df_esm[column_name].value_counts()[0:20].values):
             plt.text(i - 0.1, v + 0.1, str(v), color='black')
 
         plt.show()
@@ -97,8 +100,9 @@ class data_exploration_labels:
         df_label_counts = df_label_counts.astype(int)
 
         # add sum for rows and columns
-        df_label_counts["total"] = df_label_counts.sum(axis=1)
-
+        # add sum for rows but without including values from the column "User ID"
+        df_label_counts["total"] = df_label_counts.iloc[:, 0:].sum(axis=1)
+        #df_label_counts["total"] = df_label_counts.sum(axis=1)
 
         # create User_ID column from index
         df_label_counts["User ID"] = df_label_counts.index
@@ -114,6 +118,62 @@ class data_exploration_labels:
         df_label_counts = df_label_counts[cols]
 
         return df_label_counts
+
+    # create table which shows users x activities FOR WHICH SENSOR DATA IS AVAILABLE
+    # dependencies of this function:
+    ## functions
+    ## labeling_sensor()
+    ## data_exploration_labels.create_table_user_activity()
+    ## Merge_Transform.merge_participantIDs()
+    ## data_exploration_labels.create_table_user_activity()
+
+    ## databases
+    ### users
+    ### sensors_and_frequencies
+    def create_table_user_activity_including_sensordata(df_esm_including_number_sensordata, dict_label,
+                                                        label_column_name, sensors_included, segment_around_events):
+        df_esm = df_esm_including_number_sensordata.copy()
+
+        # add label column to df_esm
+        df_esm = labeling_sensor_df(df_esm, dict_label, label_column_name, ESM_identifier_column="ESM_timestamp")
+        # drop any NaN values in label_public transport
+        df_esm = df_esm.dropna(subset=[label_column_name])
+        if label_column_name == "label_public transport":
+            # drop all "exclude" labels: these are instances of "walking" in which people are "at home"
+            df_esm = df_esm[df_esm[label_column_name] != "exclude"]
+        print("Number of ESM_timestamps after deleting NaN label values: " + str(df_esm.shape[0]))
+
+        # delete all columns which are not "timestamp", "ESM_timestam", label_column_name, or in sensors_included
+        df_esm = df_esm[[label_column_name, "ESM_timestamp", "device_id"] + sensors_included]
+
+        for sensor in sensors_included:
+            print("started with sensor: " + sensor)
+            # set all records for which the number of sensor data points is less than required by the minimum percentage to 0
+            print(
+                "Number of ESM_timestamps with sensor data BEFORE DELETING DUE TO min_percentage for sensor: " + sensor + ": " + str(
+                    df_esm[df_esm[sensor] > 0].shape[0]))
+            sensor_frequency = sensors_and_frequencies[sensors_and_frequencies["Sensor"] == sensor]["Frequency (in Hz)"]
+            min_number_sensorrecords = float(
+                (segment_around_events * sensor_frequency) * (min_sensordata_percentage / 100))
+
+            # set all values below the minimum number of sensor records to 0 with np.where
+            df_esm[sensor] = np.where(df_esm[sensor] < min_number_sensorrecords, 0, df_esm[sensor])
+            print(
+                "Number of ESM_timestamps with sensor data AFTER DELETING DUE TO min_percentage for sensor: " + sensor + ": " + str(
+                    df_esm[df_esm[sensor] > 0].shape[0]))
+
+        # drop all rows in which there is a 0 in any of the sensors_included
+        for sensor in sensors_included:
+            df_esm = df_esm[df_esm[sensor] > 0]
+
+        # merge the participant IDs
+        df_esm = Merge_Transform.merge_participantIDs(df_esm, users, include_cities=True)
+
+        # make a table which shows participants x count of events per label class; use groupby
+        df_esm_label_counts = data_exploration_labels.create_table_user_activity(df_esm, label_column_name)
+
+        return df_esm, df_esm_label_counts
+
 
 
 

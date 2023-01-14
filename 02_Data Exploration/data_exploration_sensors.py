@@ -23,6 +23,52 @@ class data_exploration_sensors:
             print("Error: sensordata_path is not .csv or .pkl")
         return df
 
+    # count number of sensor data records for each ESM timestamps: for a list of sensors
+    def volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min=False):
+        # create ESM_timestamp column which is in datetime format from timestamp column
+        df_esm["ESM_timestamp"] = pd.to_datetime(df_esm["timestamp"], unit="ms")
+        df_esm = df_esm[["ESM_timestamp", "device_id"]]
+
+        # iterate through sensors
+        for sensor in sensors:
+            print("start with sensor " + sensor)
+            path_sensorfile = path_sensor_database + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+            df_sensor = pd.read_pickle(path_sensorfile)
+
+            # convert ESM timestamp and timestamp to datetime
+            df_sensor["ESM_timestamp"] = pd.to_datetime(df_sensor["ESM_timestamp"])
+            df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+
+            # if its GPS sensor: delete all rows from df_sensor which have accuracy > gps_accuracy_min
+            if sensor == "locations":
+                df_sensor = df_sensor[df_sensor["loc_accuracy"] <= gps_accuracy_min]
+
+            # only retain sensor data which is in "time_period" seconds around ESM timestamp
+            df_sensor = df_sensor[
+                (df_sensor['timestamp'] >= df_sensor['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
+                        df_sensor['timestamp'] <= df_sensor['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
+
+            print(
+                "Unique ESM_timestamp values in sensordata after cutting to " + str(
+                    time_period) + " seconds around events for sensor: " + sensor + ": " + str(
+                    df_sensor["ESM_timestamp"].nunique()))
+
+            # iterate through unique ESM_timestamps in df_esm and check if there is sensor data for this timestamp; than save number of sensor data points in new dataframe
+            df_esm[sensor] = 0
+            for index, row in df_esm.iterrows():
+                # print(index)
+                df_esm.loc[index, sensor] = df_sensor[df_sensor["ESM_timestamp"] == row["ESM_timestamp"]].shape[0]
+
+            # add a row which counts rows which have values > 0
+            df_esm.loc["count", sensor] = df_esm[df_esm[sensor] > 0].shape[0]
+
+            # analytics: print number of ESM_timestamps with sensor data
+            print(
+                "Number of ESM_timestamps with sensor data for sensor: " + sensor + " and segment of " + str(time_period) + " seconds around events: " + str(
+                    df_esm[df_esm[sensor] > 0].shape[0]) + "(should be the same as in the sensor data)")
+
+        return df_esm
+
     # sensor-based: create function which visualizes the data of one sensor in lineplot for specific ES-event in timeperiod
     def vis_sensordata_around_event_onesensor(df_sensor, event_time, time_period, sensor_name, label_column_name, axs_limitations):
         # find names of sensor columns and rename columns
@@ -128,7 +174,7 @@ class data_exploration_sensors:
     # -> think what other adaptations need to be done
     # -> visualize also GPS feature speed
     # -> compare (in another function) activity recognition quality of Google automatic activity recognition
-    def vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period, label_column_name, path_sensordata, axs_limitations, label_data = False, path_GPS_features = None, figure_title = None):
+    def vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period, label_column_name, path_sensordata, axs_limitations, dict_label, label_data = False, path_GPS_features = None, figure_title = None):
         """
         :param list_sensors: list of sensors to visualize
         :param event_time:
@@ -146,6 +192,7 @@ class data_exploration_sensors:
         dict_axs = {}
         # iterate through all sensors and create df_sensor_event for every sensor
         for sensor in list_sensors:
+            print("Started with sensor " + sensor[0])
             time0 = time.time()
             #load sensor data
 
@@ -398,18 +445,18 @@ class data_exploration_sensors:
             axs[5, 1].set_ylim(dict_axs[list_sensors[3][0]]["z_01"], dict_axs[list_sensors[3][0]]["z_99"])
 
             # plot sensordata from fifth sensor, which is GPS sensor, in dict_df_event on last two subplots
-            axs[6, 0].set_title(list_sensors[0][0], fontsize=15)
+            axs[6, 0].set_title(list_sensors[4][0], fontsize=15)
             sns.lineplot(x="time relative to event (s)", y="speed (km/h)",
-                         data=dict_df_event[list_sensors[1][0]],
+                         data=dict_df_event[list_sensors[4][0]],
                          ax=axs[6, 0])
             sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)",
-                         data=dict_df_event[list_sensors[1][0]],
+                         data=dict_df_event[list_sensors[4][0]],
                          ax=axs[7, 0])
             # limit axes
-            axs[6, 0].set_ylim(dict_axs[list_sensors[1][0]]["speed_01"],
-                               dict_axs[list_sensors[1][0]]["speed_99"])
-            axs[7, 0].set_ylim(dict_axs[list_sensors[1][0]]["acceleration_01"],
-                               dict_axs[list_sensors[1][0]]["acceleration_99"])
+            axs[6, 0].set_ylim(dict_axs[list_sensors[4][0]]["speed_01"],
+                               dict_axs[list_sensors[4][0]]["speed_99"])
+            axs[7, 0].set_ylim(dict_axs[list_sensors[4][0]]["acceleration_01"],
+                               dict_axs[list_sensors[4][0]]["acceleration_99"])
 
         # set title for whole plot
         if figure_title == None:
