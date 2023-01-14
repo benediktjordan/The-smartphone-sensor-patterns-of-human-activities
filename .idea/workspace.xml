@@ -5,13 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
