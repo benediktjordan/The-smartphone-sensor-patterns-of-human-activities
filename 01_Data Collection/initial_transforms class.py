@@ -45,38 +45,43 @@ import pyarrow.feather as feather
 
 # create class
 class Merge_Transform:
-    def __init__(self, dir_databases, sensor):
-        self.dir_databases = dir_databases
-        self.sensor = sensor
 
     # join sensorfiles from different databases
-    def join_sensor_files(self):
+    def join_sensor_files(dir_databases, sensor, sensor_appendix = None):
         counter = 0
-        for root, dirs, files in os.walk(self.dir_databases):  # iterate through different subfolders
+        for root, dirs, files in os.walk(dir_databases):  # iterate through different subfolders
             for subfolder in dirs:
-                path_sensor = self.dir_databases + "/" + subfolder + "/" + self.sensor + ".csv"
+                path_sensor = dir_databases + subfolder + "/" + sensor + ".csv"
+                if sensor_appendix != None:
+                    path_sensor = dir_databases + subfolder + "/" + sensor + sensor_appendix + ".csv"
                 if os.path.exists(path_sensor):
+                    print("In Subfolder " + subfolder + " the file " + sensor + " exists")
                     if counter == 0:
                         sensor_all = pd.read_csv(path_sensor)
                         counter += 1
                         print("This file was used as the base: " + str(path_sensor))
                     else:
-                        sensor_all = sensor_all.append(pd.read_csv(path_sensor))
+                        #concatenate sensorfiles
+                        sensor_all = pd.concat([sensor_all, pd.read_csv(path_sensor)])
                         print("len of sensor_all is : " + str(len(sensor_all)))
                         print("This files was added: " + str(path_sensor))
                         counter += 1
                 else:
                     continue
 
+        if counter == 0:
+            print("No sensorfiles were found for sensor " + sensor)
+            return None
+
         return sensor_all
 
     # transform JSON column into multiple columns
-    def convert_json_to_columns(self, df):
+    def convert_json_to_columns(df, sensor):
         # create prefix from first three letters of sensor and, if "_" is in sensor, add the part after "_"
-        if "_" in self.sensor:
-            prefix = self.sensor[:3] + "_" + self.sensor.split("_")[1]
+        if "_" in sensor:
+            prefix = sensor[:3] + "_" + sensor.split("_")[1]
         else:
-            prefix = self.sensor[:3]
+            prefix = sensor[:3]
 
         # if len(df) > 1000000: convert JSON in chunks
         if len(df) > 1000000:
@@ -105,7 +110,7 @@ class Merge_Transform:
         return df
 
     # merge IDs of participants which have several IDs
-    def merge_participantIDs(df, user_database, device_id_col = None):
+    def merge_participantIDs(df, user_database, device_id_col = None, include_cities = False):
         # if there is no column "device_id" in df, find the column that contains the device_id
         if device_id_col == None:
             if "device_id" not in df.columns:
@@ -121,7 +126,59 @@ class Merge_Transform:
         # replace UserIDs in "device_id" column based on mapping in user_databases (ID -> new_ID)
         df[device_id_col] = df[device_id_col].replace(user_database["ID"].values, user_database["new_ID"].values)
         df[device_id_col] = df[device_id_col].astype(int)
+
+        # if include_cities = True: add column "city" to df based on mapping in user_databases (ID -> city)
+        if include_cities == True:
+            df["city"] = df[device_id_col].replace(user_database["new_ID"].values, user_database["City"].values)
+
         return df
+
+    # add beginning, end, and duration of smartphone session around each ESM event
+    def add_smartphone_session_start_end_to_esm(df_esm, df_screen):
+        df_esm["session_start"] = None
+        df_esm["session_end"] = None
+        # convert timestamp columns to datetime and rename to src_timestamp to "timestamp"
+        df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit="ms")
+        df_screen["timestamp"] = pd.to_datetime(df_screen["scr_timestamp"], unit="ms")
+        df_screen = df_screen.drop(columns=["scr_timestamp"])
+        for index, row in df_esm.iterrows():
+            # only use screen-sensor data from the same user_id
+            df_screen_user = df_screen[df_screen["2"] == row["device_id"]]
+
+            # get the record of the screen sensor which is closest before the ESM event and the "scr_screen_status" == 3 with merge_asof
+            # check if if row["location_time"] is empty
+            if pd.isnull(row["location_time"]):
+                df_screen_before = df_screen_user[df_screen_user["timestamp"] <= row["timestamp"]]
+            else:
+                df_screen_before = df_screen_user[df_screen_user["timestamp"] <= row["location_time"]]
+            df_screen_before = df_screen_before[df_screen_before["scr_screen_status"] == 3]
+            df_screen_before = df_screen_before.sort_values(by="timestamp", ascending=False)
+            df_screen_before = df_screen_before.head(1)
+            # get the record of the screen sensor which is closest after the ESM event and the "scr_screen_status" == 3 with merge_asof
+            if pd.isnull(row["location_time"]):
+                df_screen_after = df_screen_user[df_screen_user["timestamp"] >= row["timestamp"]]
+            else:
+                df_screen_after = df_screen_user[df_screen_user["timestamp"] >= row["location_time"]]
+            df_screen_after = df_screen_after[df_screen_after["scr_screen_status"] == 3]
+            df_screen_after = df_screen_after.sort_values(by="timestamp", ascending=True)
+            df_screen_after = df_screen_after.head(1)
+
+            # add the session start and end to the ESM event (and check first if there is actually a start and end time)
+            if df_screen_before.empty:
+                df_esm.at[index, "session_start"] = np.nan
+                df_esm.at[index, "session_end"] = df_screen_after["timestamp"].values[0]
+            elif df_screen_after.empty:
+                df_esm.at[index, "session_end"] = np.nan
+                df_esm.at[index, "session_start"] = df_screen_before["timestamp"].values[0]
+            else:
+                df_esm.at[index, "session_start"] = df_screen_before["timestamp"].values[0]
+                df_esm.at[index, "session_end"] = df_screen_after["timestamp"].values[0]
+
+        # compute the duration of the smartphone session
+        df_esm["smartphone_session_duration (s)"] = (df_esm["session_end"] - df_esm["session_start"]) / np.timedelta64(
+            1, 's')
+
+        return df_esm
 
     # label sensor data with ESM data
 

@@ -127,7 +127,7 @@ class FeatureExtraction_GPS:
         df_new = df_new.reset_index(drop=True)
         return df_new
 
-    def frequentlocations(df_locations_alltimes):
+    #def frequentlocations(df_locations_alltimes):
 
     def frequentlocations_classify(self):
         # classify locations
@@ -135,7 +135,7 @@ class FeatureExtraction_GPS:
         df_locations_alltimes["loc_class"] = np.nan
         df_locations_alltimes.loc[df_locations_alltimes["loc_type"] == "home", "loc_class"] = "home"
         df_locations_alltimes.loc[df_locations_alltimes["loc_type"] == "work", "loc_class"] = "work"
-        df_locations_alltimes.loc[df_locations_alltimes["loc_type"] == "school", "loc_class"] = "school
+        df_locations_alltimes.loc[df_locations_alltimes["loc_type"] == "school", "loc_class"] = "school"
 
 
     def calculate_distance_to_frequent_locations(df, df_frequent_locations_day, df_frequent_locations_night):

@@ -1,42 +1,273 @@
 # user and sensor database
+import numpy as np
 import pandas as pd
 import os
 
-# user database matching Names to IDs to newIDs; last column is iteration number
-users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88", 1, 1],
-                      ["Simone_2","4c4e5063-1b23-4dfc-886d-c6a202225ed6", 1, 1],
-                      ["Simone_3","53c73807-3756-4303-b4dc-5e7e232e528c", 1, 1],
-                      ["Simone_4", "f83ed117-9279-4ef8-ab74-83d7b8b268b8", 1, 1],
-                      ["Tina", "0d620b8a-c2d4-48fc-9c75-80ce80aeea3e", 2, 1],
-                      ["Tina_2", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0", 2, 1],
-                      ["Lea","590f0faf-d932-4a57-998d-e3da667a91dc", 3, 1],
-                      ["Lotte","410df445-af3d-4cf7-8bf1-f92160f1c41f", 4, 1],
-                      ["Bella","ad064def-9d72-44ff-96b2-f3b3d90d1079", 5, 1],
-                      ["Madleine","36cf6eb2-9d88-46db-a90c-3f24cb4b7228", 6, 1],
-                      ["Miranda","cf2dfa9b-596b-4a72-a4da-cb3777a31cc7", 7, 1],
-                      ["Lena", "212a5ebe-0714-47ac-a887-964c24e0ae43", 8, 1],
-                      ["Paul", "15cdbd7c-132e-4bb8-9dab-192cf909daec", 9, 1],
-                      ["Selcuk", "2294d0b0-67ef-4af2-8ffb-69db607920c9", 10, 1],
-                      ["Selcuk_2", "c838b909-f782-4441-aa3c-10c6c7765ba3", 10, 1],
-                      ["Rosa", "84afe4cb-3572-46bc-bc29-d982ac375341", 11, 1],
-                      ["Rosa_2", "e6c1d093-148e-47f8-8054-6663dc5c366a", 11, 1],
-                      ["Bini", "6388b5d9-367b-427e-a2f5-912014c69a5e", 12, 1],
-                      ["Tanzi", "e9d3ed5e-1d52-445c-82ac-8bbe8066b3d7", 13, 1],
-                      ["Pauli", "6ab9716e-e6d8-4492-ad86-f051a9a4b62a", 14, 1],
-                      ["Margherita ?", "b23b3f4e-7fc1-452f-be16-b9388451f3f6", 15, 1],
-                      ["Margherita_2", "25f1657f-5a39-4dba-8a3b-e6efbfec0e4d", 15, 1],
-                      ["Unknown", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0", 18, 1],
-                      ["Felix", "b7b013b7-f78c-4325-a7ab-2dfc128fba27", 16, 1],
-                      ["Benedikt_1", "8206b501-20e7-4851-8b79-601af9e4485f", 17, 1],
-                      ["Benedikt_2", "f1dc0e69-a548-4771-85f9-28db9060d4c6", 17, 1],
-                      ["Benedikt_3", "eab5ef78-8eb2-4587-801f-834fc1f86f31", 17, 1],
-                      ["Benedikt_4", "f1db4f27-2e1c-4558-85a1-b43ef2c5af59", 17, 1],
-                      ["Benedikt_5 (vorher Unknown_2)", "57fc9641-9f4d-409b-bffd-f333b01c33c9", 17, 1],
-                      ["Benedikt_secondiPhone", "4c1db32b-48fc-4fa6-a4fe-c44f079b7ca4", 17, 1],
-                      ["Benedikt_tablet","0960f02f-8c67-486c-b8db-7850d4a7070b", 17, 1],
-                      ["Benedikt_seconditerationa", "ba683866-dfc3-47e0-a75a-61c07cf33505", 17, 2]],
-                     columns = ["Name", "ID", "new_ID", "iteration"])
+#region activity database: matching user answers to activity classes
+# region human motion
 
+human_motion = {
+    "sitting: at a table (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table", "sitting: at a table"],
+                "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: at a table (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table"],
+                "smartphonelocation": ["in two hands"]}),
+    "sitting: at a table (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "sitting: on the couch (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: on the couch", "sitting: on the couch"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: on the couch (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: on the couch"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "sitting: somewhere else (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["sitting: somewhere else", "sitting: somewhere else"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "sitting: somewhere else (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["sitting: somewhere else"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "standing (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["standing", "standing"],
+                "smartphonelocation": ["in one hand", "In my hand"]}),
+    "standing (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["standing"],
+                "smartphonelocation": ["in two hands"]}),
+    "standing (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["standing"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "lying (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["lying", "lying"],
+                "smartphonelocation": ["in one hand", "In my hand"]}),
+    "lying (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["lying"],
+                "smartphonelocation": ["in two hands"]}),
+    "lying (on flat surface)": pd.DataFrame(
+        data={"bodyposition": ["lying"],
+                "smartphonelocation": ["on a flat surface in front of me (i.e. table, bed, etc.)"]}),
+
+    "walking (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["walking", "walking"],
+              "smartphonelocation": ["In my hand", "in one hand"],
+              "location": ["on the way: walking\/cycling", "on the way: walking\/cycling"]}),
+    "walking (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["walking"],
+              "smartphonelocation": ["in two hands"],
+              "location": ["on the way: walking\/cycling"]}),
+
+    "running (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["running", "running"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "running (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["running"],
+              "smartphonelocation": ["in two hands"]}),
+
+    "cycling (in one hand)": pd.DataFrame(
+        data={"bodyposition": ["cycling", "cycling"],
+              "smartphonelocation": ["In my hand", "in one hand"]}),
+    "cycling (in two hands)": pd.DataFrame(
+        data={"bodyposition": ["cycling"],
+              "smartphonelocation": ["in two hands"]}),
+
+    np.nan: pd.DataFrame(
+        data={"location": ["on the way: in train", "on the way: other means of transport",
+                           "on the way: in public transport", "on the way: in car\/bus\/train\/tram"]})
+
+}
+
+
+humanmotion_general = {
+    "sitting: in car\/bus\/tram\/train": ["sitting"],
+    "sitting: somewhere else": ["sitting"],
+    "sitting: on the couch": ["sitting"],
+    "sitting: at a table": ["sitting"],
+    "sitting: somewhere else\",\"Other (please specify)": ["sitting"],
+    "sitting: somewhere else\",\"Other: sitting on bed": ["sitting"],
+    "sitting: on the couch\",\"sitting: somewhere else": ["sitting"],
+    "sitting: at a table\",\"sitting: in car\/bus\/tram\/train": ["sitting"],
+
+    "standing": ["standing"],
+    "standing\",\"Other (please specify)": ["standing"],
+    "standing\",\"Other: in kitchen cooking": ["standing"],
+    "standing\",\"Other: in train standing": ["standing"],
+
+    "walking": ["walking"],
+    "Other: walking": ["walking"],
+
+    "running": ["running"],
+    "cycling": ["cycling"],
+    "lying": ["lying"],
+    "lying\",\"Other: auf der Shakti matte": ["lying"]
+}
+
+humanmotion_specific = {
+    "lying": ["lying"],
+    "lying\",\"Other: auf der Shakti matte": ["lying"],
+
+    "sitting: at a table": ["sitting at a table"],
+    "sitting: at a table\",\"sitting: in car\/bus\/tram\/train": ["sitting at a table"],
+
+    "sitting: on the couch": ["sitting on the couch"],
+    "sitting: on the couch\",\"sitting: somewhere else": ["sitting on the couch"],
+
+    "sitting: in car\/bus\/tram\/train": ["sitting in car/bus/tram/train"],
+
+    "sitting: somewhere else": ["sitting somewhere else"],
+
+    "standing": ["standing"],
+    "walking": ["walking"],
+    "running": ["running"],
+    "cycling": ["cycling"],
+
+}
+#endregion
+
+# region public transport
+#activity_list = df_esm["bodyposition"].value_counts()
+#location_list = df_esm["location"].value_counts()
+
+publictransport_non_motorized = {
+    "sitting: at a table": ["stationary"],
+
+    "walking": ["walking"],
+    "Other: walking": ["walking"],
+
+    "running": ["running"],
+
+    "cycling": ["cycling"]
+
+}
+
+publictransport = {
+    "on the way: in public transport": ["public transport"],
+
+    "on the way: in train": ["train"],
+
+    "on the way: in a car": ["car"],
+
+    "on the way: in car\/bus\/train\/tram": ["car/bus/train/tram"],
+
+    "at home": ["exclude"] # because in 15 cases, the person was "walking" "at home" which is not a good
+    # representation of walking!
+}
+
+
+
+#endregion
+
+#region before & after sleep
+before_after_sleep = {
+    "lying in bed after sleeping": ["lying in bed after sleeping"],
+
+    "lying in bed before sleeping": ["lying in bed before sleeping"],
+
+    "lying in bed at another time": ["lying in bed at other times"],
+
+    "lying on couch": ["lying on the couch"],
+
+}
+
+#endregion
+
+#region on the toilet
+on_the_toilet_sittingsomewhereelse = {
+    "sitting: on the couch": ["sitting (not on the toilet)"],
+    "sitting: at a table": ["sitting (not on the toilet)"],
+}
+
+on_the_toilet = {
+    "on the toilet": ["on the toilet"]
+}
+#endregion
+
+#region during work
+#df_esm["activity"].value_counts()
+location = {
+    "in the office": ["in the office"],
+
+    "at another workplace": ["at another workplace"],
+
+    "in home-office": ["at home"],
+    "at home": ["at home"],
+    "at a friends place": ["at a friends place"],
+
+    "in restaurant": ["in restaurant"],
+
+    "shopping": ["shopping"],
+
+    "on the way: in train": ["on the way"],
+    "on the way: walking/\cycling": ["on the way"],
+    "on the way: in car": ["on the way"],
+    "on the way: standing": ["on the way"],
+    "on the way: in public transport": ["on the way"],
+
+    "with friends outside": ["with friends outside"]
+}
+#endregion
+
+# region smartphonelocation
+#df_esm["smartphonelocation"].value_counts()
+smartphonelocation = {
+    "in one hand": ["in one hand"],
+    "in two hands": ["in two hands"],
+    "on a flat surface in front of me (i.e. table, bed, etc.)": ["on flat surface"],
+    "in smartphone mount (i.e. on bicycle, in car, etc.)" : ["in smartphone mount"]
+}
+#endregion
+
+# region aligned
+#df_esm["aligned"].value_counts()
+aligned = {
+    "Aligned with my intentions": ["aligned"],
+    "Not aligned with my intentions": ["not aligned"]
+}
+#endregion
+
+#endregion
+
+
+#region user database matching Names to IDs to newIDs; last column is iteration number
+users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88", 1, 1, "Leipzig"],
+                      ["Simone_2","4c4e5063-1b23-4dfc-886d-c6a202225ed6", 1, 1,"Leipzig"],
+                      ["Simone_3","53c73807-3756-4303-b4dc-5e7e232e528c", 1, 1, "Leipzig"],
+                      ["Simone_4", "f83ed117-9279-4ef8-ab74-83d7b8b268b8", 1, 1, "Leipzig"],
+                      ["Tina", "0d620b8a-c2d4-48fc-9c75-80ce80aeea3e", 2, 1, "Berlin"],
+                      ["Tina_2", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0", 2, 1, "Berlin"],
+                      ["Lea","590f0faf-d932-4a57-998d-e3da667a91dc", 3, 1, "Maastricht"],
+                      ["Lotte","410df445-af3d-4cf7-8bf1-f92160f1c41f", 4, 1, "Berlin"],
+                      ["Bella","ad064def-9d72-44ff-96b2-f3b3d90d1079", 5, 1, "Rotterdam"],
+                      ["Madleine","36cf6eb2-9d88-46db-a90c-3f24cb4b7228", 6, 1, "Windsor"],
+                      ["Miranda","cf2dfa9b-596b-4a72-a4da-cb3777a31cc7", 7, 1, "Innsbruck"],
+                      ["Lena", "212a5ebe-0714-47ac-a887-964c24e0ae43", 8, 1, "Leipzig"],
+                      ["Paul", "15cdbd7c-132e-4bb8-9dab-192cf909daec", 9, 1, "Kampala"],
+                      ["Selcuk", "2294d0b0-67ef-4af2-8ffb-69db607920c9", 10, 1, "Berlin"],
+                      ["Selcuk_2", "c838b909-f782-4441-aa3c-10c6c7765ba3", 10, 1, "Berlin"],
+                      ["Rosa", "84afe4cb-3572-46bc-bc29-d982ac375341", 11, 1, "Leipzig"],
+                      ["Rosa_2", "e6c1d093-148e-47f8-8054-6663dc5c366a", 11, 1, "Leipzig"],
+                      ["Bini", "6388b5d9-367b-427e-a2f5-912014c69a5e", 12, 1, "Witten"],
+                      ["Tanzi", "e9d3ed5e-1d52-445c-82ac-8bbe8066b3d7", 13, 1, "Leipzig"],
+                      ["Pauli", "6ab9716e-e6d8-4492-ad86-f051a9a4b62a", 14, 1, "Leipzig"],
+                      ["Margherita ?", "b23b3f4e-7fc1-452f-be16-b9388451f3f6", 15, 1, "Berlin"],
+                      ["Margherita_2", "25f1657f-5a39-4dba-8a3b-e6efbfec0e4d", 19, 1, "Turin"],
+                      ["Unknown", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0", 18, 1, "Berlin"],
+                      ["Felix", "b7b013b7-f78c-4325-a7ab-2dfc128fba27", 16, 1, "Leipzig"],
+                      ["Benedikt_1", "8206b501-20e7-4851-8b79-601af9e4485f", 17, 1, "Leipzig"],
+                      ["Benedikt_2", "f1dc0e69-a548-4771-85f9-28db9060d4c6", 17, 1, "Leipzig"],
+                      ["Benedikt_3", "eab5ef78-8eb2-4587-801f-834fc1f86f31", 17, 1, "Leipzig"],
+                      ["Benedikt_4", "f1db4f27-2e1c-4558-85a1-b43ef2c5af59", 17, 1, "Leipzig"],
+                      ["Benedikt_5 (vorher Unknown_2)", "57fc9641-9f4d-409b-bffd-f333b01c33c9", 17, 1, "Leipzig"],
+                      ["Benedikt_secondiPhone", "4c1db32b-48fc-4fa6-a4fe-c44f079b7ca4", 17, 1, "Leipzig"],
+                      ["Benedikt_tablet","0960f02f-8c67-486c-b8db-7850d4a7070b", 17, 1, "Leipzig"],
+                      ["Benedikt_seconditeration", "ba683866-dfc3-47e0-a75a-61c07cf33505", 17, 2, "Leipzig"]],
+                     columns = ["Name", "ID", "new_ID", "Iteration", "City"])
+#endregion
+
+#region sensors and frequencies
 sensors_and_frequencies = pd.DataFrame([["barometer",0.1],
                                         ["accelerometer",10],
                                           ["battery",0], #event based
@@ -64,6 +295,7 @@ sensors_and_frequencies = pd.DataFrame([["barometer",0.1],
                                           ["significant_motion", 0],
                                           ["timezone", 0.00027777777] #once per hour
                                           ], columns = ["Sensor", "Frequency (in Hz)"])
+#endregion
 
 #region sensor columns: create dictionary with sensor names and sensor columns
 sensor_columns = {}
@@ -99,6 +331,16 @@ sensor_columns["screen"] = ["scr_screen_status"]
 sensor_columns["sensor_wifi"] = ['sen_ssid', 'sen_bssid']
 sensor_columns["significant_motion"] = ["sig_is_moving"]
 sensor_columns["timezone"] = ["tim_timezone"]
+#endregion
+
+#region numeric sensors: define which sensors are numeric (important for features extraction)
+sensors_numeric = ["accelerometer", "barometer", "gravity", "gyroscope", "linear_accelerometer", "locations", "magnetometer",
+                   "plugin_ambient_noise", "plugin_openweather", "plugin_studentlife_audio", "rotation"]
+#endregion
+
+
+
+
 
 # test: check for different sensors
 dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
@@ -108,7 +350,3 @@ df_check.columns
 
 #endregion
 
-#region numeric sensors: define which sensors are numeric (important for features extraction)
-sensors_numeric = ["accelerometer", "barometer", "gravity", "gyroscope", "linear_accelerometer", "locations", "magnetometer",
-                   "plugin_ambient_noise", "plugin_openweather", "plugin_studentlife_audio", "rotation"]
-#endregion

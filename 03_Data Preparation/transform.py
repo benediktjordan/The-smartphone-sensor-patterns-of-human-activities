@@ -397,6 +397,7 @@ dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
 path_esm ="/Volumes/INTENSO/In Usage new/Databases/esm_all_transformed.csv"
 time_period = 5
 
+
 #temporary
 path = "/Volumes/INTENSO/In Usage new/Databases/db_iteration1_20220712/locations.csv"
 ##test speed of reading data
@@ -543,6 +544,52 @@ frequency = 1
 df, sensor_partly_data = filter_sensordata_by_esm(dir_databases, path_esm, sensor, frequency, time_period)
 df.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data" + "/FINAL_" + sensor + "_esm_timeperiod_" + str(time_period) + " min.csv",index=False)
 sensor_partly_data.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data" + "/FINAL_SENSORPARTLY_" + sensor + "_esm_timeperiod_" + str(time_period) + " min.csv",index=False)
+
+## this is to double check the functionality of this function with analytics
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+# create ESM_timestamp column which is in datetime format from timestamp column
+df_esm["ESM_timestamp"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+df_esm = df_esm[["ESM_timestamp", "device_id"]]
+
+df_sensor = df.copy()
+time_period = 90
+df_sensor["timestamp"] = pd.to_datetime(df_sensor["1"], unit = "ms")
+# iterate through ESM_timestamps in df_esm
+df_results = pd.DataFrame()
+for index, row in df_esm.iterrows():
+    # find data in time_period around ESM_timestamp in df_sensors_all
+    event_time = row["ESM_timestamp"]
+    df_temporary = df_sensor[(df_sensor['timestamp'] >= event_time - pd.Timedelta(seconds=(time_period / 2))) & (
+            df_sensor['timestamp'] <= event_time + pd.Timedelta(seconds=(time_period / 2)))]
+    df_temporary["ESM_timestamp"] = row["ESM_timestamp"]
+
+    #concatenate df_results with df_temporary
+    df_results = pd.concat([df_results, df_temporary])
+
+# merge participant IDs
+#df_results = merge_participantIDs(df_results, users, device_id_col = "2", include_cities = False)
+
+print("Unique ESM_timestamp values after cutting to 90 seconds around events for locations: " + str(df_results["ESM_timestamp"].nunique()))
+
+#testarea 2
+#convert count number of values in column 1 for each ESM_timestamp in df
+df_test = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/FINAL_locations_esm_timeperiod_5 min.csv")
+test = df_test2.groupby("ESM_timestamp")["timestamp"].count()
+
+# only keep rows with column 1 == "test"
+df_test2 = df.copy()
+#convert timestamp into datetime
+df_test2["timestamp"] = pd.to_datetime(df_test2["1"], unit = "ms")
+df_test2["ESM_timestamp"] = pd.to_datetime(df_test2["ESM_timestamp"], unit = "ms")
+
+df_test2 = df_test2[df_test2["ESM_timestamp"] == pd.to_datetime("2022-07-21 18:03:12.856999936")]
+# count number of unique column 2 values
+df_test2["2"].nunique()
+# delete  columns "Unnamed: 0" and "0"
+df_test2 = df_test2.drop(labels=["Unnamed: 0", "0"], axis=1)
+#drop duplicates
+df_test3 = df_test2.drop_duplicates()
+df_test2["ESM_timestamp"].nunique()
 
 #temporary 3
 
