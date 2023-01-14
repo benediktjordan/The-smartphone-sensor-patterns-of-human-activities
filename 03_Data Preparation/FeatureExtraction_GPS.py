@@ -27,7 +27,7 @@ class FeatureExtraction_GPS:
         df_new = pd.DataFrame()
 
         # if timestamp is in unix format: proceed differently than if it is in datetime format
-        if type(df["timestamp"].iloc[0]) is not str:
+        if (type(df["timestamp"].iloc[0]) is not str) and (type(df["timestamp"].iloc[0]) is not pd.Timestamp):
             for event in df["ESM_timestamp"].unique():
                 # create dataset for the participant
                 df_event = df.loc[df["ESM_timestamp"] == event]
@@ -64,8 +64,7 @@ class FeatureExtraction_GPS:
                         continue
                     df_event.loc[i, "acceleration (m/s^2)"] = ((df_event.loc[i, "speed (km/h)"] - df_event.loc[
                         i - 1, "speed (km/h)"]) / (df_event.loc[i, "loc_timestamp"] - df_event.loc[
-                        i - 1, "loc_timestamp"])) * (
-                                                                          1000 * 1000)  # *1000 to convert km to m and another *1000 to convert ms to s
+                        i - 1, "loc_timestamp"])) * (1000 * 1000)  # *1000 to convert km to m and another *1000 to convert ms to s
 
                 # concatenate to df_new
                 df_new = pd.concat([df_new, df_event])

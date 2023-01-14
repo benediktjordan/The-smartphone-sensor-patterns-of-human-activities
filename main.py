@@ -1,5 +1,3 @@
-##test2
-
 #region import
 import pickle
 #import tensorflow_decision_forests as tfdf
@@ -143,17 +141,46 @@ for col in df_esm.columns:
 ## add beginning and end of smartphone session to each ESM-event
 df_esm_with_screen = Merge_Transform.add_smartphone_session_start_end_to_esm(df_esm, df_screen)
 
-# add duration between beginning and and of ESM answer sessiong to each ESM-event
+# add duration between beginning and end of ESM answer session to each ESM-event
 ## compute duration between first and last answer
 df_esm_with_screen["duration_between_first_and_last_answer (s)"] = (df_esm_with_screen["smartphonelocation_time"] - df_esm_with_screen[
     "location_time"]) / np.timedelta64(1, 's')
 ## drop rows for which the time it took between first and last ESM answer is above 5 minutes
-df_esm_with_screen = df_esm_with_screen[df_esm_with_screen["duration_between_first_and_last_answer (s)"] < 5*60]
+df_esm_with_smartphone_sessions = df_esm_with_screen[df_esm_with_screen["duration_between_first_and_last_answer (s)"] < 5*60]
+df_esm_with_smartphone_sessions.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_with_smartphone_sessions.csv")
 
 # Rules (NOT DOCUMENTED YET):
 ## ESM_timestamp is timestamp when "Send" button for first answer is clicked -> IMPLEMENT!!
 ## events are discarded if more than 5 minutes between first and last answer (location and smartphone location) (reduces number of events from 1113 to 1065)
 ## NOTE: there are events for which no smartphone session start or no end could be found
+
+
+# delete all sensor data which is not inside the "smartphone session" of each ESM event & drop also duplicates
+## save it as an extra file
+sensor_list = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations"]
+dir_sensors = "/Users/benediktjordan/Downloads/"
+df_esm_with_smartphone_sessions = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_with_smartphone_sessions.csv")
+dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
+
+for sensor in tqdm(sensor_list):
+    print("Start with sensor: " + sensor)
+    # set frequencies
+    frequency = 10 # for all high frequency sensors
+    if sensor == "locations":
+        frequency = 1
+    # load sensor data
+    df_sensor = pd.read_pickle(dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
+    # drop duplicates
+    num_before_removing_duplicates = len(df_sensor) #analytics purposes
+    columns_duplicate_relevant = df_sensor.columns
+    columns_duplicate_relevant = columns_duplicate_relevant.drop(["Unnamed: 0", "0"])
+    df_sensor = df_sensor.drop_duplicates(subset=columns_duplicate_relevant)
+    print("Percentage of duplicates: " + str((num_before_removing_duplicates - len(df_sensor)) / num_before_removing_duplicates))
+    # delete all sensor data which is not inside the "smartphone session" of each ESM event
+    df_sensor = Merge_Transform.delete_sensor_data_outside_smartphone_session(df_sensor, df_esm_with_smartphone_sessions, frequency)
+    # save it as pickle
+    with open(dir_results + sensor + "_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl", 'wb') as f:
+        pickle.dump(df_sensor, f, pickle.HIGHEST_PROTOCOL)
 
 
 #region TEMPORARY join all locations sensorfiles -> just double checking if my 5-min-around-event Location
@@ -226,35 +253,42 @@ path_sensor_database = "/Users/benediktjordan/Downloads/"
 df_esm = data_exploration_sensors.volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min)
 df_esm.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(time_period) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
 
+
 # calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
 ## Note: this data is relevant for, for example, public transport -> data exploration -> visualizing mean & std of GPS data
 ## calculate summary stats for GPS
-dir_sensors = "/Users/benediktjordan/Downloads/"
+dir_sensors = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/"
-sensors = ["GPS", "linear_accelerometer"]
-sensors = [ "linear_accelerometer"]
-test = pd.read_pickle("/Users/benediktjordan/Downloads/linear_accelerometer_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-
+sensors = ["GPS", "linear_accelerometer", "rotation", "magnetometer", "gyroscope"]
+only_sensordata_of_active_smartphone_sessions = "yes"
 gps_accuracy_min_list = [35]
-time_periods = [10,20,40, 90, 180]
+#time_periods = [10,20,40, 90, 180]
+time_periods = [10]
+
 for sensor in sensors:
     for time_period in time_periods:
         for gps_accuracy_min in gps_accuracy_min_list:
             if sensor == "GPS":
-                path_sensor = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
+                if only_sensordata_of_active_smartphone_sessions == "yes":
+                    path_sensor = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv"
+                else:
+                    path_sensor = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
             else:
-                path_sensor = dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+                if only_sensordata_of_active_smartphone_sessions == "yes":
+                    path_sensor = dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl"
+                else:
+                    path_sensor = dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
 
             print("Started with time period: " + str(time_period))
             summary_statistics, missing_sensordata = data_exploration_sensors.create_summary_statistics_for_sensors(path_sensor, sensor, time_period, dir_results)
             missing_sensordata_df = pd.DataFrame(missing_sensordata)
             if sensor == "GPS":
-                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv",
+                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv",
                                           index=False)
-                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_missing_sensordata.csv", index=False)
+                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "_missing_sensordata.csv", index=False)
             else:
-                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv", index=False)
-                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_missing_sensordata.csv", index=False)
+                summary_statistics.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv", index=False)
+                missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "_missing_sensordata.csv", index=False)
 
 
 
@@ -262,7 +296,14 @@ for sensor in sensors:
 
 #region calcualate distance, speed & acceleration
 # load data around events
-df_locations_events = pd.read_pickle("/Users/benediktjordan/Downloads/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
+only_sensordata_of_active_smartphone_sessions = "yes"
+accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
+
+#load GPS data
+if only_sensordata_of_active_smartphone_sessions == "yes":
+    df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/locations_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+else:
+    df_locations_events = pd.read_pickle("/Users/benediktjordan/Downloads/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
 
 #drop duplicates (this step should be integrated into data preparation)
 df_locations_events = df_locations_events.drop(columns=["Unnamed: 0", "0"])
@@ -276,13 +317,12 @@ df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceler
 # drop rows with unrealistic speed values  & GPS accuracy values
 df_features = df_features[df_features["speed (km/h)"] < 300]
 # create different GPS accuracy thresholds
-accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
 for accuracy_threshold in accuracy_thresholds:
     df_features_final = df_features[df_features["loc_accuracy"] < accuracy_threshold]
     df_features_final = df_features_final.reset_index(drop=True)
     print("Number of rows with accuracy < " + str(accuracy_threshold) + "m: " + str(len(df_features_final)))
     #save to csv
-    df_features_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + ".csv")
+    df_features_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
 #endregion
 
 #region different activities
@@ -743,6 +783,7 @@ df_esm_including_sensordata_above_threshold.to_csv("/Users/benediktjordan/Docume
 fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_human motion", "Human Motion - Number of Answers per Class with Sensor Data")
 fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
 
+
 # create plots for all events visualizing linear accelerometer, magnetometer, gyroscope, rotation, and speed data
 label_column_name = "label_human motion"
 time_period = 90  # seconds; timeperiod around event which should be visualized
@@ -750,7 +791,7 @@ df_relevant_events = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration0
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
 path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/"
 path_sensordata = "/Users/benediktjordan/Downloads/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
-gps_accuracy_min = 10 # meters
+gps_accuracy_min = 35 # meters
 path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
 axs_limitations = "general"
 label_data = True
@@ -767,12 +808,12 @@ list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
 
 #create list of event times for which sensor data exists: double check with GPS data according to above accuracy
 event_times = []
+
 for i in range(len(df_relevant_events)):
     event_times.append(df_relevant_events["ESM_timestamp"][i])
 df_gps = pd.read_csv(path_GPS_features)
 # drop events in event_times if they are not in df_gps["ESM_timestamp"]
 event_times = [x for x in event_times if x in df_gps["ESM_timestamp"].tolist()]
-
 num_events = 1
 sensor_names = ""
 for sensor in list_sensors:
@@ -816,7 +857,18 @@ for event_time in tqdm(event_times):
     # print progress
     print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
     num_events += 1
+#temporary
+# create timestamp as datetime in df_screen
+df_screen["scr_timestamp"] = pd.to_datetime(df_screen["scr_timestamp"], unit = "ms")
+df_screen_user = df_screen[df_screen["scr_device_id"] == "0d620b8a-c2d4-48fc-9c75-80ce80aeea3e"]
 
+# visualize sensordata of specific events for documentation
+event_times_and_activity = [["2022-06.23 13:08:15.327000064", "Walking"],
+                            ["2022-06.29 07:00:32.575000064", "Cycling"],
+                            ["2022-06.23 08:00:03.296999936", "Standing (in one hand)"],
+                            ["2022-06.30 09:24:22.292999936", "Sitting at a table (in one hand)"],
+                            ["2022-06.22 17:00:03.004999936", "Lying (in one hand)"],
+                            ["2022-06.23 06:24:26.934000128", "Lying (on flat surface)"],
 
 ########## THE REST OF THIS REGION ORIGINATES FROM PUBLIC TRANSPORT AND IS NOT YET ADAPTED TO HUMAN MOTION ###########
 # visualize mean/std x max x public transport class in scatterplot for GPS and accelerometer data

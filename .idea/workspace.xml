@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="test">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -621,7 +624,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673355945757</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="test">
+      <created>1673692220022</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1673692220022</updated>
+    </task>
+    <option name="localTasksCounter" value="50" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,7 +672,8 @@
     <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
     <MESSAGE value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
     <MESSAGE value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
-    <option name="LAST_COMMIT_MESSAGE" value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
+    <MESSAGE value="test" />
+    <option name="LAST_COMMIT_MESSAGE" value="test" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -734,18 +745,23 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>652</line>
+          <line>692</line>
           <option name="timeStamp" value="55" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>1044</line>
+          <line>1096</line>
           <option name="timeStamp" value="60" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>3</line>
+          <line>1</line>
           <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>72</line>
+          <option name="timeStamp" value="62" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
