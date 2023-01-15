@@ -28,6 +28,9 @@ class FeatureExtraction_GPS:
 
         # if timestamp is in unix format: proceed differently than if it is in datetime format
         if (type(df["timestamp"].iloc[0]) is not str) and (type(df["timestamp"].iloc[0]) is not pd.Timestamp):
+            print("Timestamp is in unix format. ADAPT THE CODE FOR ACCELERATION FOR THIS FORMAT. Not yet in correct format.")
+            #break the function here
+            return None
             for event in df["ESM_timestamp"].unique():
                 # create dataset for the participant
                 df_event = df.loc[df["ESM_timestamp"] == event]
@@ -105,17 +108,15 @@ class FeatureExtraction_GPS:
                                                               60 * 60 / 1000)  # *60*60 to convert from seconds to hours; /1000 to convert km to m
 
                 # calculate acceleration
-                df_event["acceleration (m/s^2)"] = 0
+                df_event["acceleration (km/h/s)"] = 0
                 for i in range(0, len(df_event)):
                     if i == 0:
-                        df_event.loc[i, "acceleration (m/s^2)"] = np.nan
+                        df_event.loc[i, "acceleration (km/h/s)"] = np.nan
                         continue
-                    df_event.loc[i, "acceleration (m/s^2)"] = ((df_event.loc[i, "speed (km/h)"] -
-                                                                df_event.loc[i - 1, "speed (km/h)"]) / (
+                    df_event.loc[i, "acceleration (km/h/s)"] = ((df_event.loc[i, "speed (km/h)"] -
+                                                                df_event.loc[i - 1, "speed (km/h)"]) / ((
                                                                        df_event.loc[i, "timestamp"] -
-                                                                       df_event.loc[
-                                                                           i - 1, "timestamp"]).total_seconds()) * (
-                                                                  1000)  # *1000 to convert km to m and another
+                                                                       df_event.loc[i - 1, "timestamp"]).total_seconds()))
 
                 # concatenate to df_new
                 df_new = pd.concat([df_new, df_event])

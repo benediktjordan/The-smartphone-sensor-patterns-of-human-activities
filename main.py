@@ -296,7 +296,7 @@ for sensor in sensors:
 
 #region calcualate distance, speed & acceleration
 # load data around events
-only_sensordata_of_active_smartphone_sessions = "yes"
+only_sensordata_of_active_smartphone_sessions = "no"
 accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
 
 #load GPS data
@@ -313,7 +313,7 @@ df_locations_events = df_locations_events.drop_duplicates()
 df_features = FeatureExtraction_GPS().calculate_distance_speed_acceleration(df_locations_events)
 
 # drop rows where distance, speed or acceleration contain NaN (they contain NaN if it is first entry of every event)
-df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (m/s^2)"])
+df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (km/h/s)"])
 # drop rows with unrealistic speed values  & GPS accuracy values
 df_features = df_features[df_features["speed (km/h)"] < 300]
 # create different GPS accuracy thresholds
@@ -857,10 +857,6 @@ for event_time in tqdm(event_times):
     # print progress
     print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
     num_events += 1
-#temporary
-# create timestamp as datetime in df_screen
-df_screen["scr_timestamp"] = pd.to_datetime(df_screen["scr_timestamp"], unit = "ms")
-df_screen_user = df_screen[df_screen["scr_device_id"] == "0d620b8a-c2d4-48fc-9c75-80ce80aeea3e"]
 
 # visualize sensordata of specific events for documentation
 event_times_and_activity = [["2022-06.23 13:08:15.327000064", "Walking"],
