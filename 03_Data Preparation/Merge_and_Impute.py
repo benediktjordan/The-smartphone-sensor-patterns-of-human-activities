@@ -8,8 +8,12 @@ import numpy as np
 
 #region create merge object/class
 class Merge_and_Impute:
-    #merge timeseries
-    def merge(df_base, sensor_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, sensor_timeseries_are_merged = False):
+
+    #merge timeseries or features
+    # NOTE_
+    ## timedelta HAS TO BE a string in format "10s", otherwise it doesnt work
+    ## merging is done using the setting "nearest" which means the nearest timestamp is taken (doesnt matter if before or after)
+    def merge(df_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, add_prefix_to_merged_columns = False):
         df_final = pd.DataFrame()
 
         # harmonize column names
@@ -64,7 +68,7 @@ class Merge_and_Impute:
 
             #if sensor timeseries are merged: add prefix of three first letters of sensor to column names
             # in order that the "double_values_X" columns of different sensors can be differentiated
-            if sensor_timeseries_are_merged == True:
+            if add_prefix_to_merged_columns == True:
                 # add prefix to column names except for "timestamp" and "device_id"
                 for col in df_tomerge_user.columns:
                     if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp":
@@ -93,8 +97,10 @@ class Merge_and_Impute:
             user_count += 1
 
         # if sensor timeseries are merged: add prefix to "timestamp_merged" column
-        if sensor_timeseries_are_merged == True:
-            df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+        #if add_prefix_to_merged_columns == True:
+        #    df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+        df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+
         return df_final
 
     # delete rows with missing values

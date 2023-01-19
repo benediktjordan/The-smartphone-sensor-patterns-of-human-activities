@@ -158,6 +158,8 @@ df_esm_with_smartphone_sessions.to_csv("/Users/benediktjordan/Documents/MTS/Iter
 # delete all sensor data which is not inside the "smartphone session" of each ESM event & drop also duplicates
 ## save it as an extra file
 sensor_list = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations"]
+sensor_list = ["accelerometer"]
+
 dir_sensors = "/Users/benediktjordan/Downloads/"
 df_esm_with_smartphone_sessions = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_with_smartphone_sessions.csv")
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
@@ -235,7 +237,6 @@ test= df_results.groupby("ESM_timestamp")["ESM_timestamp"].count()
 # visualize label data distribution
 path_esm = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv"
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
-
 df_esm = data_exploration_labels.load_esm(path_esm)
 ## visualize for every answer and every activity the number of classes
 data_exploration_labels.visualize_esm_activities_all(dir_results,df_esm)
@@ -261,9 +262,9 @@ dir_sensors = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_prepara
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/"
 sensors = ["GPS", "linear_accelerometer", "rotation", "magnetometer", "gyroscope"]
 only_sensordata_of_active_smartphone_sessions = "yes"
-gps_accuracy_min_list = [35]
+gps_accuracy_min_list = [10]
 #time_periods = [10,20,40, 90, 180]
-time_periods = [10]
+time_periods = [10,20,40, 90, 180]
 
 for sensor in sensors:
     for time_period in time_periods:
@@ -296,7 +297,7 @@ for sensor in sensors:
 
 #region calcualate distance, speed & acceleration
 # load data around events
-only_sensordata_of_active_smartphone_sessions = "no"
+only_sensordata_of_active_smartphone_sessions = "yes"
 accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
 
 #load GPS data
@@ -407,6 +408,293 @@ for index, sensor in sensors_and_frequencies.iterrows():
         continue
     df_sensor.to_csv(path_datasets + sensor["Sensor"] + "_labeled_esm_timestamps_allparticipants.csv", index=False)
 
+#endregion
+
+#region data exploration for human motion
+#region data exploration labels
+label_column_name = "label_human motion"
+df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+
+## create table with users x relevant ESM-answers
+df_label_counts_bodyposition_smartphonelocation = df_labels.groupby("bodyposition")["smartphonelocation"].value_counts().unstack().fillna(0)
+df_label_counts_bodyposition_smartphonelocation["total"] = df_label_counts_bodyposition_smartphonelocation.sum(axis=1)
+df_label_counts_bodyposition_smartphonelocation.loc["total"] = df_label_counts_bodyposition_smartphonelocation.sum(axis=0)
+df_label_counts_bodyposition_locations = df_labels.groupby("bodyposition")["location"].value_counts().unstack().fillna(0)
+df_label_counts_bodyposition_locations["total"] = df_label_counts_bodyposition_locations.sum(axis=1)
+df_label_counts_bodyposition_locations.loc["total"] = df_label_counts_bodyposition_locations.sum(axis=0)
+
+## create barplot with all human motion classes
+df_labels_humanmotion= df_labels.copy()
+#df_labels_publictransport["label_public transport"] = df_labels_publictransport["label_public transport"].replace("train", "public transport")
+fig = data_exploration_labels.visualize_esm_activity(df_labels_humanmotion, "label_human motion", "Human Motion - Number of Answers per Class")
+fig.savefig(path_storage + "human_motion_class-counts.png")
+
+##create table with users x label classes
+df_labels_humanmotion =  Merge_Transform.merge_participantIDs(df_labels_humanmotion, users, include_cities = True)
+df_label_counts = data_exploration_labels.create_table_user_activity(df_labels_humanmotion, "label_human motion")
+df_label_counts.to_csv(path_storage + "human_motion_labels-overview.csv")
+
+
+#endregion
+
+#region data exploration sensors
+# find out how many labels have sensor data: visualize as barplot and table
+segment_around_events = 90 # timeperiod considered around events
+min_sensordata_percentage = 50 #in percent; only sensordata above this threshold will be considered
+gps_accuracy_min = 35 # in meters; only gps data with accuracy below this threshold was considered when counting GPS records for each event
+label_column_name = "label_human motion"
+df_esm_including_number_sensordata = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(segment_around_events) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
+# drop row with "nan" in ESM_timestamp
+df_esm_including_number_sensordata = df_esm_including_number_sensordata[df_esm_including_number_sensordata["ESM_timestamp"].notnull()]
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+sensors_included = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations"]
+## visualize as table
+df_esm_including_sensordata_above_threshold, df_esm_user_class_counts = data_exploration_labels.create_table_user_activity_including_sensordata(df_esm_including_number_sensordata, dict_label, label_column_name , sensors_included, segment_around_events)
+print("Number of Events for which all Sensor Data is available: " + str(len(df_esm_including_sensordata_above_threshold)))
+df_esm_user_class_counts.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_user-class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
+## this is necessary for the following visualiztion of sample events: from this df will get the relevant ESM timestamps
+df_esm_including_sensordata_above_threshold.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_events_with-sensor-data_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
+
+## visualize as barplot
+fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_human motion", "Human Motion - Number of Answers per Class with Sensor Data")
+fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
+
+
+# create plots for all events visualizing linear accelerometer, magnetometer, gyroscope, rotation, and speed data
+label_column_name = "label_human motion"
+time_period = 90  # seconds; timeperiod around event which should be visualized
+df_relevant_events = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_events_with-sensor-data_event-segments-90_min-sensor-percentage-50-sensors-['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'locations']_min-gps-accuracy-35.csv")
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/Event_Visualizations/"
+path_sensordata = "/Users/benediktjordan/Downloads/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+gps_accuracy_min = 35 # meters
+only_active_smartphone_sessions = "no"
+path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + ".csv"
+axs_limitations = "general"
+label_data = True
+figure_title = ""
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
+                ["Magnetometer", "magnetometer"],
+                ["Gyroscope", "gyroscope"],
+                ["Rotation", "rotation"],
+                ["GPS"]] # this sensor set is meant for the appendix
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS"]] #this sensor set is meant for analysing dynamic human motion
+list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]] #this sensor set is meant for analysing stationary human motion
+
+## create list of event times for which sensor data exists: double check with GPS data according to above accuracy
+event_times = []
+for i in range(len(df_relevant_events)):
+    event_times.append(df_relevant_events["ESM_timestamp"][i])
+df_gps = pd.read_csv(path_GPS_features)
+# drop events in event_times if they are not in df_gps["ESM_timestamp"]
+event_times = [x for x in event_times if x in df_gps["ESM_timestamp"].tolist()]
+num_events = 1
+sensor_names = ""
+for sensor in list_sensors:
+    sensor_names += sensor[0] + "_"
+
+for event_time in tqdm(event_times):
+    time0 = time.time()
+    # TEMPORARY check if figure has already been saved; if yes, skip
+    #list_files = []
+    #for root, dirs, files in os.walk(path_to_save):
+    #    for file in files:
+    #        if file.endswith(".png"):
+    #            list_files.append(os.path.join(root, file))
+    # check if event_time is already in any element of list_files
+    #if any(str(event_time) in s for s in list_files):
+    #    print("Figure already saved for event_time: " + str(event_time))
+    #    num_events += 1
+    #    continue
+
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period,
+                                                                           label_column_name, path_sensordata, axs_limitations, dict_label, label_data = label_data,
+                                                                                             path_GPS_features = path_GPS_features)
+    # check if fig is None: if yes, continue with next event_time
+    if fig is None:
+        num_events += 1
+        continue
+
+    # find out if path exists
+    #NOte: reason for this is that there was a problem with this case
+    if activity_name == "car/bus/train/tram":
+        activity_name = "car-bus-train-tram"
+
+    # if path_to save doesnt exist, create it with mkdir
+    if not os.path.exists(path_to_save + activity_name + "/"):
+        os.makedirs(path_to_save + activity_name + "/")
+
+    fig.savefig(
+        path_to_save + activity_name + "/gps-accuracy-min-" + str(gps_accuracy_min) + "_" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + ".png")
+    plt.close(fig)
+    # print progress
+    print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
+    num_events += 1
+
+
+
+# visualize sensordata of specific events for documentation
+event_times_and_activity = [["2022-06-23 13:08:15.327000064", "Walking (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS"]]],
+                            ["2022-06-29 07:00:32.575000064", "Cycling (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS"]]],
+                            ["2022-06-23 08:00:03.296999936", "Standing (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-30 09:24:22.292999936", "Sitting at a Table (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-22 17:00:03.004999936", "Lying (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-23 06:24:26.934000128", "Lying (Smartphone on a Flat Surface)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]]]
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/SummaryStats_Visualizations/"
+for event_time_and_activity in event_times_and_activity:
+    print("Start with Event " + str(event_time_and_activity[1]))
+    figure_title = "Sample Event of " + event_time_and_activity[1]
+    list_sensors = event_time_and_activity[2]
+    event_time = event_time_and_activity[0]
+    sensor_names = ""
+    for sensor in list_sensors:
+        sensor_names += sensor[0] + "_"
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time,
+                                                                                             time_period,
+                                                                                             label_column_name,
+                                                                                             path_sensordata,
+                                                                                             axs_limitations,
+                                                                                             dict_label,
+                                                                                             label_data=label_data,
+                                                                                             path_GPS_features=path_GPS_features,
+                                                                                             figure_title = figure_title)
+    path_to_save_updated = path_to_save + activity_name + "/"
+    #create path if it doesnt exist
+    if not os.path.exists(path_to_save_updated):
+        os.makedirs(path_to_save_updated)
+    fig.savefig(
+        path_to_save_updated + "gps-accuracy-min-" + str(gps_accuracy_min) + "_" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + ".png", dpi = 300)
+
+
+# visualize mean/std x max x human motion classes in scatterplot for GPS and accelerometer data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+time_periods = [10,20,40, 90, 180]
+list_activities = ["standing", "sitting: at table", "lying", "walking", "cycling"]
+join_classes = "yes"
+visualize_participants = "no"
+gps_accuracy_min = 10 # minimum accuracy of GPS data to be included in analysis
+sensors = [["Linear Accelerometer", "linear_accelerometer"],
+           ["GPS", "locations"],
+           ["Rotation", "rotation"]]
+only_sensordata_of_active_smartphone_sessions = "yes"
+label_column_name = ["Human Motion Classes", "label_human motion"]
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/" + label_column_name[1] + "/SummaryStats_Visualizations/"
+
+for sensor in sensors:
+    for time_period in time_periods:
+        if sensor[0] == "GPS":
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1],
+                                                  ESM_identifier_column="ESM_timestamp")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            # combine human motion classes
+            if join_classes == "yes":
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["standing (in one hand)", "standing (in two hands)"], "standing")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["sitting: at a table (in one hand)", "sitting: at a table (in two hands)"], "sitting: at table")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["lying (in one hand)", "lying (in two hands)"], "lying")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["walking (in one hand)", "walking (in two hands)"], "walking")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["cycling (in one hand)", "cycling (in two hands)"], "cycling")
+
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1] , label_column_name[0], list_activities,
+                                    "Mean and Maximum Speed and Acceleration of Human Motion Events", visualize_participants)
+            fig.savefig(path_storage + "SummaryStatsVisualization_GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                        + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
+
+        else:
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor[1] + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1], ESM_identifier_column="ESM_timestamp")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            # combine human motion classes
+            if join_classes == "yes":
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["standing (in one hand)", "standing (in two hands)"], "standing")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["sitting: at a table (in one hand)", "sitting: at a table (in two hands)"], "sitting: at table")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["lying (in one hand)", "lying (in two hands)"], "lying")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["walking (in one hand)", "walking (in two hands)"], "walking")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["cycling (in one hand)", "cycling (in two hands)"], "cycling")
+
+            figure_title = "Mean and Maximum of the " + sensor[0] + " of Human Motion Events"
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1], label_column_name[0], list_activities, figure_title , visualize_participants)
+            fig.savefig(
+                path_storage + "SummaryStatsVisualization_" + sensor[1] + "_std_max_activities-included-" + str(
+                    list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
+
+
+
+
+#testarea for location data
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration.csv")
+#label data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+# delete rows with nan values in label_public transport
+df_locations = df_locations.dropna(subset=["label_public transport"])
+
+#calculate summary stats for column accuracy
+df_locations["loc_accuracy"].describe()
+
+# only retain rows with accuracy < 35
+df_locations_new = df_locations[df_locations["loc_accuracy"] < 35]
+#count number of unique ESM_timestamps
+df_locations["ESM_timestamp"].nunique()
+df_locations_new["ESM_timestamp"].nunique()
+
+#retain only data which is in 90s time period around ESM_timestamp
+time_period = 90
+#convert timestamp to datetime
+df_locations_new["ESM_timestamp"] = pd.to_datetime(df_locations_new["ESM_timestamp"])
+df_locations_new["timestamp"] = pd.to_datetime(df_locations_new["timestamp"])
+df_locations_new = df_locations_new[(df_locations_new['timestamp'] >= df_locations_new['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
+        df_locations_new['timestamp'] <= df_locations_new['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
+
+df_locations_new["ESM_timestamp"].nunique()
+# take only the unique ESM_timestamps and count from them the number of label_public transport
+df_locations_new_unique_ESM_timestamps = df_locations_new.drop_duplicates(subset=["ESM_timestamp"])
+df_locations_new_unique_ESM_timestamps["label_public transport"].value_counts()
+
+
+
+
+
+# add labels
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+#delete NaN values in label_public transport
+df_locations = df_locations[df_locations["label_public transport"].notna()]
+#get only data from user with loc_device_id = 590f0faf-d932-4a57-998d-e3da667a91dc
+df_locations_user = df_locations[df_locations["loc_device_id"] == "b7b013b7-f78c-4325-a7ab-2dfc128fba27"]
+
+#endregion
 
 #endregion
 
@@ -440,6 +728,7 @@ for sensor in sensors_high_frequency:
         counter += 1
 #save to csv
 df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/highfrequencysensors_allparticipants.csv", index=False)
+
 
 #region feature extraction: tsfresh features for high-frequency sensors
 ##NOTE: the following code regarding feature extraction and selection with tsfresh is copied from "pythonProject", as the
@@ -552,7 +841,7 @@ for sensor in sensors:
         with open(path_features, 'wb') as f:
             pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
 
-## combine different sensor files into one file
+## merge different feature sensor files into one file
 ## concatenate dataframes based on sensor_timestamp column and device_id column
 #Note: important to merge based not only on timestamp BUT ALSO on device_id, as for TIna & Selcuk the timestamp is the same
 #(as well as the ESM_timestamp)
@@ -789,10 +1078,11 @@ label_column_name = "label_human motion"
 time_period = 90  # seconds; timeperiod around event which should be visualized
 df_relevant_events = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_events_with-sensor-data_event-segments-90_min-sensor-percentage-50-sensors-['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'locations']_min-gps-accuracy-35.csv")
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/"
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/Event_Visualizations/"
 path_sensordata = "/Users/benediktjordan/Downloads/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
 gps_accuracy_min = 35 # meters
-path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + ".csv"
+only_active_smartphone_sessions = "no"
+path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + ".csv"
 axs_limitations = "general"
 label_data = True
 figure_title = ""
@@ -806,9 +1096,8 @@ list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
 list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
                 ["Rotation", "rotation"]] #this sensor set is meant for analysing stationary human motion
 
-#create list of event times for which sensor data exists: double check with GPS data according to above accuracy
+## create list of event times for which sensor data exists: double check with GPS data according to above accuracy
 event_times = []
-
 for i in range(len(df_relevant_events)):
     event_times.append(df_relevant_events["ESM_timestamp"][i])
 df_gps = pd.read_csv(path_GPS_features)
@@ -858,87 +1147,120 @@ for event_time in tqdm(event_times):
     print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
     num_events += 1
 
+
+
 # visualize sensordata of specific events for documentation
-event_times_and_activity = [["2022-06.23 13:08:15.327000064", "Walking"],
-                            ["2022-06.29 07:00:32.575000064", "Cycling"],
-                            ["2022-06.23 08:00:03.296999936", "Standing (in one hand)"],
-                            ["2022-06.30 09:24:22.292999936", "Sitting at a table (in one hand)"],
-                            ["2022-06.22 17:00:03.004999936", "Lying (in one hand)"],
-                            ["2022-06.23 06:24:26.934000128", "Lying (on flat surface)"],
+event_times_and_activity = [["2022-06-23 13:08:15.327000064", "Walking (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS"]]],
+                            ["2022-06-29 07:00:32.575000064", "Cycling (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["GPS"]]],
+                            ["2022-06-23 08:00:03.296999936", "Standing (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-30 09:24:22.292999936", "Sitting at a Table (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-22 17:00:03.004999936", "Lying (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]],
+                            ["2022-06-23 06:24:26.934000128", "Lying (Smartphone on a Flat Surface)", [["Linear Accelerometer", "linear_accelerometer"],
+                ["Rotation", "rotation"]]]]
+path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/SummaryStats_Visualizations/"
+for event_time_and_activity in event_times_and_activity:
+    print("Start with Event " + str(event_time_and_activity[1]))
+    figure_title = "Sample Event of " + event_time_and_activity[1]
+    list_sensors = event_time_and_activity[2]
+    event_time = event_time_and_activity[0]
+    sensor_names = ""
+    for sensor in list_sensors:
+        sensor_names += sensor[0] + "_"
+    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time,
+                                                                                             time_period,
+                                                                                             label_column_name,
+                                                                                             path_sensordata,
+                                                                                             axs_limitations,
+                                                                                             dict_label,
+                                                                                             label_data=label_data,
+                                                                                             path_GPS_features=path_GPS_features,
+                                                                                             figure_title = figure_title)
+    path_to_save_updated = path_to_save + activity_name + "/"
+    #create path if it doesnt exist
+    if not os.path.exists(path_to_save_updated):
+        os.makedirs(path_to_save_updated)
+    fig.savefig(
+        path_to_save_updated + "gps-accuracy-min-" + str(gps_accuracy_min) + "_" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
+            time_period) + "_Sensors-" + sensor_names + ".png", dpi = 300)
 
-########## THE REST OF THIS REGION ORIGINATES FROM PUBLIC TRANSPORT AND IS NOT YET ADAPTED TO HUMAN MOTION ###########
-# visualize mean/std x max x public transport class in scatterplot for GPS and accelerometer data
+
+# visualize mean/std x max x human motion classes in scatterplot for GPS and accelerometer data
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
 time_periods = [10,20,40, 90, 180]
-list_activities = ["stationary", "walking", "public transport", "car"]
+list_activities = ["standing", "sitting: at table", "lying", "walking", "cycling"]
+join_classes = "yes"
 visualize_participants = "no"
-gps_accuracy_min = 35 # minimum accuracy of GPS data to be included in analysis
-sensors = ["linear_accelerometer", "GPS"]
-sensors = ["GPS"]
+gps_accuracy_min = 10 # minimum accuracy of GPS data to be included in analysis
+sensors = [["Linear Accelerometer", "linear_accelerometer"],
+           ["GPS", "locations"],
+           ["Rotation", "rotation"]]
+only_sensordata_of_active_smartphone_sessions = "yes"
+label_column_name = ["Human Motion Classes", "label_human motion"]
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/" + label_column_name[1] + "/SummaryStats_Visualizations/"
 
 for sensor in sensors:
     for time_period in time_periods:
-        if sensor == "GPS":
+        if sensor[0] == "GPS":
             df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv")
-            # add label public transport
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1],
                                                   ESM_identifier_column="ESM_timestamp")
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,
-                                    "Figure Title", visualize_participants)
-            fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
-                        + str(time_period) + "s_scatterplot.png")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            # combine human motion classes
+            if join_classes == "yes":
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["standing (in one hand)", "standing (in two hands)"], "standing")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["sitting: at a table (in one hand)", "sitting: at a table (in two hands)"], "sitting: at table")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["lying (in one hand)", "lying (in two hands)"], "lying")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["walking (in one hand)", "walking (in two hands)"], "walking")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["cycling (in one hand)", "cycling (in two hands)"], "cycling")
+
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1] , label_column_name[0], list_activities,
+                                    "Mean and Maximum Speed and Acceleration of Human Motion Events", visualize_participants)
+            fig.savefig(path_storage + "SummaryStatsVisualization_GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                        + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
+
         else:
             df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
-            # add label public transport
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
-                                                  ESM_identifier_column="ESM_timestamp")
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,"Figure Title", visualize_participants)
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor[1] + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1], ESM_identifier_column="ESM_timestamp")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            # combine human motion classes
+            if join_classes == "yes":
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["standing (in one hand)", "standing (in two hands)"], "standing")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["sitting: at a table (in one hand)", "sitting: at a table (in two hands)"], "sitting: at table")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["lying (in one hand)", "lying (in two hands)"], "lying")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["walking (in one hand)", "walking (in two hands)"], "walking")
+                df_summary_stats[label_column_name[0]] = df_summary_stats[label_column_name[0]].replace(
+                    ["cycling (in one hand)", "cycling (in two hands)"], "cycling")
+
+            figure_title = "Mean and Maximum of the " + sensor[0] + " of Human Motion Events"
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1], label_column_name[0], list_activities, figure_title , visualize_participants)
             fig.savefig(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/" + sensor + "_std_max_activities-included-" + str(
+                path_storage + "SummaryStatsVisualization_" + sensor[1] + "_std_max_activities-included-" + str(
                     list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
-                + str(time_period) + "s_scatterplot.png")
-
-
-# UPDATED APPROACH 2: visualize mean x max x public transport class in scatterplot for GPS data BUT THIS TIME COMBINE ALL PUBLIC TRANSPORT CLASSES
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-time_periods = [10,20,40, 90, 180]
-sensors = ["linear_accelerometer", "GPS"]
-list_activities = ["stationary", "walking", "public transport", "car", "running", "cycling"]
-visualize_participants = "no"
-gps_accuracy_min = 35 # minimum accuracy of GPS data to be included in analysis
-for sensor in sensors:
-    for time_period in time_periods:
-        if sensor == "GPS":
-            df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + ".csv")
-            # add label public transport
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport",
-                                                  ESM_identifier_column="ESM_timestamp")
-            # combine all public transport classes
-            df_summary_stats["label_public transport"] = df_summary_stats["label_public transport"].replace(
-                ["train", "car/bus/train/tram"], "public transport")
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, "GPS", "label_public transport", list_activities,
-                                    "Mean and Speed of Transportation Mode Events", visualize_participants)
-            fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
-                        + str(time_period) + "s_scatterplot.png")
-        else:
-            df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/" + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
-            # add label public transport
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
-            # combine all public transport classes
-            df_summary_stats["label_public transport"] = df_summary_stats["label_public transport"].replace(
-                ["train", "car/bus/train/tram"], "public transport")
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor, "label_public transport", list_activities,"Mean and Maxima of the Linear Accelerometer of Transportation Mode Events", visualize_participants)
-            fig.savefig(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_public transport/" + sensor + "_std_max_activities-included-" + str(
-                    list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
-                + str(time_period) + "s_scatterplot.png")
-
-# get unique ESM_timestamp values
-df_summary_stats["ESM_timestamp"].nunique()
+                + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
 
 
 
@@ -989,13 +1311,292 @@ df_locations_user = df_locations[df_locations["loc_device_id"] == "b7b013b7-f78c
 #endregion
 
 #region data preparation for human motion
-label_column_name = "label_human motion - general"
+
 # load labels
 sensors_included = "all"
 with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl", 'rb') as f:
     dict_label = pickle.load(f)
 
-# create different combinations of sensors & features
+#region merge different sensors 1. set: all high-freq. sensors; 2. set: linear accelerometer & rotation
+label_column_name = "label_human motion"
+sensor_sets_to_merge = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"],
+                        ["linear_accelerometer", "rotation"]]
+timedelta = "100ms" #must be in format compatible with pandas.Timedelta
+columns_to_delete = ["device_id", "ESM_timestamp", "Unnamed: 0", "0", "1", "3"]
+add_prefix_to_merged_columns = False # this is not necessary here since in the sensor data is already prefix contained
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
+
+for sensor_set in sensor_sets_to_merge:
+    print("Merging sensor set: " + str(sensor_set))
+    counter = 1
+    for sensor in sensor_set:
+        print("Start with sensor: " + sensor)
+        if counter == 1:
+            sensor_base = sensor
+            df_base = pd.read_pickle(path_datasets + sensor + "_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+            counter += 1
+            continue
+        if counter > 1:
+            sensor_tomerge = sensor
+            df_tomerge = pd.read_pickle(path_datasets + sensor + "_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+            df_base = Merge_and_Impute.merge(df_base, sensor_base, df_tomerge, sensor_tomerge, timedelta, columns_to_delete, add_prefix_to_merged_columns)
+            counter += 1
+    df_base.to_csv(
+        "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/_esm_timeperiod_5 min_only-active-smartphone-sessions_timeseries-merged_sensors-" + str(sensor_set) + ".csv", index=False)
+#save to csv
+#endregion
+
+#region feature extraction of high-frequency features: for both sensor subsets
+## COMPARE CODE IN OTHER PROJECT
+### what is missing:
+### - feature extraction for all highfreq: 2,5, and 10s feature segments
+### - combining chunks: for LinAcc-Rot set: 1s and 2s chunks; for all highfreq: all feature segments chunks
+#endregion
+
+#region feature extraction of Speed & Acceleration features
+## COMPARE CODE IN OTHER PROJECT
+#endregion
+
+#region merge high-frequency features with speed & acceleration features (or, for feature_segment == 1: merge high-frequency features with speed & acceleration)
+## WHAT STILL MISSING: for set "LinAcc-Rot": 1 and 2s feature segments; for set "all highfreq": everything
+high_freq_sensor_sets = [["linear_accelerometer", "rotation"],
+                         ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
+                          ]
+feature_segments = [10,5,2,1] #in seconds
+only_active_smartphone_sessions = "yes"
+min_gps_accuracy = 35
+columns_to_delete = ["device_id", "ESM_timestamp"]
+path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/"
+
+for high_freq_sensor_set in high_freq_sensor_sets:
+    for feature_segment in feature_segments:
+        timedelta = str(feature_segment) + "s"
+        print("Start with high_freq_sensor_set: " + str(high_freq_sensor_set) + " and feature_segment: " + str(feature_segment))
+        df_features_highfreq = pd.read_pickle(path_features + str(high_freq_sensor_set) + "_timeperiod-" + str(
+            feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl")
+
+        # if feature_segment == 1, use speed & acceleration data, as there are no derived features
+        if feature_segment == 1:
+            df_features_speedacc = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions  + ".csv")
+        else:
+            df_features_speedacc = pd.read_pickle(path_features + "GPS_timeperiod-" + str(feature_segment) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions  + "_FeaturesExtracted.pkl")
+
+        df_merged = Merge_and_Impute.merge(df_features_highfreq, df_features_speedacc, "GPS", timedelta, columns_to_delete,
+                  add_prefix_to_merged_columns=False)
+
+        #double check if merging worked
+        df_merged_timecolumns = df_merged[["timestamp", "GPS_timestamp_merged"]]
+
+        # save with open and pickle highest protocall
+        with open(path_storage + str(high_freq_sensor_set) + "-merged-to-GPSFeatures_feature-segment-" + str(feature_segment) + "_min-gps-accuracy-" + str(min_gps_accuracy) +"_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted_Merged.pkl", 'wb') as f:
+            pickle.dump(df_merged, f, pickle.HIGHEST_PROTOCOL)
+#endregion
+
+#region feature selection: data-driven approach
+## COMPARE CODE IN OTHER PROJECT
+### What is missing:
+### - feature selection for all highfreq AND GPS: all feature segments
+### - feature selection for LinAcc-Rot AND GPS: all feature segments
+#endregion
+
+#region feature selection: hypothesis-driven approach
+features_HypothesisApproach = [["linear_accelerometer", "maximum", "one feature"],
+                                 ["linear_accelerometer", "minimum", "one feature"],
+                                    ["linear_accelerometer", "mean", "one feature"],
+                                    ["linear_accelerometer", "median", "one feature"],
+                                    ["linear_accelerometer", "standard_deviation", "one feature"],
+                                    ["linear_accelerometer", "root_mean_square", "one feature"],
+                                    ["linear_accelerometer", "fft_coefficient__attr_\"abs\"", "several features"],
+                                    ["rotation", "mean", "one feature"],
+                                    ["rotation", "median", "one feature"],
+                                    ["rotation", "standard_deviation", "one feature"]
+                               ]
+
+Speed
+- mean
+- median
+- maximum
+
+
+## get features for hypothesis-driven approach and save them
+### extract hypothesis-driven features from high-frequency sensors features
+path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/"
+sensor_sets = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"],
+                        ["linear_accelerometer", "rotation"]]
+feature_segments = [1, 2, 5, 10]
+feature_segments = [10]
+only_active_smartphone_sessions = "yes"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/hypothesis_driven_approach/"
+for sensor_set in sensor_sets:
+    for feature_segment in feature_segments:
+        #load features
+        df_features = pd.read_pickle(path_features + str(sensor_set) + "_timeperiod-" + str(feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl")
+        # create list of names of features to keep
+        features_to_keep_one = []
+        for feature in features_HypothesisApproach:
+            if feature[2] == "one feature":
+                for axis in ["double_values_0", "double_values_1", "double_values_2"]:
+                    features_to_keep_one.append(feature[0][:3] + "_" + axis + "__" + feature[1])
+        features_to_keep_several = []
+        for feature in features_HypothesisApproach:
+            if feature[2] == "several features":
+                for axis in ["double_values_0", "double_values_1", "double_values_2"]:
+                    features_to_keep_several.append(feature[0][:3] + "_" + axis + "__" + feature[1])
+        # add "sensor_timestamp", "ESM_timestamp", "device_id" to features_to_keep
+        features_to_keep_one.extend(["sensor_timestamp", "ESM_timestamp", "device_id"])
+        # keep only columns from df_feature than contain either exactly one of the features from "features_to_keep_one" or contain in their name one of the features from "features_to_keep_several"
+        df_features_hypothesisdriven = df_features[df_features.columns[df_features.columns.isin(features_to_keep_one) | df_features.columns.str.contains('|'.join(features_to_keep_several))]]
+        df_features_hypothesisdriven.to_csv(path_storage + str(sensor_set) + "_timeperiod-" + str(feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted_FeaturesSelected-HypothesisDrivenApproach.csv", index=False)
+
+### extract hypothesis-driven features from GPS-features
+### NOTE: for segment_length == 1 second: no mean, median or standard deviation can be calculated as there is only one value per second for GPS features
+
+
+
+
+
+
+# add the feature "dominant frequency" to the list of features and compute it as the maximum of the fft_coefficient__attr_"abs" features
+
+
+# RELOCATE THIS SECTION SOMEWHERE ELSE: explore features & understand them
+df_features = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/linear_accelerometer/linear_accelerometer_timeperiod-10_only-active-smartphone-sessions-yes s_FeaturesExtracted.pkl")
+feature_names = pd.DataFrame(df_features.columns)
+
+
+# import filtfilt
+from scipy.signal import filtfilt
+from scipy.signal import butter, lfilter
+
+# Generate test signal
+fs = 1000  # sample rate
+t = np.linspace(0, 1, fs)  # time vector
+f1 = 50  # frequency 1
+f2 = 150  # frequency 2
+A1 = 2  # amplitude 1
+A2 = 1  # amplitude 2
+sig = A1 * np.sin(2 * np.pi * f1 * t) + A2 * np.sin(2 * np.pi * f2 * t)
+plt.plot(t, sig)
+plt.show()
+
+# Measure dominant frequency
+fft_sig = np.fft.fft(sig)
+fft_freq = np.fft.fftfreq(len(sig), 1/fs)
+dominant_freq = fft_freq[np.argmax(np.abs(fft_sig))]
+print("Dominant frequency: {:.2f} Hz".format(dominant_freq))
+
+# Design band-pass filter
+low = dominant_freq - 5
+high = dominant_freq + 5
+nyquist = 0.5 * fs
+low = low / nyquist
+high = high / nyquist
+b, a = butter(3, [low, high], btype='band')
+
+# Apply band-pass filter to original signal
+filtered_sig = filtfilt(b, a, sig)
+
+# Measure peak-to-peak difference in filtered signal
+p2p_diff = np.ptp(filtered_sig)
+print("Peak-to-peak difference in filtered signal: {:.2f}".format(p2p_diff))
+
+# Plot original and filtered signal
+plt.figure(figsize=(12,6))
+plt.subplot(211)
+plt.plot(t, sig)
+plt.title('Original Signal')
+plt.xlabel('Time (s)')
+plt.subplot(212)
+plt.plot(t, filtered_sig)
+plt.title('Filtered Signal')
+plt.xlabel('Time (s)')
+plt.show()
+
+
+
+
+## cyclical patterns
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Signal 1: Constant amplitude sine wave at 1 Hz
+fs = 100  # sample rate
+t = np.linspace(0, 1, fs)  # time vector
+f1 = 1  # frequency
+A1 = 1  # amplitude
+sig1 = A1 * np.sin(2 * np.pi * f1 * t)
+
+# Signal 2: Two sine waves at 1 Hz and 2 Hz with constant amplitude
+f2 = 2
+A2 = 1
+sig2 = A1 * np.sin(2 * np.pi * f1 * t) + A2 * np.sin(2 * np.pi * f2 * t)
+
+# Signal 3: Two sine waves at 1 Hz and 2 Hz with variable amplitude
+A3 = 2
+A4 = 0.5
+sig3 = A3 * np.sin(2 * np.pi * f1 * t) + A4 * np.sin(2 * np.pi * f2 * t)
+
+# Signal 4: Amplitude modulated sine wave at 1 Hz
+f3 = 1
+A5 = 1
+sig4 = A5 * np.sin(2 * np.pi * f3 * t) * np.sin(2 * np.pi * 5 * t)
+
+# Plot the signals
+plt.figure(figsize=(12,6))
+plt.subplot(221)
+plt.plot(t, sig1)
+plt.title('Signal 1')
+plt.xlabel('Time (s)')
+plt.subplot(222)
+plt.plot(t, sig2)
+plt.title('Signal 2')
+plt.xlabel('Time (s)')
+plt.subplot(223)
+plt.plot(t, sig3)
+plt.title('Signal 3')
+plt.xlabel('Time (s)')
+plt.subplot(224)
+plt.plot(t, sig4)
+plt.title('Signal 4')
+plt.xlabel('Time (s)')
+plt.show()
+
+# Calculate FFT for each signal
+fft1 = np.fft.fft(sig1)
+fft2 = np.fft.fft(sig2)
+fft3 = np.fft.fft(sig3)
+fft4 = np.fft.fft(sig4)
+
+# Plot the frequency-amplitude spectrum
+plt.figure(figsize=(12,6))
+plt.subplot(221)
+plt.plot(np.abs(fft1))
+plt.title('Signal 1')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Amplitude')
+plt.subplot(222)
+plt.plot(np.abs(fft2))
+plt.title('Signal 2')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Amplitude')
+plt.subplot(223)
+plt.plot(np.abs(fft3))
+plt.title('Signal 3')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Amplitude')
+plt.subplot(224)
+plt.plot(np.abs(fft4))
+plt.title('Signal 4')
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Amplitude')
+plt.show()
+#endregion
+
+
+
+
+# create different combinations of sensor features OUTDATED!!!
 combinations_sensors = [["highfrequencysensors-all", "GPS"],
                         ["linear_accelerometer", "rotation", "GPS"],
                         ["linear_accelerometer", "GPS"]]

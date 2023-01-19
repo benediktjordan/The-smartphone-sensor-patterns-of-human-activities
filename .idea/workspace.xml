@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/merge_timeseries.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/Merge_and_Impute.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -286,14 +287,7 @@
       <workItem from="1673075071491" duration="23340000" />
       <workItem from="1673168218066" duration="43470000" />
       <workItem from="1673349277808" duration="45825000" />
-      <workItem from="1673732856605" duration="2491000" />
-    </task>
-    <task id="LOCAL-00002" summary="This is the first commit message">
-      <created>1664548912593</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1664548912593</updated>
+      <workItem from="1673732856605" duration="51134000" />
     </task>
     <task id="LOCAL-00003" summary="This is the first commit message">
       <created>1664549284444</created>
@@ -631,7 +625,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673730725258</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula">
+      <created>1673794743928</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1673794743929</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -674,7 +675,8 @@
     <MESSAGE value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
     <MESSAGE value="test" />
     <MESSAGE value="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data" />
-    <option name="LAST_COMMIT_MESSAGE" value="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data" />
+    <MESSAGE value="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula" />
+    <option name="LAST_COMMIT_MESSAGE" value="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -746,16 +748,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>692</line>
-          <option name="timeStamp" value="55" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>1092</line>
-          <option name="timeStamp" value="60" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
           <line>1</line>
           <option name="timeStamp" value="61" />
         </line-breakpoint>
@@ -763,6 +755,11 @@
           <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
           <line>72</line>
           <option name="timeStamp" value="62" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>619</line>
+          <option name="timeStamp" value="65" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
