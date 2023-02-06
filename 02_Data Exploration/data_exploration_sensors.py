@@ -526,6 +526,9 @@ class data_exploration_sensors:
                 df_sensor = df_sensor.rename(columns={column: "double_values_2"})
             if "accuracy" in column:
                 df_sensor = df_sensor.rename(columns={column: "accuracy"})
+            if column == "timestamp_datetime":
+                df_sensor = df_sensor.drop(columns=["timestamp"])
+                df_sensor = df_sensor.rename(columns={column: "timestamp"})
 
         # iterate through esm events
         esm_events = df_sensor["ESM_timestamp"].unique()
@@ -636,7 +639,7 @@ class data_exploration_sensors:
         pal = sns.color_palette("bright")
         hex_colors = [matplotlib.colors.rgb2hex(color) for color in pal]
         ## remove similar colors from the palette
-        hex_colors = [color for color in hex_colors if color != '#023eff' and color != '#e8000b' and color != '#f14cc1']
+        hex_colors = [color for color in hex_colors if color != '#023eff' and color != '#e8000b' and color != '#f14cc1' and color != '#1ac938']
         hex_colors = hex_colors[:len(df_summary_stats[label_column_name].unique())]
 
         # sort the labels alphabetically in order to ensure that same colour is used for same label across all datasets

@@ -481,7 +481,8 @@ df_results_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/da
 #region build DF class including the options to enable and disable permutation and binomial test
 class DecisionForest:
 
-	def DF_sklearn(df, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, grid_search_space = None, feature_importance = None):
+	#DF including LOSOCV, hyperparameter tuning, permutation test, etc
+	def DF_sklearn(df, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, confusion_matrix_order, grid_search_space = None, feature_importance = None, parameter_set = "default", combine_participants = False):
 		"""
 		Builds a decision forest using the sklearn library
 		:param df:
@@ -505,9 +506,6 @@ class DecisionForest:
 		df["timestamp"] = pd.to_datetime(df["timestamp"])
 		df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
 
-		# Make list of all participants
-		IDlist = set(df["device_id"])
-
 		# initialize
 		test_proband = list()
 		outer_results_acc = list()
@@ -526,6 +524,15 @@ class DecisionForest:
 		y_test_array = np.empty([0])
 		y_pred_array = np.empty([0])
 
+		shap_values_dict = dict()
+
+		# Make list of all participants
+		IDlist = set(df["device_id"])
+		# make different IDlist in case a simple train-test split should be used for outer iteration (for parameter tuning, LOSOCV will still be used)
+		if combine_participants == True:
+			IDlist = set(df["device_id_traintest"])
+
+
 		# for loop to iterate through LOSOCV "rounds"
 		counter = 1
 		num_participants = len(IDlist)
@@ -534,13 +541,22 @@ class DecisionForest:
 
 			#split data into train and test
 			LOOCV_O = i
-			#df["device_id"] = df["device_id"].apply(str)
 			df_train = df[df["device_id"] != LOOCV_O]
 			df_test = df[df["device_id"] == LOOCV_O]
+			if combine_participants == True:
+				if i == 1:
+					print("This iteration will be skipped since train-set is test-set")
+					continue
+				df_train = df[df["device_id_traintest"] != LOOCV_O]
+				df_test = df[df["device_id_traintest"] == LOOCV_O]
 
 			# define Test data - the person left out of training
 			X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
 												"timestamp"])  # add sensor_timestamp here as soon as available
+			if combine_participants == True:
+				X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "device_id_traintest",
+												  "timestamp"])  # add sensor_timestamp here as soon as available
+
 			X_test = np.array(X_test_df)
 			y_test_df = df_test[label_column_name]  # This is the outcome variable
 			y_test = np.array(y_test_df)
@@ -554,7 +570,11 @@ class DecisionForest:
 			X_train_df = df_train.copy()
 
 			# define the model
-			model = RandomForestClassifier(random_state=1)
+			if parameter_set == "default":
+				model = RandomForestClassifier(random_state=11)
+			else:
+				model = RandomForestClassifier(**parameter_set)
+
 
 			# define list of indices for inner CV for the GridSearch (use again LOSOCV with the remaining subjects)
 			# here a "Leave Two Subejcts Out" CV is used!
@@ -577,9 +597,14 @@ class DecisionForest:
 
 			# drop participant column
 			df_train = df_train.drop(columns=["device_id"])
+			if combine_participants == True:
+				df_train = df_train.drop(columns=["device_id_traintest"])
 
 			# drop other columns
 			X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "timestamp"])  # add sensor_timestamp later on here
+			if combine_participants == True:
+				X_train_df = X_train_df.drop(columns=[ "device_id_traintest"])  # add sensor_timestamp later on here
+
 			X_train = np.array(X_train_df)
 			y_train_df = df_train[label_column_name]  # This is the outcome variable
 			y_train_df = y_train_df.reset_index(drop=True)
@@ -589,7 +614,8 @@ class DecisionForest:
 			if parameter_tuning == "yes":
 
 				# define search
-				search = GridSearchCV(model, grid_search_space, scoring='accuracy', cv=inner_idxs, refit=True, n_jobs=-1)
+				print("Start parameter tuning")
+				search = GridSearchCV(model, grid_search_space, scoring='balanced_accuracy', cv=inner_idxs, refit=True, n_jobs=-1)
 
 				# execute search
 				print("Start fitting model with parameter tuning...")
@@ -604,6 +630,7 @@ class DecisionForest:
 
 			# if parameter tuning is set to False, use the default parameters
 			else:
+				print("Start fitting model without parameter tuning...")
 				best_model = model.fit(X_train, y_train)
 				parameter_tuning_active = "no"
 
@@ -624,11 +651,11 @@ class DecisionForest:
 			split_permutation = []
 			train_permutation = data_permutation[data_permutation["device_id"] != i]
 			test_permutation = data_permutation[data_permutation["device_id"] == i]
+			if combine_participants == True:
+				train_permutation = data_permutation[data_permutation["device_id_traintest"] != i]
+				test_permutation = data_permutation[data_permutation["device_id_traintest"] == i]
 			add_permutation = [train_permutation.index, test_permutation.index]
 			split_permutation.append(add_permutation)
-
-
-
 
 			##Drop some stuff
 			# data_permutation = data_permutation.drop(columns=dropcols)
@@ -636,13 +663,17 @@ class DecisionForest:
 			##Create X and y dataset
 			X_permutation = data_permutation.drop(
 				columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp"])
+			if combine_participants == True:
+				X_permutation = data_permutation.drop(
+					columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp", "device_id_traintest"])
 			y_permutation = data_permutation[label_column_name]
 
 			##compute permutation test
 			score_model, perm_scores_model, pvalue_model = permutation_test_score(best_model, X_permutation,
-																				  y_permutation, scoring="accuracy",
+																				  y_permutation, scoring="balanced_accuracy",
 																				  cv=split_permutation,
-																				  n_permutations=n_permutations)
+																				  n_permutations=n_permutations,
+																				  n_jobs=-1)
 			print("Permutation test done.")
 
 			## visualize permutation test restuls
@@ -678,30 +709,40 @@ class DecisionForest:
 			y_test_confusionmatrix = pd.Series(y_test)
 			y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
 			label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
-			y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
-			y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
+			#y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
+			#y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
 			# also convert yhat to numerical labels using same mapping
 			yhat_confusionmatrix = pd.Series(yhat)
 			yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
 			label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
-			yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
-			yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+			#yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
+			#yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+
+			# create joint label mapping which is == confusion_matrix_order except the elements which are not in label_mapping or label_mapping2
+			label_mapping_joint = list(set(label_mapping.values()) | set(label_mapping2.values()))
+			label_mapping_confusion_matrix = confusion_matrix_order.copy()
+			for key in label_mapping_confusion_matrix:
+				if key not in label_mapping_joint:
+					#delete from list
+					label_mapping_confusion_matrix.remove(key)
 
 			# Visualize Confusion Matrix with absolute values
 			fig, ax = plt.subplots(figsize=(10, 5))
-			mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix)
+			#plt.gcf().subplots_adjust(bottom=0.15)
+			mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix, labels = label_mapping_confusion_matrix)
 			sns.heatmap(mat, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, fmt='d', cbar=False, linewidths=0.2)
 			plt.title('Confusion Matrix Absolute Values with Test-Proband ' + str(i) )
-			plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
 			# add xticks and yticks from label_mapping (which is a dictionary)
-			tick_marks = np.arange(len(label_mapping)) + 0.5
-			plt.xticks(tick_marks, label_mapping.values(), rotation=0)
-			plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+			tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
+			plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+			plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
 			plt.xlabel('Predicted Label')
 			plt.ylabel('True Label')
-			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
-					i) + "_ConfusionMatrix_absolute.png")
 			#plt.show()
+			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
+					i) + "_ConfusionMatrix_absolute.png", bbox_inches="tight")
+
 
 			# visualize confusion matrix with percentages
 			# Get and reshape confusion matrix data
@@ -710,22 +751,23 @@ class DecisionForest:
 			sns.set(font_scale=1.4)
 			sns.heatmap(matrix, annot=True, annot_kws={'size': 10},cmap=plt.cm.Greens, linewidths=0.2)
 			# Add labels to the plot
-			plt.xticks(tick_marks, label_mapping.values(), rotation=0)
-			plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+			tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
+			plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+			plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
 			plt.xlabel('Predicted Label')
 			plt.ylabel('True Label')
 			plt.title('Confusion Matrix Relative Values with Test-Proband ' + str(i) )
-			plt.suptitle('Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
 			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
-					i) + "_ConfusionMatrix_percentages.png")
+					i) + "_ConfusionMatrix_percentages.png", bbox_inches="tight")
 			#plt.show()
 
 			# apply binomial test
 			print("Start binomial test...")
 			# calculate sum of diagonal axis of confusion matrix
 			sum_diagonal = 0
-			for i in range(len(mat)):
-				sum_diagonal += mat[i][i]
+			for l in range(len(mat)):
+				sum_diagonal += mat[l][l]
 			# calculate number of classes in y_test
 			classes = len(np.unique(y_test))
 			pvalue_binom = binom_test(x=sum_diagonal, n=len(y_test), p=(1/classes), alternative='greater')
@@ -738,15 +780,25 @@ class DecisionForest:
 				print("Start computing SHAP values...")
 				explainer = shap.Explainer(best_model)
 				shap_values = explainer.shap_values(X_test)
-				# plt.figure(figsize=(10, 5))
+
+				# Compute the absolute averages of the SHAP values for each sample and feature across all classes
+				## Explanation: in shap_values are three dimensions: classes x samples x features
+				## In absolute_average_shape_values, the absolute average for each feature and sample over the classes
+				## is computed. The result is a matrix with two dimensions: samples x features
+				absolute_average_shap_values = np.mean(np.abs(shap_values), axis=0)
+
 				fig, ax = plt.subplots(figsize=(10, 5))
 				plt.title("Feature Importance for iteration with proband " + str(i) + " as test set")
-				# plot summary_plot with tight layout
-				shap.summary_plot(shap_values[1], X_test_df, plot_type="bar", show=False, plot_size=(20, 10))
-				# fig = plt.gcf()
-				fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
-						i) + "_SHAPFeatureImportance.png")
-				# plt.show()
+				shap.summary_plot(absolute_average_shap_values, X_test_df.iloc[0:0], plot_type="bar", show=False,
+								  plot_size=(20, 10))
+				plt.show()
+				fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+					label_segment) + "_parameter_tuning-" + parameter_tuning_active + "_test_proband-" + str(
+					i) + "_SHAPFeatureImportance.png")
+
+				# store the SHAP values (in order to get combined SHAP values for the whole LOSOCV in the end)
+				## create dictionary which contains as key the proband number and as values the SHAP values and the best_model.classes_
+				shap_values_dict[i] = [shap_values, best_model.classes_]
 
 			# store statistical test results (p-value permutation test, accuracy of that permutation iteration, pvalue binomial test) in list
 			print("Start storing statistical test results...")
@@ -814,9 +866,9 @@ class DecisionForest:
 		results_overall["Seconds around Event"] = [label_segment]
 		results_overall["Balanced Accuracy"] = [balanced_accuracy_overall]
 		results_overall["Accuracy"] = [accuracy_score(y_test_array, y_pred_array)]
-		results_overall["F1"] = [f1_score(y_test_array, y_pred_array, average="weighted")]
-		results_overall["Precision"] = [precision_score(y_test_array, y_pred_array, average="weighted")]
-		results_overall["Recall"] = [recall_score(y_test_array, y_pred_array, average="weighted")]
+		results_overall["F1"] = [f1_score(y_test_array, y_pred_array, average="macro")]
+		results_overall["Precision"] = [precision_score(y_test_array, y_pred_array, average="macro")]
+		results_overall["Recall"] = [recall_score(y_test_array, y_pred_array, average="macro")]
 
 		# visualize confusion matrix for all y_test and y_pred data
 		# convert categorical labels to numerical labels and save the mapping for later visualization
@@ -824,32 +876,43 @@ class DecisionForest:
 		y_test_confusionmatrix = df_labels_results["y_test"]
 		y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
 		label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
-		y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
-		y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
+		#y_test_confusionmatrix = y_test_confusionmatrix.cat.codes
+		#y_test_confusionmatrix = y_test_confusionmatrix.to_numpy()
 
 		# also convert yhat to numerical labels using same mapping
 		yhat_confusionmatrix = df_labels_results["y_pred"]
 		yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
 		label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
-		yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
-		yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+		#yhat_confusionmatrix = yhat_confusionmatrix.cat.codes
+		#yhat_confusionmatrix = yhat_confusionmatrix.to_numpy()
+
+		# create joint label mapping which is == confusion_matrix_order except the elements which are not in label_mapping or label_mapping2
+		label_mapping_joint = list(set(label_mapping.values()) | set(label_mapping2.values()))
+		label_mapping_confusion_matrix = confusion_matrix_order.copy()
+		for key in label_mapping_confusion_matrix:
+			if key not in label_mapping_joint:
+				# delete from list
+				label_mapping_confusion_matrix.remove(key)
 
 		# Visualize Confusion Matrix with absolute values
-		fig, ax = plt.subplots(figsize=(10, 5))
-		mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix)
+		plt.figure(figsize=(16, 7))
+		sns.set(font_scale=1.4)
+		mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix, labels = label_mapping_confusion_matrix)
 		sns.heatmap(mat, square=True, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, fmt='d', cbar=False,
 					linewidths=0.2)
-		plt.title('Confusion Matrix Absolute Values with Test-Proband ' + str(i))
-		plt.suptitle('Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
+		plt.title("Confusion Matrix Absolute Values for All Participants")
+		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
 		# add xticks and yticks from label_mapping (which is a dictionary)
-		tick_marks = np.arange(len(label_mapping)) + 0.5
-		plt.xticks(tick_marks, label_mapping.values(), rotation=0)
-		plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+		tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
+		plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+		plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
 		plt.xlabel('Predicted Label')
 		plt.ylabel('True Label')
+		#plt.show()
 		plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-			label_segment) + "_parameter_tuning-" + parameter_tuning_active + "_ConfusionMatrix_absolute.png")
-		plt.show()
+			label_segment) + "_parameter_tuning-" + parameter_tuning_active + "_ConfusionMatrix_absolute.png",
+					bbox_inches="tight")
+		#
 
 		# visualize confusion matrix with percentages
 		# Get and reshape confusion matrix data
@@ -858,22 +921,119 @@ class DecisionForest:
 		sns.set(font_scale=1.4)
 		sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
 		# Add labels to the plot
-		plt.xticks(tick_marks, label_mapping.values(), rotation=0)
-		plt.yticks(tick_marks, label_mapping.values(), rotation=0)
+		plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+		plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
 		plt.xlabel('Predicted label')
 		plt.ylabel('True label')
-		plt.title('Confusion Matrix Relative Values with Test-Proband ' + str(i))
-		plt.suptitle('Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
+		plt.title("Confusion Matrix Relative Values for All Participants")
+		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
 		plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-			label_segment) + "_parameter_tuning-" + parameter_tuning_active + "_ConfusionMatrix_percentages.png")
-		plt.show()
+			label_segment) + "_parameter_tuning-" + parameter_tuning_active +
+					"_ConfusionMatrix_percentages.png", bbox_inches="tight")
+		#plt.show()
+
+		# visualize confusion matrix with percentages and absolute values combined
+		matrix = mat.astype('float') / mat.sum(axis=1)[:, np.newaxis]
+		matrix_abs = mat.astype('float')
+		plt.figure(figsize=(16, 7))
+		sns.set(font_scale=1.4)
+		sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
+		for i, j in itertools.product(range(mat.shape[0]), range(mat.shape[1])):
+			plt.text(j + 0.5, i + 0.5, '({0})'.format(matrix_abs[i, j]), ha='center', va='center', fontsize=12)
+		plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+		plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
+		plt.xlabel('Predicted label')
+		plt.ylabel('True label')
+		plt.title("Confusion Matrix with Relative and Absolute Values for All Participants")
+		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
+		plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+			label_segment) + "_parameter_tuning-" + parameter_tuning_active +
+					"_ConfusionMatrix_percentages_absolute.png", bbox_inches="tight")
+
+		# visualize SHAP values for whole LOSOCV
+		## save raw shap values "shap_values_dict" to pickle
+		with open (path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + parameter_tuning_active + "_SHAPValues_AllLOSOCVIterations.pkl", "wb") as f:
+			pickle.dump(shap_values_dict, f)
+
+		## the a list of shap value lists: each sub-list are the joint shap values for one class; classes are ordered according to confusion_matrix_order
+		shap_values_list_joint = []
+		for i in range(len(confusion_matrix_order)):
+			shap_values_list_joint.append(np.empty((0, len(X_test_df.columns)), float))
+
+		for key in shap_values_dict:
+			# iterate through shap_values_dict[key][1]
+			classes = shap_values_dict[key][1]
+			counter = 0
+			for single_class in classes:
+				# find out at which place this class is in confusion_matrix_order
+				index = confusion_matrix_order.index(single_class)
+				# append corresponding shap values to shap_values_list
+				shap_values_list_joint[index] = np.append(shap_values_list_joint[index], shap_values_dict[key][0][counter], axis=0)
+				counter += 1
+
+		## visualize the shap values for whole LOSOCV and each individual class
+		for single_class in confusion_matrix_order:
+			index = confusion_matrix_order.index(single_class)
+
+			fig, ax = plt.subplots(figsize=(10, 5))
+			plt.title("Feature Importance for whole LOSOCV combined (absolute average SHAP values) for class " + single_class)
+			shap.summary_plot(shap_values_list_joint[index], X_test_df.iloc[0:0], plot_type="bar", show=False,
+							  plot_size=(20, 10))
+			plt.show()
+			# replace in "single_class" all "/" with "-" (otherwise the file cannot be saved)
+			single_class = single_class.replace("/", "-")
+			fig.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" +
+						parameter_tuning_active + "_SHAPValues_class-" + single_class + "_AllLOSOCVIterations.png", bbox_inches="tight")
+
+		## visualize the shap values for whole LOSOCV and all classes combined
+		### take the absolute averages of the shap values over all classes
+		shap_values_averaged_samples = [np.mean(np.abs(shap_values_list_joint[i]), axis=0) for i in range(len(confusion_matrix_order))]
+		shap_values_averaged_samples_classes = np.mean(np.abs(shap_values_averaged_samples), axis=0)
+
+		### have to reshape in order to match need of summary_plot: (n_samples, n_features); create artificial samples by duplicating the shap values
+		### NOTE: this wasnt possible before because sample values from different LOSOCV iteration can´t be averaged, as there are
+		### sometimes different number of sample values for each class
+		shap_values_averaged_samples_classes_includingartificialsamples = np.repeat(
+			shap_values_averaged_samples_classes[np.newaxis, :], 2, axis=0)
+
+		fig, ax = plt.subplots(figsize=(10, 5))
+		plt.title("Feature Importance for whole LOSOCV combined (absolute average SHAP values)")
+		shap.summary_plot(shap_values_averaged_samples_classes_includingartificialsamples, X_test_df.iloc[0:0], plot_type="bar", show=False,
+						  plot_size=(20, 10))
+		#plt.show()
+		fig.savefig(
+			path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" +
+			parameter_tuning_active + "_SHAPValues_all-classes-combined_AllLOSOCVIterations.png",
+			bbox_inches="tight")
+
 
 		# TODO include here also a binomial test for the final accuracy
-		# TODO include here also a confusion matrix
 		# TODO think how to apply permutation test here
-
 		return results_overall
 
+	#DF only used for training the final deployment model: train on all data without testing
+	## Note: this doesnt include LOSOCV, hyperparameter tuning, training-testing, permutation/binomial tests, etc
+	def DF_sklearn_deployment(df, label_segment, label_column_name, parameter_set, path_storage):
+		# Transform data needed for DF
+		## reset index
+		df = df.reset_index(drop=True)
+		## convert timestamp and ESM_timestamp to datetime
+		df["timestamp"] = pd.to_datetime(df["timestamp"])
+		df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+		## drop columns
+		X_train =  np.array(df.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "timestamp"]))  # add sensor_timestamp later on here
+		y_train_df = df[label_column_name]  # This is the outcome variable
+		y_train_df = y_train_df.reset_index(drop=True)
+		y_train = np.array(y_train_df)  # Outcome variable here
+
+		#define model and train
+		model = RandomForestClassifier(**parameter_set)
+		print("Start fitting model...")
+		best_model = model.fit(X_train, y_train)
+
+
+		return best_model
 
 # train decision forest
 # load data

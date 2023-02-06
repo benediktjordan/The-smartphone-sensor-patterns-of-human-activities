@@ -1,12 +1,83 @@
 #region import
-import pandas as pd
 import pickle
-import time
+#import tensorflow_decision_forests as tfdf
+import datetime
+import os
+import random
 import numpy as np
+import pandas as pd
+import tensorflow as tf
+import math
+import time
+import matplotlib.pyplot as plt
+import json
 
+# computing distance
+import geopy.distance
+
+#Classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import validation_curve
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+
+#evaluation
+from sklearn.metrics import balanced_accuracy_score
+
+#nested CV
+from numpy import mean
+from numpy import std
+from sklearn.datasets import make_classification
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+# import classification report
+from sklearn.metrics import classification_report
+
+#Feature Importance
+import shap
+
+#Statistical Testing
+from scipy.stats import binom_test
+from sklearn.model_selection import permutation_test_score
+
+#Keras Tuner
+import keras
+import keras_tuner as kt
+from kerastuner.tuners import RandomSearch
+from kerastuner.tuners import BayesianOptimization
+from kerastuner.tuners import Hyperband
+
+# visualization
+import seaborn as sns
+
+# for keeping track
+from tqdm import tqdm
+
+
+
+try:
+  from wurlitzer import sys_pipes
+except:
+  from colabtools.googlelog import CaptureLog as sys_pipes
 #endregion
 
-#region create merge object/class
+#temporary
+#df_temp = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/temp/df_final_14.csv")
+#save df_temp as pkl with highest protocoll
+#with open("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/temp/df_final_14_2.pkl", 'wb') as f:
+#    pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
+
 class Merge_and_Impute:
 
     #merge timeseries or features
@@ -110,6 +181,7 @@ class Merge_and_Impute:
             #concatenate df_merged and df_tomerge_user
             ## Note: this adds to df_merged all the records from df_tomerge_user which couldn´t be merged
             df_merged = pd.concat([df_merged, df_tomerge_user], axis=0)
+            print("df_merged.shape after concatenation: ", df_merged.shape)
 
             # for all rows in df_merged where the ESM_timestamp is NaN, fill it with the ESM_timestamp_merged
             ## Note: this is necessary because the ESM_timestamp is NaN for all rows which were not merged but merely concatenated
@@ -118,9 +190,11 @@ class Merge_and_Impute:
                 if pd.isna(row["ESM_timestamp"]):
                     df_merged.loc[index, "ESM_timestamp"] = row["ESM_timestamp_merged"]
             df_merged = df_merged.drop(columns=['ESM_timestamp_merged'])
+            print("df_merged.shape after filling ESM_timestamp: ", df_merged.shape)
 
             # concatenate df_merged to df_final
             df_final = pd.concat([df_final, df_merged], axis=0)
+            print("df_final.shape after concatenation: ", df_final.shape)
 
             # implement going in several steps since its crashing otherwise
             ## save intermediate df_final to csv
@@ -149,137 +223,47 @@ class Merge_and_Impute:
     # - fill by last / next value
     # - fill by mean
 
+high_freq_sensor_sets = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]]
+feature_segments = [1] #in seconds
+path_intermediate_files = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/temp/" #this location is for the intermediate df_final files which will be saved after each user is done. If the
 
-#testsection
-df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/linear_accelerometer/activity-label_human motion - general_sensor-linear_accelerometer_timeperiod-30 s_featureselection.pkl")
 
-# region create merged timeseries
-#TODO integrate these functions into "Merge_and_Impute" class (more exact: check if Merge_and_Impute class works for timeseries merging)
-## import data
-sensors_included = ["linear_accelerometer", "rotation"]
-timedelta = "100ms"
-col_to_delete = ['Unnamed: 0', '0', '1', "ESM_timestamp"]
-# check which sensor file contains the most rows; this will be the base file
-# (the other files will be merged into this one)
-max_rows = 0
-sensors_to_merge = []
-for sensor in sensors_included:
-    df = pd.read_pickle(
-        "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/" + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-    if len(df) > max_rows and max_rows == 0:
-        max_rows = len(df)
-        base_sensor = sensor
-        print("Base sensor is " + base_sensor)
-        print("Number of rows: " + str(max_rows))
-    elif len(df) > max_rows and max_rows != 0:
-        sensors_to_merge.append(base_sensor)
-        base_sensor = sensor
-        print("The new base sensor is " + sensor)
-        print("Number of rows: " + str(len(df)))
-    else:
-        #add sensor to list of sensors to merge
-        sensors_to_merge.append(sensor)
-del df
+#region merge high-frequency features with speed & acceleration features (or, for feature_segment == 1: merge high-frequency features with speed & acceleration)
+## WHAT STILL MISSING: for set "LinAcc-Rot": everything; for set "all highfreq": everything
+### NOTE: for LinAcc-Rot set, it crashed always; therefore I implemented a "chunk" approach: after data for one user is merged,
+### the intermediate result is stored in "path_intermediate_files". If the function is called again, it starts only after this user
+#high_freq_sensor_sets = [["linear_accelerometer", "rotation"],
+#                         ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]]
+#feature_segments = [10,5,2,1] #in seconds
+only_active_smartphone_sessions = "yes"
+min_gps_accuracy = 35
+columns_to_delete = ["device_id", "ESM_timestamp"]
+path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/"
+#path_intermediate_files = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/temp/" #this location is for the intermediate df_final files which will be saved after each user is done. If the
+# script is stopped, the intermediate files can be loaded and the script can be continued with the next user
 
-#sensors = ["accelerometer", "gravity",
-#           "gyroscope", "magnetometer", "rotation"]
+for high_freq_sensor_set in high_freq_sensor_sets:
+    for feature_segment in feature_segments:
+        timedelta = str(feature_segment) + "s"
+        print("Start with high_freq_sensor_set: " + str(high_freq_sensor_set) + " and feature_segment: " + str(feature_segment))
+        df_features_highfreq = pd.read_pickle(path_features + str(high_freq_sensor_set) + "_timeperiod-" + str(
+            feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl")
 
-## iterate through sensors
-#TODO: also merge sensors with lesser frequency (i.e. locations, open_weather etc.)
+        # if feature_segment == 1, use speed & acceleration data, as there are no derived features
+        if feature_segment == 1:
+            df_features_speedacc = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions  + ".csv")
+        else:
+            df_features_speedacc = pd.read_pickle(path_features + "GPS_timeperiod-" + str(feature_segment) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions  + "_FeaturesExtracted.pkl")
 
-df_base = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/" + str(
-    base_sensor) + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-sensors_included_string = ""
-for sensor in sensors_to_merge:
-    time_begin = time.time()
-    sensors_included_string += "-" + sensor
-    print("Current sensor is: ", sensor)
-    df_sensor = pd.read_pickle(
-        "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/" + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-    #df_base = merge_unaligned_timeseries(df_base, df_tomerge=df_sensor, merge_sensor=sensor)
-    df_base = Merge_and_Impute.merge(df_base, df_tomerge=df_sensor, timedelta=timedelta, columns_to_delete= col_to_delete)
-    df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/" + str(base_sensor) + "_with" + str(sensors_included_string) + "_esm_timeperiod_5 min_TimeseriesMerged.csv", index=False)
-    time_end = time.time()
-    print("Time for sensor ", sensor, " is: ", time_end - time_begin)
+        df_merged = Merge_and_Impute.merge(df_features_highfreq, df_features_speedacc, "GPS", timedelta, columns_to_delete, path_intermediate_files,
+                  add_prefix_to_merged_columns=False)
 
-# endregion
+        #double check if merging worked
+        df_merged_timecolumns = df_merged[["timestamp", "GPS_timestamp_merged"]]
 
-##region merging function (OUTDATED; I AM USING NOW THE MERGE_AND_IMPUTE CLASS)
-def merge_unaligned_timeseries(df_base, df_tomerge, merge_sensor):
-    df_final = pd.DataFrame()
-    user_count = 0
+        # save with open and pickle highest protocall
+        with open(path_storage + str(high_freq_sensor_set) + "-merged-to-GPSFeatures_feature-segment-" + str(feature_segment) + "_min-gps-accuracy-" + str(min_gps_accuracy) +"_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted_Merged.pkl", 'wb') as f:
+            pickle.dump(df_merged, f, pickle.HIGHEST_PROTOCOL)
 
-    #convert timestamp column to datetime format
-    df_base['timestamp'] = pd.to_datetime(df_base['timestamp'])
-    df_tomerge['timestamp'] = pd.to_datetime(df_tomerge['timestamp'])
-    df_base["ESM_timestamp"] = pd.to_datetime(df_base["ESM_timestamp"])
-    df_tomerge["ESM_timestamp"] = pd.to_datetime(df_tomerge["ESM_timestamp"])
-
-    # iterate through devices and ESM_timestamps
-    number_of_events = len(df_base['ESM_timestamp'].unique())
-    counter = 1
-    for event in df_base['ESM_timestamp'].unique():
-        print("Event " + str(counter) + "/" + str(number_of_events))
-        counter += 1
-
-        # get data for specific user and ESM event
-        df_base_event = df_base[df_base['ESM_timestamp'] == event]
-        df_tomerge_event = df_tomerge[df_tomerge['ESM_timestamp'] == event]
-
-        # sort dataframes by timestamp
-        df_base_event = df_base_event.sort_values(by='timestamp')
-        df_tomerge_event = df_tomerge_event.sort_values(by='timestamp')
-
-        # duplicate timestamp column for test purposes
-        df_tomerge_event['timestamp_' + str(merge_sensor)] = df_tomerge_event['timestamp'].copy()
-
-        # delete all ESM-related columns in df_sensor_user_event (otherwise they would be duplicated)
-        #df_sensor_user_event = df_sensor_user_event.drop(
-        #    columns=['ESM_timestamp', "ESM_location", "ESM_location_time",
-        #             "ESM_bodyposition", "ESM_bodyposition_time",
-        #             "ESM_activity", "ESM_activity_time",
-        #             "ESM_smartphonelocation", "ESM_smartphonelocation_time",
-        #             "ESM_aligned", "ESM_aligned_time"])
-        # delete columns "Unnamed: 0", "0", "1" and "2" from df_sensor_user_event: all the information of these
-        # columns is already contained in the JSON data
-        df_tomerge_event = df_tomerge_event.drop(columns=['Unnamed: 0', '0', '1', '2', "ESM_timestamp"])
-
-        # merge dataframes
-        df_merged = pd.merge_asof(df_base_event, df_tomerge_event, on='timestamp',
-                                  tolerance=pd.Timedelta("100ms"))
-        # TODO: include functionality so that also sensors with lesser frequency can be merged (i.e.
-        #  locations, open_wheather etc.)
-
-        # add merged data to 00_general dataframe
-        df_final = pd.concat([df_final, df_merged], axis=0)
-    return df_final
 #endregion
-
-#region temporary
-df_base = pd.read_csv(
-    "/Users/benediktjordan/Documents/MTS/Iteration01/Data/magnetometer_esm_timeperiod_5 min_TimeseriesMerged.csv",
-    parse_dates=['timestamp', "1", "timestamp_accelerometer"], infer_datetime_format=True)
-
-test = df_base["1"] - df_base["timestamp"]
-test2 = df_base["1"] - df_base["timestamp_accelerometer"]
-test.describe()
-test2.describe()
-
-df_base = df_base.drop(columns=['ESM_timestamp_y', "ESM_location_y", "ESM_location_time_y",
-                                "ESM_bodyposition_y", "ESM_bodyposition_time_y",
-                                "ESM_activity_y", "ESM_activity_time_y",
-                                "ESM_smartphonelocation_y", "ESM_smartphonelocation_time_y",
-                                "ESM_aligned_y", "ESM_aligned_time_y",
-                                "Unnamed: 0_y", "0_y", "1_y", "2_y", "3_y"])
-df_base = df_base.rename(columns={"Unnamed: 0_x": "Unnamed: 0", "0_x": "0", "1_x": "1", "2_x": "2", "3_x": "3",
-                                  "ESM_timestamp_x": "ESM_timestamp", "ESM_location_x": "ESM_location",
-                                  "ESM_location_time_x": "ESM_location_time", "ESM_bodyposition_x": "ESM_bodyposition",
-                                  "ESM_bodyposition_time_x": "ESM_bodyposition_time", "ESM_activity_x": "ESM_activity",
-                                  "ESM_activity_time_x": "ESM_activity_time",
-                                  "ESM_smartphonelocation_x": "ESM_smartphonelocation",
-                                  "ESM_smartphonelocation_time_x": "ESM_smartphonelocation_time",
-                                  "ESM_aligned_x": "ESM_aligned",
-                                  "ESM_aligned_time_x": "ESM_aligned_time"})
-
-# endregion temporary
-

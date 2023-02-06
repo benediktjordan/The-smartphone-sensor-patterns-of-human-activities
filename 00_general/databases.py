@@ -185,28 +185,32 @@ on_the_toilet = {
 }
 #endregion
 
-#region during work
+#region location
 #df_esm["activity"].value_counts()
 location = {
     "in the office": ["in the office"],
-
     "at another workplace": ["at another workplace"],
 
     "in home-office": ["at home"],
     "at home": ["at home"],
-    "at a friends place": ["at a friends place"],
 
-    "in restaurant": ["in restaurant"],
+    "at a friends place": ["at another place"],
+    "Other: boyfriend's home": ["at another place"],
+    "Other: at boyfriend's home": ["at another place"],
+    "Other: Boyfriend's home": ["at another place"],
+    "Other: at boyfriends home": ["at another place"],
 
-    "shopping": ["shopping"],
+    "in restaurant": ["at another place"],
+
+    "shopping": ["at another place"],
+
+    "with friends outside": ["at another place"],
 
     "on the way: in train": ["on the way"],
     "on the way: walking/\cycling": ["on the way"],
     "on the way: in car": ["on the way"],
     "on the way: standing": ["on the way"],
-    "on the way: in public transport": ["on the way"],
-
-    "with friends outside": ["with friends outside"]
+    "on the way: in public transport": ["on the way"]
 }
 #endregion
 

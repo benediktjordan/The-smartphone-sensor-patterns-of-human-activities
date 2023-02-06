@@ -78,6 +78,14 @@ class FeatureExtraction_GPS:
         else:
             # convert to datetime
             df["timestamp"] = pd.to_datetime(df["timestamp"])
+            # rename columns which contain  "double_longitude" in some part of the name to "loc_double_longitude"
+            # and rename columns which contain  "double_latitude" in some part of the name to "loc_double_latitude"
+            ## this is only done to synchronize the versions of laboratory to naturalistic data
+            for col in df.columns:
+                if "double_longitude" in col:
+                    df = df.rename(columns={col: "loc_double_longitude"})
+                if "double_latitude" in col:
+                    df = df.rename(columns={col: "loc_double_latitude"})
 
             for event in df["ESM_timestamp"].unique():
                 # create dataset for the participant
