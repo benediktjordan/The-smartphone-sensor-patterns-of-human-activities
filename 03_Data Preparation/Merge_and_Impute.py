@@ -8,8 +8,13 @@ import numpy as np
 
 #region create merge object/class
 class Merge_and_Impute:
-    #merge timeseries
-    def merge(df_base, sensor_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, sensor_timeseries_are_merged = False):
+
+    #merge timeseries or features
+    # NOTE_
+    ## timedelta HAS TO BE a string in format "10s", otherwise it doesnt work
+    ## merging is done using the setting "nearest" which means the nearest timestamp is taken (doesnt matter if before or after)
+    def merge(df_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, path_intermediate_files = None, add_prefix_to_merged_columns = False):
+
         df_final = pd.DataFrame()
 
         # harmonize column names
@@ -29,7 +34,7 @@ class Merge_and_Impute:
 
         ## if there is a column named "sensor_timestamp", rename it to "timestamp"
         if "sensor_timestamp" in df_base.columns:
-            df_base = df_base.rename(columns={"sensor_timestamp": "timestamp"})
+            df_base.rename(columns={"sensor_timestamp": "timestamp"}, inplace=True)
         if "sensor_timestamp" in df_tomerge.columns:
             df_tomerge = df_tomerge.rename(columns={"sensor_timestamp": "timestamp"})
 
@@ -37,7 +42,25 @@ class Merge_and_Impute:
         total_users = len(df_base['device_id'].unique())
         # iterate through participants and ESM_timestamps
         for user in df_base['device_id'].unique():
+            if path_intermediate_files != None:
+
+                # check if for this user, there is already a df_final
+                if os.path.exists(path_intermediate_files + "df_final_" + str(user_count) + ".pkl"):
+                    #check if also for next user_count, there is a df_final
+                    if os.path.exists(path_intermediate_files + "df_final_" + str(user_count + 1) + ".pkl"):
+                        print("df_final_" + str(user_count) + ".csv already exists")
+                        # if yes: increase user_count and continue
+                        user_count += 1
+                        continue
+                    user_count += 1
+                    continue
+                # if not: load df_final
+                if user_count != 1:
+                    print("df_final_" + str(user_count-1) + " will be used now")
+                    df_final = pd.read_pickle(path_intermediate_files + "df_final_" + str(user_count - 1) + ".pkl")
+
             print("User with ID " + str(user) + " is being processed.")
+            print("This is user " + str(user_count) + " of " + str(total_users) + ".")
             time_start = time.time()
 
             df_base_user = df_base[df_base['device_id'] == user]
@@ -51,8 +74,9 @@ class Merge_and_Impute:
             df_base_user = df_base_user.sort_values(by='timestamp')
             df_tomerge_user = df_tomerge_user.sort_values(by='timestamp')
 
-            # duplicate timestamp column for test purposes
+            # duplicate timestamp column for test purposes and ESM_timestamp column in order to get ESM_timestamp for rows later where only data from df_tomerge is in
             df_tomerge_user['timestamp_merged'] = df_tomerge_user['timestamp'].copy()
+            df_tomerge_user['ESM_timestamp_merged'] = df_tomerge_user['ESM_timestamp'].copy()
 
             # delete columns from df_tomerger_user that dont have to be merged
             df_tomerge_user = df_tomerge_user.drop(columns= columns_to_delete)
@@ -64,10 +88,10 @@ class Merge_and_Impute:
 
             #if sensor timeseries are merged: add prefix of three first letters of sensor to column names
             # in order that the "double_values_X" columns of different sensors can be differentiated
-            if sensor_timeseries_are_merged == True:
+            if add_prefix_to_merged_columns == True:
                 # add prefix to column names except for "timestamp" and "device_id"
                 for col in df_tomerge_user.columns:
-                    if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp":
+                    if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp" and col != "ESM_timestamp_merged":
                         df_tomerge_user = df_tomerge_user.rename(columns={col: sensor_merge[:3] + "_" + col})
 
             # merge dataframes
@@ -84,17 +108,35 @@ class Merge_and_Impute:
             print("df_tomerge_user.shape after deleting rows that are already in df_merged: ", df_tomerge_user.shape)
 
             #concatenate df_merged and df_tomerge_user
+            ## Note: this adds to df_merged all the records from df_tomerge_user which couldn´t be merged
             df_merged = pd.concat([df_merged, df_tomerge_user], axis=0)
+
+            # for all rows in df_merged where the ESM_timestamp is NaN, fill it with the ESM_timestamp_merged
+            ## Note: this is necessary because the ESM_timestamp is NaN for all rows which were not merged but merely concatenated
+            df_merged = df_merged.reset_index(drop=True)
+            for index, row in df_merged.iterrows():
+                if pd.isna(row["ESM_timestamp"]):
+                    df_merged.loc[index, "ESM_timestamp"] = row["ESM_timestamp_merged"]
+            df_merged = df_merged.drop(columns=['ESM_timestamp_merged'])
 
             # concatenate df_merged to df_final
             df_final = pd.concat([df_final, df_merged], axis=0)
+
+            # implement going in several steps since its crashing otherwise
+            ## save intermediate df_final to csv
+            if path_intermediate_files != None:
+                #save with pickle highest protocol
+                with open(path_intermediate_files + "df_final_" + str(user_count) + ".pkl", 'wb') as f:
+                    pickle.dump(df_final, f, pickle.HIGHEST_PROTOCOL)
 
             #print("Time for User " + str(user_count) + "/" + str(total_users) + " was " + str((time.time()-time_start)/60) + " minutes")
             user_count += 1
 
         # if sensor timeseries are merged: add prefix to "timestamp_merged" column
-        if sensor_timeseries_are_merged == True:
-            df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+        #if add_prefix_to_merged_columns == True:
+        #    df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+        df_final = df_final.rename(columns={"timestamp_merged": sensor_merge[:3] + "_timestamp_merged"})
+
         return df_final
 
     # delete rows with missing values

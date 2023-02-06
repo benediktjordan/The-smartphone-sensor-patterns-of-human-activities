@@ -4,7 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember">
+      <change afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/InitialTransforms_Iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Data Collection/initial_transforms class.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_Data Collection/Merge_Transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/Merge_and_Impute.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/Merge_and_Impute.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/label_transformation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -284,27 +296,16 @@
       <workItem from="1673075071491" duration="23340000" />
       <workItem from="1673168218066" duration="43470000" />
       <workItem from="1673349277808" duration="45825000" />
-    </task>
-    <task id="LOCAL-00001" summary="This is the first commit message">
-      <created>1664546704490</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1664546704490</updated>
-    </task>
-    <task id="LOCAL-00002" summary="This is the first commit message">
-      <created>1664548912593</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1664548912593</updated>
-    </task>
-    <task id="LOCAL-00003" summary="This is the first commit message">
-      <created>1664549284444</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1664549284444</updated>
+      <workItem from="1673732856605" duration="92399000" />
+      <workItem from="1674244708638" duration="32781000" />
+      <workItem from="1674395923912" duration="4656000" />
+      <workItem from="1674400761527" duration="28000" />
+      <workItem from="1674401400424" duration="83916000" />
+      <workItem from="1674810982892" duration="3820000" />
+      <workItem from="1674819281259" duration="39555000" />
+      <workItem from="1675029536698" duration="22390000" />
+      <workItem from="1675206489846" duration="5382000" />
+      <workItem from="1675350335651" duration="9459000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
@@ -621,7 +622,35 @@
       <option name="project" value="LOCAL" />
       <updated>1673355945757</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="test">
+      <created>1673692220022</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1673692220022</updated>
+    </task>
+    <task id="LOCAL-00050" summary="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data">
+      <created>1673730725257</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1673730725258</updated>
+    </task>
+    <task id="LOCAL-00051" summary="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula">
+      <created>1673794743928</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1673794743929</updated>
+    </task>
+    <task id="LOCAL-00052" summary="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember">
+      <created>1674149790099</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1674149790099</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -662,7 +691,11 @@
     <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
     <MESSAGE value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
     <MESSAGE value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
-    <option name="LAST_COMMIT_MESSAGE" value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
+    <MESSAGE value="test" />
+    <MESSAGE value="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data" />
+    <MESSAGE value="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula" />
+    <MESSAGE value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
+    <option name="LAST_COMMIT_MESSAGE" value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -723,29 +756,19 @@
           <option name="timeStamp" value="42" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_Data Collection/initial_transforms class.py</url>
-          <line>46</line>
-          <option name="timeStamp" value="50" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_labels.py</url>
-          <line>95</line>
-          <option name="timeStamp" value="53" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>652</line>
-          <option name="timeStamp" value="55" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>1044</line>
-          <option name="timeStamp" value="60" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>3</line>
+          <line>1</line>
           <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>72</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <line>622</line>
+          <option name="timeStamp" value="65" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

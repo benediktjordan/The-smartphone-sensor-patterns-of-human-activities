@@ -180,6 +180,77 @@ class Merge_Transform:
 
         return df_esm
 
+    # delete sensor data outside of the active smartphone session
+    def delete_sensor_data_outside_smartphone_session(df_sensor, df_esm_with_smartphone_sessions, frequency):
+        # make convert string timestamp columns to datetime
+        df_sensor["ESM_timestamp"] = pd.to_datetime(df_sensor["ESM_timestamp"])
+        df_sensor["timestamp"] = pd.to_datetime(df_sensor["timestamp"])
+        df_esm_with_smartphone_sessions["timestamp"] = pd.to_datetime(df_esm_with_smartphone_sessions["timestamp"])
+        df_esm_with_smartphone_sessions["session_start"] = pd.to_datetime(
+            df_esm_with_smartphone_sessions["session_start"])
+        df_esm_with_smartphone_sessions["session_end"] = pd.to_datetime(df_esm_with_smartphone_sessions["session_end"])
+
+        # #iterate through unique ESM_timestamps of df_sensor
+        counter = 1
+        for esm_timestamp in df_sensor["ESM_timestamp"].unique():
+            print("Start with ESM_timestamp: " + str(esm_timestamp) + " which is: " + str(counter) + "/" + str(
+                len(df_sensor["ESM_timestamp"].unique())))
+            # get the corresponding smartphone session start and end
+            smartphone_session_start = df_esm_with_smartphone_sessions[
+                df_esm_with_smartphone_sessions["timestamp"] == pd.Timestamp(esm_timestamp)]["session_start"]
+            smartphone_session_end = df_esm_with_smartphone_sessions[
+                df_esm_with_smartphone_sessions["timestamp"] == pd.Timestamp(esm_timestamp)]["session_end"]
+
+            # check if there is a smartphone session start and end
+            if len(smartphone_session_start) == 0 or len(smartphone_session_end) == 0:
+                print("No smartphone session start or end found for ESM_timestamp: " + str(esm_timestamp))
+                counter += 1
+                continue
+            smartphone_session_start = smartphone_session_start.iloc[0]
+            smartphone_session_end = smartphone_session_end.iloc[0]
+
+            # analytics: number of seconds which will be deleted
+            seconds_before_event = (pd.Timestamp(esm_timestamp) - smartphone_session_start).total_seconds()
+            seconds_after_event = (smartphone_session_end - pd.Timestamp(esm_timestamp)).total_seconds()
+
+            # check if either one is nan
+            if np.isnan(seconds_before_event) or np.isnan(seconds_after_event):
+                print("Either seconds_before_event or seconds_after_event is nan")
+                counter += 1
+                continue
+
+            if seconds_before_event > 300:
+                seconds_before_event = 300
+            if seconds_after_event > 300:
+                seconds_after_event = 300
+            seconds_which_will_be_deleted = 600 - seconds_before_event - seconds_after_event
+
+            # check if nothing has to be deleted
+            if seconds_which_will_be_deleted == 0:
+                print("Nothing to delete")
+                counter += 1
+                continue
+            records_which_will_be_deleted = seconds_which_will_be_deleted * frequency
+            n_records_before_deletion = len(df_sensor)
+
+            # delete all sensor data which is not inside the smartphone session
+            df_sensor_timestamp = df_sensor[df_sensor["ESM_timestamp"] == esm_timestamp]
+            ## get indices of sensor data which is not inside the smartphone session
+            indices_to_delete = df_sensor_timestamp[(df_sensor_timestamp["timestamp"] < smartphone_session_start) | (
+                        df_sensor_timestamp["timestamp"] > smartphone_session_end)].index
+            ## delete sensor data which is not inside the smartphone session
+            df_sensor = df_sensor.drop(indices_to_delete)
+
+            # analytics: percentage of records which which have been correctly deleted
+            n_records_after_deletion = len(df_sensor)
+            percentage_of_records_which_have_been_deleted = (
+                                                                        n_records_before_deletion - n_records_after_deletion) / records_which_will_be_deleted * 100
+            print(
+                "Percentage of records which have been deleted: " + str(percentage_of_records_which_have_been_deleted))
+            print("Length of df_sensor: " + str(len(df_sensor)))
+            counter += 1
+        return df_sensor
+
     # label sensor data with ESM data
 
 test = df_frequentlocations_day.copy()

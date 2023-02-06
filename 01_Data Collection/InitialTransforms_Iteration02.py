@@ -37,16 +37,16 @@ class InitialTransforms_Iteration02:
         for activity in dict_label.keys():
             df_sensor.loc[(df_sensor["timestamp_datetime"] >= dict_label[activity]["start_session"]) & (
                         df_sensor["timestamp_datetime"] <= dict_label[activity][
-                    "end_session"]), "label_human motion - general"] = activity
+                    "end_session"]), "user activity"] = activity
             #get the number or rows for that activity
             print("Number of entries for activity" + activity + " are: " + str(len(df_sensor.loc[(df_sensor["timestamp_datetime"] >= dict_label[activity]["start_session"]) & (df_sensor["timestamp_datetime"] <= dict_label[activity]["end_session"])])) + "with start time " + str(dict_label[activity]["start_session"]) + "and end time " + str(dict_label[activity]["end_session"]))
 
         #delete first three letters of every label (since "xx_" has been added in dict_label as prefix to
         # distinguish between activities with the same name but performed at different time segments)
-        df_sensor["label_human motion - general"] = df_sensor["label_human motion - general"].str[3:]
+        df_sensor["user activity"] = df_sensor["user activity"].str[3:]
 
         # delete all rows with nan as label
-        df_sensor = df_sensor.dropna(subset=["label_human motion - general"])
+        df_sensor = df_sensor.dropna(subset=["user activity"])
 
         return df_sensor
 
@@ -60,14 +60,15 @@ class InitialTransforms_Iteration02:
         df_sensor["ESM_timestamp"] = ""
         dict_label_esm = {}
         for key in dict_label.keys():
-            #print("start with key " + str(key))
+            print("start with key " + str(key))
             # create list of times: every "time_period" second from start_session ongoing one timestamp (until end_session)
             event_times = []
             start_session = dict_label[key]["start_session"]
             end_session = dict_label[key]["end_session"]
             event_time = start_session + datetime.timedelta(seconds=(length_of_esm_events / 2))
+
             # run while loop until event_time is bigger than end_session
-            while event_time < end_session:
+            while event_time < (end_session + datetime.timedelta(seconds=(length_of_esm_events / 2))):
                 event_times.append(event_time)
                 event_time = event_time + datetime.timedelta(seconds=length_of_esm_events)
 
@@ -80,14 +81,16 @@ class InitialTransforms_Iteration02:
                         df_sensor.at[index, "ESM_timestamp"] = event_time
                     row_count += 1
 
-            # create dict_label which maps ESM_timestamps to label_human motion - general
+            # create dict_label which maps ESM_timestamps to "user activitiy" and "device_id"
             ## Note: this is necessary for things like feature selection (in order to reuse the same code of iteration 01)
             for event_time in event_times:
                 # get label_human motion - general for that event_time
                 #check if there is a label for that event time
                 if len(df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]) > 0:
-                    label = df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]["label_human motion - general"].iloc[0]
-                    # add event_time and label to dict_label_esm; the label should be in a dictionary with the key name "label_human motion - general"
-                    dict_label_esm[event_time] = {"label_human motion - general": label}
+                    label = df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]["user activity"].iloc[0]
+                    user_id = df_sensor.loc[df_sensor["ESM_timestamp"] == event_time]["device_id"].iloc[0]
+                    # add event_time and label to dict_label_esm; the label should be in a dictionary with the key name "user activitiy"
+                    dict_label_esm[event_time] = {"user activity": label,
+                                                  "device_id": user_id}
         return df_sensor, dict_label_esm
 

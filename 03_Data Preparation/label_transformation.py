@@ -19,29 +19,43 @@ df_esm["bodyposition"].value_counts().sum()
 # create dictionary which maps activities to different activity levels
 
 class label_transformation:
+
+    # add activity classes to df_esm
+    ## Note: this works for iteration 02 data; and also for iteration 01 -> human motion data; for the other
+    ## iteration 01 classes, it doesnt work (use the next function)
+    def add_activity_classes(df_esm, dict_mapping, label_column_name):
+
+        df_esm[label_column_name] = np.nan
+        for key in dict_mapping:
+            df_map = dict_mapping[key]
+            # iterate through dataframe
+            for index, row in df_map.iterrows():
+                if len(row) == 1:
+                    # insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]), label_column_name] = key
+
+                if len(row) == 2:
+                    # insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]) & (
+                                df_esm[df_map.columns[1]] == row.iloc[1]), label_column_name] = key
+
+                if len(row) == 3:
+                    # insert in df_esm[label_column_name) the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
+                    df_esm.loc[
+                        (df_esm[df_map.columns[0]] == row.iloc[0]) & (df_esm[df_map.columns[1]] == row.iloc[1]) & (
+                                    df_esm[df_map.columns[2]] == row.iloc[2]), label_column_name] = key
+        return df_esm
+
+
+    # adds to df_esm the different activity classes based on the mappings provided
+    # OLD, CREATE BETTER NEW ONE AND INTEGRATE IN FUNCTION ABOVE
     def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep,
                                   on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
                                   location, smartphonelocation, aligned):
 
         # special case for "human_motion", since more than one column in df_esm have to be evaluated to create each label
         #iterate through dictionary human_motion
-        df_esm["label_human motion"] = np.nan
-        for key in human_motion:
-            df_map = human_motion[key]
-            # iterate through dataframe
-            for index, row in df_map.iterrows():
-                if len(row) == 1:
-                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
-                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]), "label_human motion"] = key
-
-                if len(row) == 2:
-                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
-                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]) & (df_esm[df_map.columns[1]] == row.iloc[1]), "label_human motion"] = key
-
-                if len(row) == 3:
-                    #insert in df_esm["human motion") the key in case in the df_esm column == df_map.columns[0] the values == row.iloc[0] and in the df_esm column == df_map.columns[1] the values == row.iloc[1]
-                    df_esm.loc[(df_esm[df_map.columns[0]] == row.iloc[0]) & (df_esm[df_map.columns[1]] == row.iloc[1]) & (df_esm[df_map.columns[2]] == row.iloc[2]), "label_human motion"] = key
-
+        df_esm = label_transformation.add_activity_classes(df_esm, human_motion, "label_human motion")
 
         # create dataframe with details of new columns
         new_columns = [["label_human motion - general", "humanmotion_general", "bodyposition"],
@@ -80,7 +94,11 @@ class label_transformation:
         df_esm = df_esm_including_activity_classes_dataframe
 
         # create timestamp_datetime column
-        df_esm["timestamp_datetime"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+        # check if column "timestamp" exists
+        if "timestamp" in df_esm.columns: #this case is for iteration 01 data
+            df_esm["timestamp_datetime"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+        elif "ESM_timestamp" in df_esm.columns: #this case is for iteration 02 data
+            df_esm["timestamp_datetime"] = pd.to_datetime(df_esm["ESM_timestamp"], unit = "ms")
 
         # convert df_esm into dict (set timestamp as keys) and save it
         df_esm = df_esm.set_index("timestamp_datetime")

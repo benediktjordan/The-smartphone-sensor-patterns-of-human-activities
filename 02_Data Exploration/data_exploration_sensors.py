@@ -240,12 +240,14 @@ class data_exploration_sensors:
                     # get 1% and 99% quantiles of speed and acceleration and put in dictionary
                     dict_axs[sensor[0]]["speed_01"] = df_sensor["speed (km/h)"].quantile(0.01)
                     dict_axs[sensor[0]]["speed_99"] = df_sensor["speed (km/h)"].quantile(0.99)
-                    dict_axs[sensor[0]]["acceleration_01"] = df_sensor["acceleration (m/s^2)"].quantile(0.01)
-                    dict_axs[sensor[0]]["acceleration_99"] = df_sensor["acceleration (m/s^2)"].quantile(0.99)
+                    dict_axs[sensor[0]]["acceleration_01"] = df_sensor["acceleration (km/h/s)"].quantile(0.01)
+                    dict_axs[sensor[0]]["acceleration_99"] = df_sensor["acceleration (km/h/s)"].quantile(0.99)
                 elif axs_limitations == "event":
                     # get 1% and 99% quantiles of speed and acceleration and put in dictionary
                     dict_axs[sensor[0]]["speed_01"]  = df_event["speed (km/h)"].quantile(0.01)
                     dict_axs[sensor[0]]["speed_99"] = df_event["speed (km/h)"].quantile(0.99)
+                    dict_axs[sensor[0]]["acceleration_01"] = df_event["acceleration (km/h/s)"].quantile(0.01)
+                    dict_axs[sensor[0]]["acceleration_99"] = df_event["acceleration (km/h/s)"].quantile(0.99)
 
             else:
                 if axs_limitations == "general":
@@ -298,7 +300,7 @@ class data_exploration_sensors:
                 axs[0].set_title(list_sensors[0][0], fontsize=15)
                 sns.lineplot(x="time relative to event (s)", y="speed (km/h)", data=dict_df_event[list_sensors[0][0]],
                              ax=axs[0])
-                sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)", data=dict_df_event[list_sensors[0][0]],
+                sns.lineplot(x="time relative to event (s)", y="acceleration (km/h/s)", data=dict_df_event[list_sensors[0][0]],
                              ax=axs[1])
                 # limit axes
                 axs[0].set_ylim(dict_axs[list_sensors[0][0]]["speed_01"], dict_axs[list_sensors[0][0]]["speed_99"])
@@ -324,7 +326,7 @@ class data_exploration_sensors:
                 sns.lineplot(x="time relative to event (s)", y="speed (km/h)",
                              data=dict_df_event[list_sensors[1][0]],
                              ax=axs[0, 1])
-                sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)",
+                sns.lineplot(x="time relative to event (s)", y="acceleration (km/h/s)",
                              data=dict_df_event[list_sensors[1][0]],
                              ax=axs[1, 1])
                 # limit axes
@@ -449,7 +451,7 @@ class data_exploration_sensors:
             sns.lineplot(x="time relative to event (s)", y="speed (km/h)",
                          data=dict_df_event[list_sensors[4][0]],
                          ax=axs[6, 0])
-            sns.lineplot(x="time relative to event (s)", y="acceleration (m/s^2)",
+            sns.lineplot(x="time relative to event (s)", y="acceleration (km/h/s)",
                          data=dict_df_event[list_sensors[4][0]],
                          ax=axs[7, 0])
             # limit axes
@@ -464,8 +466,9 @@ class data_exploration_sensors:
                          "\n(Participant " + str(participant_id) + " at " + str(event_time) + " with axis based on " + axs_limitations + " data)", fontsize=20)
         else:
             plt.suptitle(figure_title, fontsize=20)
-        fig.tight_layout()
-        fig.subplots_adjust(top=0.88)
+
+        plt.tight_layout()
+        plt.subplots_adjust(top=0.88)
         plt.show()
 
         return fig, activity_name
@@ -523,6 +526,9 @@ class data_exploration_sensors:
                 df_sensor = df_sensor.rename(columns={column: "double_values_2"})
             if "accuracy" in column:
                 df_sensor = df_sensor.rename(columns={column: "accuracy"})
+            if column == "timestamp_datetime":
+                df_sensor = df_sensor.drop(columns=["timestamp"])
+                df_sensor = df_sensor.rename(columns={column: "timestamp"})
 
         # iterate through esm events
         esm_events = df_sensor["ESM_timestamp"].unique()
@@ -550,7 +556,7 @@ class data_exploration_sensors:
                 ESM_timestamp.append(esm_event)
 
                 # differentiate between sensor types
-                if sensor in ["accelerometer", "linear_accelerometer",  "magnetometer", "rotations"]:
+                if sensor in ["accelerometer", "linear_accelerometer",  "magnetometer", "rotation", "gyroscope"]:
                     accuracy_mean.append(summary_stats_esm_event["accuracy"]["mean"])
                     accuracy_std.append(summary_stats_esm_event["accuracy"]["std"])
                     double_values_0_mean.append(summary_stats_esm_event["double_values_0"]["mean"])
@@ -570,9 +576,9 @@ class data_exploration_sensors:
                     speed_mean.append(summary_stats_esm_event["speed (km/h)"]["mean"])
                     speed_std.append(summary_stats_esm_event["speed (km/h)"]["std"])
                     speed_max.append(summary_stats_esm_event["speed (km/h)"]["max"])
-                    acceleration_mean.append(summary_stats_esm_event["acceleration (m/s^2)"]["mean"])
-                    acceleration_std.append(summary_stats_esm_event["acceleration (m/s^2)"]["std"])
-                    acceleration_max.append(summary_stats_esm_event["acceleration (m/s^2)"]["max"])
+                    acceleration_mean.append(summary_stats_esm_event["acceleration (km/h/s)"]["mean"])
+                    acceleration_std.append(summary_stats_esm_event["acceleration (km/h/s)"]["std"])
+                    acceleration_max.append(summary_stats_esm_event["acceleration (km/h/s)"]["max"])
 
                 # print("Progress: " + str(esm_events.tolist().index(str(esm_event))) + "/" + str(len(esm_events)))
                 print("Progress " + str(counter) + "/" + str(len(esm_events)))
@@ -586,7 +592,7 @@ class data_exploration_sensors:
         summary_stats["ESM_timestamp"] = ESM_timestamp
         summary_stats["device_id"] = device_id
 
-        if sensor in ["accelerometer", "linear_accelerometer", "magnetometer", "rotations"]:
+        if sensor in ["accelerometer", "linear_accelerometer", "magnetometer", "rotation", "gyroscope"]:
             summary_stats["double_values_0_mean"] = double_values_0_mean
             summary_stats["double_values_0_std"] = double_values_0_std
             summary_stats["double_values_1_mean"] = double_values_1_mean
@@ -627,73 +633,145 @@ class data_exploration_sensors:
         df_summary_stats["participant"] = df_summary_stats["participant"].str[-3:]
 
         # visualize four dimensional scatterplot with seaborn: mean x std x participant x activity
-        if sensor_name == "GPS":
+
+        # create colour palette
+        ## Get the "bright" palette
+        pal = sns.color_palette("bright")
+        hex_colors = [matplotlib.colors.rgb2hex(color) for color in pal]
+        ## remove similar colors from the palette
+        hex_colors = [color for color in hex_colors if color != '#023eff' and color != '#e8000b' and color != '#f14cc1' and color != '#1ac938']
+        hex_colors = hex_colors[:len(df_summary_stats[label_column_name].unique())]
+
+        # sort the labels alphabetically in order to ensure that same colour is used for same label across all datasets
+        df_summary_stats = df_summary_stats.sort_values(by=label_column_name)
+
+        if sensor_name == "locations":
+            #rename columns for visualization
+            df_summary_stats = df_summary_stats.rename(columns={"speed_mean": "speed mean (km/h)", "speed_std": "speed standard deviation (km/h)", "speed_max": "speed maximum (km/h)"})
+            df_summary_stats = df_summary_stats.rename(columns={"acceleration_mean": "acceleration mean (km/h/s)", "acceleration_std": "acceleration standard deviation (km/h/s)", "acceleration_max": "acceleration maximum (km/h/s)"})
+
             # check if participants should be visualized as fourth dimension or not
             if visualize_participants == "no":
-                fig, axs = plt.subplots(1, 1, figsize=(15, 10))
+                fig, axs = plt.subplots(2, 1, figsize=(15, 10))
                 fig.suptitle(figure_title, fontsize=24)
-                sns.scatterplot(x="speed_mean", y="speed_max", style=label_column_name,
-                                data=df_summary_stats, ax=axs)
-                #sns.scatterplot(x="acceleration_mean", y="acceleration_max", style=label_column_name,
-                #                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="speed mean (km/h)", y="speed maximum (km/h)", hue=label_column_name, palette=hex_colors,
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="acceleration mean (km/h/s)", y="acceleration maximum (km/h/s)", hue=label_column_name, palette=hex_colors,
+                                data=df_summary_stats, ax=axs[1])
 
             elif visualize_participants == "yes":
                 fig, axs = plt.subplots(2, 1, figsize=(15, 10))
                 fig.suptitle(figure_title, fontsize=24)
-                sns.scatterplot(x="speed_mean", y="speed_max", style=label_column_name, hue="participant",
-                                data=df_summary_stats, ax=axs)
-                #sns.scatterplot(x="acceleration_mean", y="acceleration_max", style=label_column_name, hue="participant",
-                #                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="speed mean (km/h)", y="speed maximum (km/h)", style=label_column_name, hue="participant",
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="acceleration mean (km/h/s)", y="acceleration maximum (km/h/s)", style=label_column_name, hue="participant",
+                                data=df_summary_stats, ax=axs[1])
 
             # set x and y limits
-            axs.set_xlim(df_summary_stats["speed_mean"].quantile(0.01),
-                            df_summary_stats["speed_mean"].quantile(0.99))
-            axs.set_ylim(df_summary_stats["speed_max"].quantile(0.01),
-                            df_summary_stats["speed_max"].quantile(0.99))
+            axs[0].set_xlim(df_summary_stats["speed mean (km/h)"].quantile(0.01),
+                            df_summary_stats["speed mean (km/h)"].quantile(0.99))
+            axs[0].set_ylim(df_summary_stats["speed maximum (km/h)"].quantile(0.01),
+                            df_summary_stats["speed maximum (km/h)"].quantile(0.99))
 
-            #xs[1].set_xlim(df_summary_stats["acceleration_mean"].quantile(0.01),
-            #                df_summary_stats["acceleration_mean"].quantile(0.99))
-            #axs[1].set_ylim(df_summary_stats["acceleration_max"].quantile(0.01),
-            #                df_summary_stats["acceleration_max"].quantile(0.99))
+            axs[1].set_xlim(df_summary_stats["acceleration mean (km/h/s)"].quantile(0.01),
+                            df_summary_stats["acceleration mean (km/h/s)"].quantile(0.99))
+            axs[1].set_ylim(df_summary_stats["acceleration maximum (km/h/s)"].quantile(0.01),
+                            df_summary_stats["acceleration maximum (km/h/s)"].quantile(0.99))
 
         # if sensor is something else than GPS (i.e. high frequency sensors)
-        else:
+        elif sensor_name == "linear_accelerometer":
+            # rename columns for visualization
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_0_mean": "x-axis mean (m/s²)", "double_values_0_std": "x-axis standard deviation (m/s²)"})
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_1_mean": "y-axis mean (m/s²)", "double_values_1_std": "y-axis standard deviation (m/s²)"})
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_2_mean": "z-axis mean (m/s²)", "double_values_2_std": "z-axis standard deviation (m/s²)"})
+
             # check if participants should be visualized as fourth dimension or not
             if visualize_participants == "no":
                 fig, axs = plt.subplots(3, 1, figsize=(15, 10))
                 fig.suptitle(figure_title, fontsize=24)
-                sns.scatterplot(x="double_values_0_mean", y="double_values_0_std", style=label_column_name,
+                sns.scatterplot(x="x-axis mean (m/s²)", y="x-axis standard deviation (m/s²)", hue=label_column_name, palette=hex_colors,
                                 data=df_summary_stats, ax=axs[0])
-                sns.scatterplot(x="double_values_1_mean", y="double_values_1_std", style=label_column_name,
+                sns.scatterplot(x="y-axis mean (m/s²)", y="y-axis standard deviation (m/s²)", hue=label_column_name, palette=hex_colors,
                                 data=df_summary_stats, ax=axs[1])
-                sns.scatterplot(x="double_values_2_mean", y="double_values_2_std", style=label_column_name,
+                sns.scatterplot(x="z-axis mean (m/s²)", y="z-axis standard deviation (m/s²)", hue=label_column_name, palette=hex_colors,
                                 data=df_summary_stats, ax=axs[2])
             elif visualize_participants == "yes":
                 fig, axs = plt.subplots(3, 1, figsize=(15, 10))
                 fig.suptitle(figure_title, fontsize=24)
-                sns.scatterplot(x="double_values_0_mean", y="double_values_0_std", style=label_column_name,
+                sns.scatterplot(x="x-axis mean (m/s²)", y="x-axis standard deviation (m/s²)", style=label_column_name,
                                 data=df_summary_stats, ax=axs[0])
-                sns.scatterplot(x="double_values_1_mean", y="double_values_1_std", style=label_column_name,
+                sns.scatterplot(x="y-axis mean (m/s²)", y="y-axis standard deviation (m/s²)", style=label_column_name,
                                 data=df_summary_stats, ax=axs[1])
-                sns.scatterplot(x="double_values_2_mean", y="double_values_2_std", style=label_column_name,
+                sns.scatterplot(x="z-axis mean (m/s²)", y="z-axis standard deviation (m/s²)", style=label_column_name,
                                 data=df_summary_stats, ax=axs[2])
 
             # set x and y limits: all axis will be set with the minimum and max values of the x-axis
-            axs[0].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
-                            df_summary_stats["double_values_0_mean"].quantile(0.99))
-            axs[0].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
-                            df_summary_stats["double_values_0_std"].quantile(0.99))
+            axs[0].set_xlim(df_summary_stats["x-axis mean (m/s²)"].quantile(0.01),
+                            df_summary_stats["x-axis mean (m/s²)"].quantile(0.99))
+            axs[0].set_ylim(df_summary_stats["x-axis standard deviation (m/s²)"].quantile(0.01),
+                            df_summary_stats["x-axis standard deviation (m/s²)"].quantile(0.99))
 
-            axs[1].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
-                            df_summary_stats["double_values_0_mean"].quantile(0.99))
-            axs[1].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
-                            df_summary_stats["double_values_0_std"].quantile(0.99))
+            axs[1].set_xlim(df_summary_stats["y-axis mean (m/s²)"].quantile(0.01),
+                            df_summary_stats["y-axis mean (m/s²)"].quantile(0.99))
+            axs[1].set_ylim(df_summary_stats["y-axis standard deviation (m/s²)"].quantile(0.01),
+                            df_summary_stats["y-axis standard deviation (m/s²)"].quantile(0.99))
 
-            axs[2].set_xlim(df_summary_stats["double_values_0_mean"].quantile(0.01),
-                            df_summary_stats["double_values_0_mean"].quantile(0.99))
-            axs[2].set_ylim(df_summary_stats["double_values_0_std"].quantile(0.01),
-                            df_summary_stats["double_values_0_std"].quantile(0.99))
+            axs[2].set_xlim(df_summary_stats["z-axis mean (m/s²)"].quantile(0.01),
+                            df_summary_stats["z-axis mean (m/s²)"].quantile(0.99))
+            axs[2].set_ylim(df_summary_stats["z-axis standard deviation (m/s²)"].quantile(0.01),
+                            df_summary_stats["z-axis standard deviation (m/s²)"].quantile(0.99))
 
+        elif sensor_name == "rotation":
+            # rename columns for visualization
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_0_mean": "x-axis mean",
+                                                                "double_values_0_std": "x-axis standard deviation"})
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_1_mean": "y-axis mean",
+                                                                "double_values_1_std": "y-axis standard deviation"})
+            df_summary_stats = df_summary_stats.rename(columns={"double_values_2_mean": "z-axis mean",
+                                                                "double_values_2_std": "z-axis standard deviation"})
+
+            # check if participants should be visualized as fourth dimension or not
+            if visualize_participants == "no":
+                fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="x-axis mean", y="x-axis standard deviation", hue=label_column_name,
+                                palette=hex_colors,
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="y-axis mean", y="y-axis standard deviation", hue=label_column_name,
+                                palette=hex_colors,
+                                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="z-axis mean", y="z-axis standard deviation", hue=label_column_name,
+                                palette=hex_colors,
+                                data=df_summary_stats, ax=axs[2])
+            elif visualize_participants == "yes":
+                fig, axs = plt.subplots(3, 1, figsize=(15, 10))
+                fig.suptitle(figure_title, fontsize=24)
+                sns.scatterplot(x="x-axis mean", y="x-axis standard deviation", style=label_column_name,
+                                data=df_summary_stats, ax=axs[0])
+                sns.scatterplot(x="y-axis mean", y="y-axis standard deviation", style=label_column_name,
+                                data=df_summary_stats, ax=axs[1])
+                sns.scatterplot(x="z-axis mean", y="z-axis standard deviation", style=label_column_name,
+                                data=df_summary_stats, ax=axs[2])
+
+            # set x and y limits: all axis will be set with the minimum and max values of the x-axis
+            axs[0].set_xlim(df_summary_stats["x-axis mean"].quantile(0.01),
+                            df_summary_stats["x-axis mean"].quantile(0.99))
+            axs[0].set_ylim(df_summary_stats["x-axis standard deviation"].quantile(0.01),
+                            df_summary_stats["x-axis standard deviation"].quantile(0.99))
+
+            axs[1].set_xlim(df_summary_stats["y-axis mean"].quantile(0.01),
+                            df_summary_stats["y-axis mean"].quantile(0.99))
+            axs[1].set_ylim(df_summary_stats["y-axis standard deviation"].quantile(0.01),
+                            df_summary_stats["y-axis standard deviation"].quantile(0.99))
+
+            axs[2].set_xlim(df_summary_stats["z-axis mean"].quantile(0.01),
+                            df_summary_stats["z-axis mean"].quantile(0.99))
+            axs[2].set_ylim(df_summary_stats["z-axis standard deviation"].quantile(0.01),
+                            df_summary_stats["z-axis standard deviation"].quantile(0.99))
+
+
+
+        plt.tight_layout()
         plt.show()
 
         return fig

@@ -6,7 +6,7 @@ class data_exploration_labels:
         df_esm = pd.read_csv(esm_path)
         return df_esm
 
-    # visualize summary of ESM data for every question
+    # for all activities: barplot of classes x number of events
     def visualize_esm_activities_all(dir_results, df_esm):
         # create summary of ESM data
         esm_summary = {
@@ -37,6 +37,50 @@ class data_exploration_labels:
 
             plt.savefig(dir_results + "/" + activity + "_ESM activity count.png")
             #plt.show()
+
+    # for one activity: barplot of classes x number of events
+    def visualize_esm_activity(df_esm, column_name, fig_title):
+        fig = plt.figure(figsize=(15, 10))
+        plt.title(fig_title)
+        sns.barplot(x=df_esm[column_name].value_counts()[0:20].index,
+                    y=df_esm[column_name].value_counts()[0:20].values,
+                    palette="Blues_d")
+        if len(df_esm[column_name].value_counts()[0:20].index) > 10:
+            plt.xticks(rotation=20)
+        else:
+            plt.xticks(rotation=15)
+        # include actual number of events in bar plot
+        for i, v in enumerate(df_esm[column_name].value_counts()[0:20].values):
+            plt.text(i - 0.1, v + 0.1, str(v), color='black')
+
+        plt.show()
+        return fig
+
+    # for one activity: barplot of classes x number of minutes (ESM_timestamp * esm_segment)
+    ## Note: this function is relevant only for laboratory data. It visualizes an approximation
+    ## for the minutes of data recorded per activity class by multiplying the number of ESM events
+    ## with the length of the ESM segments (in minutes)
+    def visualize_esm_activity_minutes(df_esm, column_name, esm_segment_length, fig_title):
+        esm_segment_length_in_minutes = esm_segment_length / 60
+        fig = plt.figure(figsize=(15, 10))
+        plt.title(fig_title)
+        sns.barplot(x=df_esm[column_name].value_counts()[0:20].index,
+                    y=(df_esm[column_name].value_counts()[0:20].values * esm_segment_length_in_minutes),
+                    palette="Blues_d")
+        if len(df_esm[column_name].value_counts()[0:20].index) > 10:
+            plt.xticks(rotation=20)
+        else:
+            plt.xticks(rotation=15)
+        # include actual number of events in bar plot
+        for i, v in enumerate(df_esm[column_name].value_counts()[0:20].values * esm_segment_length_in_minutes):
+            plt.text(i - 0.1, v + 0.1, str(v), color='black')
+
+        #label x-axis and y-axis
+        plt.xlabel("classes")
+        plt.ylabel("total minutes")
+
+        plt.show()
+        return fig
 
     # visualize sum of ES data
     def visualize_esm_notNaN(df_esm):
@@ -74,30 +118,47 @@ class data_exploration_labels:
             plt.text(i - 0.1, v + 0.1, str(v), color='black')
         plt.savefig(dir_results + "/" + "ESM not NaN count.png")
 
-    # visualize one activity as barplot
-    def visualize_esm_activity(df_esm, column_name, fig_title):
 
-        fig = plt.figure(figsize=(15, 10))
-        plt.title(fig_title)
-        sns.barplot(x=df_esm[column_name].value_counts()[0:20].index, y=df_esm[column_name].value_counts()[0:20].values,
-                    palette="Blues_d")
-        if len(df_esm[column_name].value_counts()[0:20].index) > 10:
-            plt.xticks(rotation=20)
-        else:
-            plt.xticks(rotation=15)
-        # include actual number of events in bar plot
-        for i, v in enumerate(df_esm[column_name].value_counts()[0:20].values):
-            plt.text(i - 0.1, v + 0.1, str(v), color='black')
 
-        plt.show()
-        return fig
-
-    # create table which shows users x activities (so number of labels per user and label class)
-    def create_table_user_activity(df_esm, label_column_name):
+    # create table which shows users x classes x number of events
+    ## Note: relevant for naturalistic data only
+    def create_table_user_classes_eventcount(df_esm, label_column_name):
 
         #create label counts per user
         df_label_counts = df_esm.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
         df_label_counts = df_label_counts.astype(int)
+
+        # add sum for rows and columns
+        # add sum for rows but without including values from the column "User ID"
+        df_label_counts["total"] = df_label_counts.iloc[:, 0:].sum(axis=1)
+        #df_label_counts["total"] = df_label_counts.sum(axis=1)
+
+        # create User_ID column from index
+        df_label_counts["User ID"] = df_label_counts.index
+
+        # add column with the city of user as the second column by matching the User_ID with the city of the user in df_labels_publictransport with lambda function
+        df_label_counts["City"] = df_label_counts.apply(lambda x: df_esm[df_esm["device_id"] == x["User ID"]]["city"].values[0], axis=1)
+
+        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+
+        # make sure that User ID and City are the first two columns
+        cols = df_label_counts.columns.tolist()
+        cols = cols[-2:] + cols[:-2]
+        df_label_counts = df_label_counts[cols]
+
+        return df_label_counts
+
+
+    # create table which shows users x classes x number of minutes recorded for this class
+    ## Note: relevant for laboratory data only.
+    def create_table_user_classes_minutes(df_esm, label_column_name, esm_segment_length):
+
+        #create label counts per user
+        df_label_counts = df_esm.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+        # multiply every cell with the length of the ESM segments (in minutes)
+        df_label_counts = df_label_counts * (esm_segment_length / 60)
+        # round to 1 decimal
+        df_label_counts = df_label_counts.round(1)
 
         # add sum for rows and columns
         # add sum for rows but without including values from the column "User ID"
