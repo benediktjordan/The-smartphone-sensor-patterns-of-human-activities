@@ -24,7 +24,7 @@ class data_exploration_sensors:
         return df
 
     # count number of sensor data records for each ESM timestamps: for a list of sensors
-    def volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min=False):
+    def volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min, only_active_smartphone_sessions):
         # create ESM_timestamp column which is in datetime format from timestamp column
         df_esm["ESM_timestamp"] = pd.to_datetime(df_esm["timestamp"], unit="ms")
         df_esm = df_esm[["ESM_timestamp", "device_id"]]
@@ -32,7 +32,10 @@ class data_exploration_sensors:
         # iterate through sensors
         for sensor in sensors:
             print("start with sensor " + sensor)
-            path_sensorfile = path_sensor_database + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+            if only_active_smartphone_sessions == "no":
+                path_sensorfile = path_sensor_database + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+            elif only_active_smartphone_sessions == "yes":
+                path_sensorfile = path_sensor_database + sensor + "_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl"
             df_sensor = pd.read_pickle(path_sensorfile)
 
             # convert ESM timestamp and timestamp to datetime
@@ -69,7 +72,7 @@ class data_exploration_sensors:
 
         return df_esm
 
-    # sensor-based: create function which visualizes the data of one sensor in lineplot for specific ES-event in timeperiod
+    # sensor-based: lineplot: create function which visualizes the data of one sensor in lineplot for specific ES-event in timeperiod
     def vis_sensordata_around_event_onesensor(df_sensor, event_time, time_period, sensor_name, label_column_name, axs_limitations):
         # find names of sensor columns and rename columns
         for col in df_sensor.columns:
@@ -165,7 +168,7 @@ class data_exploration_sensors:
             fig.savefig(path_to_save + activity_name + "/" + activity_name + "_EventTime-"  + str(event_time) + "_Segment-" + str(time_period) + "_Sensor-"+ sensor_name + ".png")
             plt.close(fig)
 
-    # event-based: visualize several sensors (2-4; must be high-frequency) around every event
+    # event-based: lineplot: visualize several sensors (2-4; must be high-frequency) around every event
     #TODO include in this function the possibility to visualize also for data from second iteration:
     #-> make labeling optional DONE
     #-> create "ESM_timestamp" column in the new dataset below
@@ -618,7 +621,7 @@ class data_exploration_sensors:
 
         return summary_stats, missing_sensordata
 
-    # visualize mean & std of sensor in scatterplot for specific sensor and list of classes
+    # visualize scatterplot: mean & std of sensor in scatterplot for specific sensor and list of classes
     def vis_summary_stats(df_summary_stats, sensor_name, label_column_name, list_activities,
                           figure_title, visualize_participants=False):
 
@@ -776,6 +779,51 @@ class data_exploration_sensors:
 
         return fig
 
+    #visualize scatterplot
+    def vis_scatterplot(df, x_column, y_column, figure_title, point_size_based_on_point_occurence = "no"):
+
+        if point_size_based_on_point_occurence == "yes":
+            # count the occurrences of each point: necessary to plot the points with the correct size
+            c = Counter(zip(df[x_column], df[y_column]))
+            print("Maximum point size: ", max(c.values()))
+            # create a list of the sizes, here multiplied by 10 for scale
+            ## scale this point scaller depending on how many points are in the biggest cluster
+            scale_factor = 10
+            if max(c.values()) > 1000:
+                scale_factor = 1
+            if max(c.values()) > 10000:
+                scale_factor = 0.7
+            if max(c.values()) > 25000:
+                scale_factor = 0.5
+            if max(c.values()) > 100000:
+                scale_factor = 0.1
+            if max(c.values()) > 300000:
+                scale_factor = 0.05
+            s = [scale_factor * c[(xx, yy)] for xx, yy in zip(df[x_column], df[y_column])]
+
+        # plot the scatterplot
+        fig = plt.figure(figsize=(15, 10))
+        fig.suptitle(figure_title, fontsize=24)
+
+        if point_size_based_on_point_occurence == "yes":
+            plt.scatter(df[x_column], df[y_column], s=s)
+        elif point_size_based_on_point_occurence == "no":
+            plt.scatter(df[x_column], df[y_column])
+
+        plt.xlabel(x_column)
+        plt.ylabel(y_column)
+        plt.show()
+
+        return fig
+
+    def vis_histogram(df_participant, hist_column_name, figure_title, bin_number):
+        fig = plt.figure(figsize=(15, 10))
+        fig.suptitle(figure_title, fontsize=24)
+        sns.histplot(data=df_participant, x=hist_column_name, bins=bin_number)
+        if bin_number > 30:
+            plt.xticks(rotation=90)
+        plt.show()
+        return fig
 
 #region Iteration 01
 #load data & initialize

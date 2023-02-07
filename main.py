@@ -12,6 +12,7 @@ import time
 import matplotlib.pyplot as plt
 import json
 import itertools
+import string
 
 # computing distance
 import geopy.distance
@@ -66,6 +67,10 @@ import matplotlib
 # for keeping track
 from tqdm import tqdm
 
+#for GPS visualization in maps
+import utm
+from collections import Counter
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
 
 try:
@@ -238,13 +243,15 @@ for label_column_name in label_column_names:
 #endregion
 
 # region sensor transformation
-# merge all screen-sensor data
+# merge all screen- and wifi-sensor data
 # Note: this is needed for adding the beginning and end of sessions to all ESM events
 dir_databases = "/Volumes/INTENSO/In Usage new/Databases/"
-sensor = "screen"
-df_sensors_all = Merge_Transform.join_sensor_files(dir_databases, sensor, sensor_appendix = None)
-df_sensors_all = Merge_Transform.convert_json_to_columns(df_sensors_all, "screen")
-df_sensors_all.to_csv(dir_databases + "screen_all.csv")
+sensors = ["screen", "sensor_wifi"]
+sensors = ["sensor_wifi"]
+for sensor in sensors:
+    df_sensors_all = Merge_Transform.join_sensor_files(dir_databases, sensor, sensor_appendix = None)
+    df_sensors_all = Merge_Transform.convert_json_to_columns(df_sensors_all, sensor)
+    df_sensors_all.to_csv(dir_databases + sensor +"_all.csv")
 
 # add to each ESM-event the beginning and end of the smartphone session
 df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
@@ -310,19 +317,18 @@ plt.show()
 
 # delete all sensor data which is not inside the "smartphone session" of each ESM event & drop also duplicates
 ## save it as an extra file
-sensor_list = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations"]
-sensor_list = ["accelerometer"]
+sensor_list = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations", "sensor_wifi"]
+sensor_list = ["sensor_wifi"]
 
-dir_sensors = "/Users/benediktjordan/Downloads/"
+dir_sensors = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/"
 df_esm_with_smartphone_sessions = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_with_smartphone_sessions.csv")
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
 
 for sensor in tqdm(sensor_list):
     print("Start with sensor: " + sensor)
     # set frequencies
-    frequency = 10 # for all high frequency sensors
-    if sensor == "locations":
-        frequency = 1
+    # get from sensors_and_frequencies
+    frequency = int(sensors_and_frequencies[sensors_and_frequencies["Sensor"] == sensor]["Frequency (in Hz)"])
     # load sensor data
     df_sensor = pd.read_pickle(dir_sensors + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.pkl")
     # drop duplicates
@@ -391,21 +397,25 @@ test= df_results.groupby("ESM_timestamp")["ESM_timestamp"].count()
 # visualize label data distribution
 path_esm = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv"
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+threshold = 5 #only events which have at least this number of occurences are visualized
 df_esm = data_exploration_labels.load_esm(path_esm)
-## visualize for every answer and every activity the number of classes
-data_exploration_labels.visualize_esm_activities_all(dir_results,df_esm)
-## visualize in one plot the number of labels per activity (bar plot)
-data_exploration_labels.visualize_esm_notNaN(dir_results, df_esm)
+## visualize for every answer and every activity the number of classes & count analytics
+df_analytics = data_exploration_labels.visualize_esm_activities_all(dir_results,df_esm, threshold)
+df_analytics.to_csv(dir_results + "analytics.csv")
+    ## visualize in one plot the number of labels per activity (bar plot)
+data_exploration_labels.visualize_esm_notNaN( df_esm)
 
 # calculate number of sensor-datapoints for each event
 # find out how many labels have sensor data -> ##temporary -> make later into function!
 df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
-gps_accuracy_min = 35
+gps_accuracy_min = 100
 time_period = 90 #in seconds; timeperiod around events which will be included
-sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "barometer", "rotation", "locations"]
-path_sensor_database = "/Users/benediktjordan/Downloads/"
-df_esm = data_exploration_sensors.volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min)
-df_esm.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(time_period) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
+only_active_smartphone_sessions = "yes"
+sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "barometer", "rotation", "locations", "sensor_wifi"]
+sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations", "sensor_wifi"]
+path_sensor_database = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
+df_esm = data_exploration_sensors.volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min, only_active_smartphone_sessions)
+df_esm.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(time_period) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
 
 # calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
 ## Note: this data is relevant for, for example, public transport -> data exploration -> visualizing mean & std of GPS data
@@ -3029,128 +3039,150 @@ for label_segment in label_segments:
 #region data exploration labels
 label_column_name = "label_location"
 df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/labels/"
 
 ## create table with users x relevant ESM-answers
 ## merge participant IDs
 df_labels = Merge_Transform.merge_participantIDs(df_labels, users, device_id_col = None, include_cities = True)
-df_label_counts_participants_locations = df_labels.groupby("device_id")["label_location"].value_counts().unstack().fillna(0)
-df_label_counts_participants_locations["total"] = df_label_counts_participants_locations.sum(axis=1)
-df_label_counts_participants_locations.loc["total"] = df_label_counts_participants_locations.sum(axis=0)
-
-## create barplot with all human motion classes
-df_labels_humanmotion= df_labels.copy()
-#df_labels_publictransport["label_public transport"] = df_labels_publictransport["label_public transport"].replace("train", "public transport")
-fig = data_exploration_labels.visualize_esm_activity(df_labels_humanmotion, "label_human motion", "Human Motion - Number of Answers per Class")
-fig.savefig(path_storage + "human_motion_class-counts.png")
-
-##create table with users x label classes
-df_labels_humanmotion =  Merge_Transform.merge_participantIDs(df_labels_humanmotion, users, include_cities = True)
-df_label_counts = data_exploration_labels.create_table_user_activity(df_labels_humanmotion, "label_human motion")
-df_label_counts.to_csv(path_storage + "human_motion_labels-overview.csv")
-
+df_label_counts_participants_locations = data_exploration_labels.create_table_user_classes_eventcount(df_labels, label_column_name)
+df_label_counts_participants_locations.to_csv(path_storage + "label_counts_participants_locations.csv")
 
 #endregion
 
 #region data exploration sensors
-
-
-# find out how many labels have sensor data: visualize as barplot and table
+#region find out how many labels have sensor data: visualize as barplot and table
 segment_around_events = 90 # timeperiod considered around events
 min_sensordata_percentage = 50 #in percent; only sensordata above this threshold will be considered
-gps_accuracy_min = 35 # in meters; only gps data with accuracy below this threshold was considered when counting GPS records for each event
+gps_accuracy_min = 100 # in meters; only gps data with accuracy below this threshold was considered when counting GPS records for each event
 label_column_name = "label_location"
-df_esm_including_number_sensordata = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(segment_around_events) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
+only_active_smartphone_sessions = "yes"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/labels/"
+df_esm_including_number_sensordata = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
 # drop row with "nan" in ESM_timestamp
 df_esm_including_number_sensordata = df_esm_including_number_sensordata[df_esm_including_number_sensordata["ESM_timestamp"].notnull()]
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-sensors_included = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations"]
+sensors_included = ["locations", "sensor_wifi" ]
+#sensors_included = ["locations" ]
+#sensors_included = ["sensor_wifi" ]
+
 ## visualize as table
 df_esm_including_sensordata_above_threshold, df_esm_user_class_counts = data_exploration_labels.create_table_user_activity_including_sensordata(df_esm_including_number_sensordata, dict_label, label_column_name , sensors_included, segment_around_events)
 print("Number of Events for which all Sensor Data is available: " + str(len(df_esm_including_sensordata_above_threshold)))
-df_esm_user_class_counts.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_user-class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
+df_esm_user_class_counts.to_csv(path_storage + "location_user-class-counts_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
 ## this is necessary for the following visualiztion of sample events: from this df will get the relevant ESM timestamps
-df_esm_including_sensordata_above_threshold.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_events_with-sensor-data_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
+df_esm_including_sensordata_above_threshold.to_csv(path_storage + "location_events_with-sensor-data_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
 
 ## visualize as barplot
-fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_human motion", "Human Motion - Number of Answers per Class with Sensor Data")
-fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
+fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_location", "Frequent Locations - Number of Answers per Class with Sensor Data")
+fig.savefig(path_storage + "human_motion_class-counts_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
+#endregion
 
+#region visualize GPS: generic maps with locations for each participant
+## based on all location data
+df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/locations_all_JSON-transformed_merged-participantIDs.csv")
+path_storage = '/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/sensors/GPS/'
+for participant in df["loc_device_id"].unique():
+    t0 = time.time()
+    print("started with participant: " + str(participant))
+    figure_title = "GPS Data of User " + str(participant)
+    df_participant = df[df["loc_device_id"] == participant]
+    fig = GPS_visualization.gps_utm_genericmap(df_participant, figure_title, colour_based_on_labels = "no")
+    fig.savefig(path_storage + "GPS_data_user_" + str(participant) + ".png", dpi=300)
+    print("finished with participant: " + str(participant) + " in " + str((time.time() - t0)/60) + " minutes")
 
-# create plots for all events visualizing linear accelerometer, magnetometer, gyroscope, rotation, and speed data
-label_column_name = "label_human motion"
-time_period = 90  # seconds; timeperiod around event which should be visualized
-df_relevant_events = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_events_with-sensor-data_event-segments-90_min-sensor-percentage-50-sensors-['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'locations']_min-gps-accuracy-35.csv")
+## based on 1 record per event & coloured regarding to location classes
+label_column_name = "label_location"
+colour_based_on_labels = "yes"
+min_gps_accuracy = 100 # only use GPS points with accuracy below this value
+df_locations = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/locations_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
 dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-path_to_save = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/Event_Visualizations/"
-path_sensordata = "/Users/benediktjordan/Downloads/INSERT_esm_timeperiod_5 min.csv_JSONconverted.pkl"
-gps_accuracy_min = 35 # meters
-only_active_smartphone_sessions = "no"
-path_GPS_features = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(gps_accuracy_min) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + ".csv"
-axs_limitations = "general"
-label_data = True
-figure_title = ""
-list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
-                ["Magnetometer", "magnetometer"],
-                ["Gyroscope", "gyroscope"],
-                ["Rotation", "rotation"],
-                ["GPS"]] # this sensor set is meant for the appendix
-list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
-                ["GPS"]] #this sensor set is meant for analysing dynamic human motion
-list_sensors = [["Linear Accelerometer", "linear_accelerometer"],
-                ["Rotation", "rotation"]] #this sensor set is meant for analysing stationary human motion
+path_storage = '/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/sensors/GPS/'
+df_locations = df_locations[df_locations["loc_accuracy"] < min_gps_accuracy] # delete all records with accuracy > min_gps_accuracy
+df_locations = labeling_sensor_df(df_locations, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp") #add labels to df
+df_locations = df_locations.dropna(subset=[label_column_name]) # drop NaN values in label column
+df_locations = Merge_Transform.merge_participantIDs(df_locations, users, device_id_col = None, include_cities = False)# merge participant IDs
+### keep for each event the GPS record with a timestamp closest to the ESM timestamp (first one after ESM timestamp)
+df_locations = df_locations[df_locations["timestamp"] >= df_locations["ESM_timestamp"]] ## delete, for every event, all records with a timestamp earlier than the ESM timestamp
+df_locations = df_locations.sort_values(by=['ESM_timestamp', 'timestamp']) ## now keep only one record per event, the one with the timestamp closest to the ESM timestamp
+df_locations = df_locations.drop_duplicates(subset=['ESM_timestamp'], keep='first')
+df_locations = df_locations.rename(columns={label_column_name: "Location Classes"}) # rename label_column into "Location Classes" (necessary for visualization)
+for participant in df_locations["device_id"].unique():
+    t0 = time.time()
+    print("started with participant: " + str(participant))
+    figure_title = "GPS Data of Events for User " + str(participant)
+    df_participant = df_locations[df_locations["device_id"] == participant]
+    fig = GPS_visualization.gps_utm_genericmap(df_participant, figure_title, "Location Classes", colour_based_on_labels)
+    fig.savefig(path_storage +  "GPSData_OnlyEvents_only-active-smartphon-seessions-yes" + "_min-gps-acc-" + str(min_gps_accuracy) +"_user_" + str(participant) + ".png", dpi=300)
+    print("finished with participant: " + str(participant) + " in " + str((time.time() - t0)/60) + " minutes")
+#endregion
 
-## create list of event times for which sensor data exists: double check with GPS data according to above accuracy
-event_times = []
-for i in range(len(df_relevant_events)):
-    event_times.append(df_relevant_events["ESM_timestamp"][i])
-df_gps = pd.read_csv(path_GPS_features)
-# drop events in event_times if they are not in df_gps["ESM_timestamp"]
-event_times = [x for x in event_times if x in df_gps["ESM_timestamp"].tolist()]
-num_events = 1
-sensor_names = ""
-for sensor in list_sensors:
-    sensor_names += sensor[0] + "_"
+# region visualize WiFi
+# xmin around event WiFi data: scatterplots with WiFi BSSID x location classes for each participant
+label_column_name = "label_location"
+point_size_based_on_point_occurence = "yes"
+df_wifi = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/sensor_wifi_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+path_storage = '/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/sensors/WiFi/'
+df_wifi = labeling_sensor_df(df_wifi, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp") #add labels to df
+df_wifi = df_wifi.dropna(subset=[label_column_name]) #drop nan in label column
+df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = None, include_cities = False)# merge participant IDs
 
-for event_time in tqdm(event_times):
-    time0 = time.time()
-    # TEMPORARY check if figure has already been saved; if yes, skip
-    #list_files = []
-    #for root, dirs, files in os.walk(path_to_save):
-    #    for file in files:
-    #        if file.endswith(".png"):
-    #            list_files.append(os.path.join(root, file))
-    # check if event_time is already in any element of list_files
-    #if any(str(event_time) in s for s in list_files):
-    #    print("Figure already saved for event_time: " + str(event_time))
-    #    num_events += 1
-    #    continue
+#TODO NOTE AND DOCUMENT IN SENSOR EXPLORATION: many NaN values in WiFi data; dlete theme
+print("NaN values in sen_ssid column: " + str(df_wifi["sen_ssid"].isna().sum()))## how many NaN values in sen_ssid column?
+df_wifi = df_wifi.dropna(subset=["sen_ssid"])#drop nan values in sen_ssid and sen_bssid column
+# create anonymized BSSID column: replaece each BSSID with a letter combination
+df_wifi["Anonymized WiFi BSSID"] = np.nan
+for bssid in df_wifi["sen_bssid"].unique():
+    #create random letter combination of length 6
+    random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+    #make sure that the letter combination is not already used
+    while random_letters in df_wifi["Anonymized WiFi BSSID"].unique():
+        random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+    #replace BSSID with letter combination
+    df_wifi.loc[df_wifi["sen_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
 
-    fig, activity_name = data_exploration_sensors.vis_sensordata_around_event_severalsensors(list_sensors, event_time, time_period,
-                                                                           label_column_name, path_sensordata, axs_limitations, dict_label, label_data = label_data,
-                                                                                             path_GPS_features = path_GPS_features)
-    # check if fig is None: if yes, continue with next event_time
-    if fig is None:
-        num_events += 1
-        continue
+df_wifi = df_wifi.rename(columns={label_column_name: "Location Classes"})# rename "label_location" into "Location Classes"
+x_column = "Location Classes"
+y_column = "Anonymized WiFi BSSID"
 
-    # find out if path exists
-    #NOte: reason for this is that there was a problem with this case
-    if activity_name == "car/bus/train/tram":
-        activity_name = "car-bus-train-tram"
+### keep for each event the record with a timestamp closest to the ESM timestamp (first one after ESM timestamp)
+df_wifi = df_wifi[df_wifi["timestamp"] >= df_wifi["ESM_timestamp"]] ## delete, for every event, all records with a timestamp earlier than the ESM timestamp
+df_wifi = df_wifi.sort_values(by=['ESM_timestamp', 'timestamp']) ## now keep only one record per event, the one with the timestamp closest to the ESM timestamp
+df_wifi = df_wifi.drop_duplicates(subset=['ESM_timestamp'], keep='first')
 
-    # if path_to save doesnt exist, create it with mkdir
-    if not os.path.exists(path_to_save + activity_name + "/"):
-        os.makedirs(path_to_save + activity_name + "/")
+for participant in df_wifi["device_id"].unique():
+    print("started with participant " + str(participant))
+    figure_title = "WiFi BSSID x Location Classes for User " + str(participant)
+    df_participant = df_wifi[df_wifi["device_id"] == participant]
+    fig = data_exploration_sensors.vis_scatterplot(df_participant, x_column, y_column, figure_title, point_size_based_on_point_occurence)
+    fig.savefig(path_storage + "WiFiBSSIDxLocationClasses_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=300)
 
-    fig.savefig(
-        path_to_save + activity_name + "/gps-accuracy-min-" + str(gps_accuracy_min) + "_" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
-            time_period) + "_Sensors-" + sensor_names + ".png")
-    plt.close(fig)
-    # print progress
-    print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
-    num_events += 1
+# all WiFi data: histograms of different WiFi BSSID for each participant
+df_wifi = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/sensor_wifi_all.csv")
+df_wifi = df_wifi.dropna(subset=["sen_wifi_bssid"])#drop nan values in sen_ssid and sen_bssid column
+df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = "sen_wifi_device_id", include_cities = False)# merge participant IDs
 
+## create anonymized BSSID column: replaece each BSSID with a letter combination
+df_wifi["Anonymized WiFi BSSID"] = np.nan
+for bssid in df_wifi["sen_wifi_bssid"].unique():
+    #create random letter combination of length 6
+    random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+    #make sure that the letter combination is not already used
+    while random_letters in df_wifi["Anonymized WiFi BSSID"].unique():
+        random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+    #replace BSSID with letter combination
+    df_wifi.loc[df_wifi["sen_wifi_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
+##create histogram for each participant
+for participant in df_wifi["sen_wifi_device_id"].unique():
+    print("started with participant " + str(participant))
+    figure_title = "WiFi-Complete-Dataset-BSSID_User-" + str(participant)
+    df_participant = df_wifi[df_wifi["sen_wifi_device_id"] == participant]
+    number_bins = len(df_participant["Anonymized WiFi BSSID"].unique())
+    fig = data_exploration_sensors.vis_histogram(df_participant, "Anonymized WiFi BSSID", figure_title, number_bins)
+    fig.savefig(path_storage + "WiFiBSSID_histogram_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=300)
+
+
+#endregion
 
 
 

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 
 class data_exploration_labels:
 
@@ -7,7 +9,10 @@ class data_exploration_labels:
         return df_esm
 
     # for all activities: barplot of classes x number of events
-    def visualize_esm_activities_all(dir_results, df_esm):
+    def visualize_esm_activities_all(dir_results, df_esm, threshold):
+
+        df_analytics = pd.DataFrame(columns=["activity", "count (not NaN)", "count above threshold", "percentage above threshold"])
+
         # create summary of ESM data
         esm_summary = {
             "location": df_esm["location"].value_counts(),
@@ -24,19 +29,37 @@ class data_exploration_labels:
             "Smartphone Location": df_esm["smartphonelocation"].value_counts()
         }
 
+
         # create bar plots for every question
         for activity in esm_summary:
-            plt.figure(figsize=(15, 10))
-            plt.title("Events for " + activity)
-            sns.barplot(x=esm_summary[activity][0:10].index, y=esm_summary[activity][0:10].values,
-                        palette="Blues_d")
-            plt.xticks(rotation=15)
-            # include actual number of events in bar plot
-            for i, v in enumerate(esm_summary[activity][0:10].values):
-                plt.text(i - 0.1, v + 0.1, str(v), color='black')
 
-            plt.savefig(dir_results + "/" + activity + "_ESM activity count.png")
+            # fill df_analytics with data: add one row with activity, count (not NaN), count above threshold, percentage above threshold
+            df_analytics.loc[len(df_analytics)] = [activity, esm_summary[activity].sum(), esm_summary[activity][esm_summary[activity] > threshold].sum(), esm_summary[activity][esm_summary[activity] > threshold].sum() / esm_summary[activity].sum()]
+
+            # delete all rows with value < 10
+            esm_summary[activity] = esm_summary[activity][esm_summary[activity] > threshold]
+
+            plt.figure(figsize=(15, 10))
+            plt.suptitle("Answer Distribution for " + activity, fontsize=24)
+            sns.barplot(x=esm_summary[activity][0:30].index, y=esm_summary[activity][0:30].values,
+                        palette="Blues_d")
+
+            plt.xticks(rotation=15)
+            # if there are more than 10 classes, rotate x-axis labels more
+            if len(esm_summary[activity][0:30].index) > 10:
+                plt.xticks(rotation=45)
+            # include actual number of events in bar plot
+            for i, v in enumerate(esm_summary[activity][0:30].values):
+                plt.text(i - 0.1, v + 0.1, str(v), color='black')
+            # add y-label
+            plt.ylabel("number of events")
+
+            plt.tight_layout()
+            plt.savefig(dir_results + "/" + activity + "_ESM activity count.png", dpi=300, bbox_inches='tight')
             #plt.show()
+
+        return df_analytics
+
 
     # for one activity: barplot of classes x number of events
     def visualize_esm_activity(df_esm, column_name, fig_title):
@@ -118,8 +141,6 @@ class data_exploration_labels:
             plt.text(i - 0.1, v + 0.1, str(v), color='black')
         plt.savefig(dir_results + "/" + "ESM not NaN count.png")
 
-
-
     # create table which shows users x classes x number of events
     ## Note: relevant for naturalistic data only
     def create_table_user_classes_eventcount(df_esm, label_column_name):
@@ -197,7 +218,9 @@ class data_exploration_labels:
 
         # add label column to df_esm
         df_esm = labeling_sensor_df(df_esm, dict_label, label_column_name, ESM_identifier_column="ESM_timestamp")
-        # drop any NaN values in label_public transport
+
+        # drop any NaN values in label column
+        print("Number of rows before dropping NaN values in label column: " + str(df_esm.shape[0]))
         df_esm = df_esm.dropna(subset=[label_column_name])
         if label_column_name == "label_public transport":
             # drop all "exclude" labels: these are instances of "walking" in which people are "at home"
@@ -231,7 +254,7 @@ class data_exploration_labels:
         df_esm = Merge_Transform.merge_participantIDs(df_esm, users, include_cities=True)
 
         # make a table which shows participants x count of events per label class; use groupby
-        df_esm_label_counts = data_exploration_labels.create_table_user_activity(df_esm, label_column_name)
+        df_esm_label_counts = data_exploration_labels.create_table_user_classes_eventcount(df_esm, label_column_name)
 
         return df_esm, df_esm_label_counts
 

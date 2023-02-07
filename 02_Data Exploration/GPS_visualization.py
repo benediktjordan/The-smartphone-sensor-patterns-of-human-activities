@@ -4,11 +4,104 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 import os
+import time
+import matplotlib
 import seaborn as sns
+from geopy.distance import geodesic
+
+import utm
+from collections import Counter
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+
 #endregion
 
+class GPS_visualization:
+
+    # visualize GPS points on generic map (include scale bar)
+    def gps_utm_genericmap(df, figure_title, label_column_name = None, colour_based_on_labels = "no"):
+
+        # convert column names: if column name contains 'latitude' or 'longitude', replace it with 'latitude' or 'longitude'
+        for column in df.columns:
+            if 'latitude' in column:
+                df = df.rename(columns={column:'latitude'})
+            elif 'longitude' in column:
+                df = df.rename(columns={column:'longitude'})
+
+
+        # convert latitude and longitude to UTM
+        x, y, _, _ = zip(*df.apply(lambda row: utm.from_latlon(row['latitude'], row['longitude']), axis=1))
+
+        # count the occurrences of each point: necessary to plot the points with the correct size
+        c = Counter(zip(x, y))
+        print("The Maximum number of points at one location is: ", max(c.values()))
+        # create a list of the sizes, here multiplied by 10 for scale
+        ## scale this point scaller depending on how many points are in the biggest cluster
+        scale_factor = 10
+        if max(c.values()) > 100000:
+            scale_factor = 0.1
+        if max(c.values()) > 300000:
+            scale_factor = 0.05
+        s = [scale_factor * c[(xx, yy)] for xx, yy in zip(x, y)]
+
+        # visualize
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        #create sns scatterplot
+        if colour_based_on_labels == "yes":
+            # create colour palette
+            ## Get the "bright" palette
+            pal = sns.color_palette("bright")
+            hex_colors = [matplotlib.colors.rgb2hex(color) for color in pal]
+            ## remove similar colors from the palette
+            hex_colors = [color for color in hex_colors if
+                          color != '#023eff' and color != '#e8000b' and color != '#f14cc1' and color != '#1ac938']
+            hex_colors = hex_colors[:len(df[label_column_name].unique())]
+
+            #plot
+            sns.scatterplot(x, y, hue = df[label_column_name], s=s, ax=ax, palette=hex_colors)
+        else:
+            sns.scatterplot(x, y, s=s, ax=ax)
+        #ax.scatter(x, y, s=s)
+        ax.set_aspect('equal')  # set x and y-axis scales to be equal
+
+        # dont show numbers on x and y-axis
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+        ## calculate lenght of scalebar which should be 10% of the x-axis
+        scalebar_length = (max(x) - min(x)) * 0.1
+        scalebar_title = str(round(float(scalebar_length / 1000), 1)) + ' km'
+
+        # add a scale bar with AnchoredSizeBar
+        scalebar = AnchoredSizeBar(ax.transData,
+                                   scalebar_length, scalebar_title, 'lower right',
+                                   pad=0.5,
+                                   color='black',
+                                   frameon=False,
+                                   size_vertical=1)
+
+        ax.add_artist(scalebar)
+
+        #add title
+        plt.title(figure_title, fontsize=18)
+        plt.show()
+        return fig
+
+
+
+
+#endregion
+
+
+
+
+
+
+
 # get complete locations dataset of all participants
-df_locations = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
+df_locations = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/locations_all.pkl")
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/locations_all.csv")
+
 df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
 
 # label locations with event
@@ -27,6 +120,10 @@ print("Number of participants with events: ", len(df_locations_events["loc_devic
 df_locations_events_vis = df_locations_events.drop_duplicates(subset=["ESM_timestamp"])
 print(df_locations_events_vis[label_column_name].value_counts())
 print("Number of labels per participant: ", df_locations_events_vis.groupby("loc_device_id")[label_column_name].value_counts())
+
+
+
+
 
 
 # only fist 1000 rows
