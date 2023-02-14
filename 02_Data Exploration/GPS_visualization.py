@@ -36,15 +36,23 @@ class GPS_visualization:
         print("The Maximum number of points at one location is: ", max(c.values()))
         # create a list of the sizes, here multiplied by 10 for scale
         ## scale this point scaller depending on how many points are in the biggest cluster
-        scale_factor = 10
+        scale_factor = 50
+        if max(c.values()) > 100:
+            scale_factor = 1
+        if max(c.values()) > 30000:
+            scale_factor = 0.8
+        if max(c.values()) > 50000:
+            scale_factor = 0.1
         if max(c.values()) > 100000:
             scale_factor = 0.1
+            if max(c.values()) > 200000:
+                scale_factor = 0.07
         if max(c.values()) > 300000:
             scale_factor = 0.05
         s = [scale_factor * c[(xx, yy)] for xx, yy in zip(x, y)]
 
         # visualize
-        fig, ax = plt.subplots(figsize=(8, 8))
+        fig, ax = plt.subplots(figsize= (15,10))
 
         #create sns scatterplot
         if colour_based_on_labels == "yes":
@@ -84,6 +92,7 @@ class GPS_visualization:
 
         #add title
         plt.title(figure_title, fontsize=18)
+        plt.tight_layout()
         plt.show()
         return fig
 

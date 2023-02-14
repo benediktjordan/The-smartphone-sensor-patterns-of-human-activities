@@ -46,6 +46,16 @@ class data_exploration_sensors:
             if sensor == "locations":
                 df_sensor = df_sensor[df_sensor["loc_accuracy"] <= gps_accuracy_min]
 
+            # if its wifi sensor: delete all rows which don´t have any value in BSSID column
+            ## Note: it has been found that there are some rows in the wifi sensor data which don´t have any value in the BSSID column
+            if sensor == "sensor_wifi":
+                # rename the column including "BSSID" into "BSSID"
+                for column in df_sensor.columns:
+                    if "bssid" in column:
+                        df_sensor = df_sensor.rename(columns={column: "bssid"})
+                # delete all rows which don´t have any value in BSSID column
+                df_sensor = df_sensor[df_sensor["bssid"].notna()]
+
             # only retain sensor data which is in "time_period" seconds around ESM timestamp
             df_sensor = df_sensor[
                 (df_sensor['timestamp'] >= df_sensor['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
@@ -812,17 +822,33 @@ class data_exploration_sensors:
 
         plt.xlabel(x_column)
         plt.ylabel(y_column)
-        plt.show()
+        plt.tight_layout()
+        #plt.show()
 
         return fig
 
-    def vis_histogram(df_participant, hist_column_name, figure_title, bin_number):
+    def vis_barplot(df_participant, barplot_column_name, figure_title, y_label, number_bars_to_plot, conversion_factor = None):
+        # create value counts for column "barplot_column_name"
+        df_value_counts = df_participant[barplot_column_name].value_counts().reset_index()
+
+        # only keep the top "number_bars_to_plot" values
+        df_value_counts = df_value_counts.head(number_bars_to_plot)
+
+        # if conversion_Factor is not None, multiply the values in the column "barplot_column_name" with the conversion factor
+        if conversion_factor != None:
+            df_value_counts[barplot_column_name] = df_value_counts[barplot_column_name] * conversion_factor
+
+        # create a sns barplot
         fig = plt.figure(figsize=(15, 10))
         fig.suptitle(figure_title, fontsize=24)
-        sns.histplot(data=df_participant, x=hist_column_name, bins=bin_number)
-        if bin_number > 30:
+        sns.barplot(x="index", y=barplot_column_name, data=df_value_counts)
+        plt.xlabel(barplot_column_name)
+        plt.ylabel(y_label)
+
+        if len(df_value_counts) > 30:
             plt.xticks(rotation=90)
-        plt.show()
+        plt.tight_layout()
+        #plt.show()
         return fig
 
 #region Iteration 01

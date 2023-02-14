@@ -7,6 +7,73 @@ import geopy.distance
 
 class GPS_computations:
 
+    # delete accuracies above gps_min_accuracy and delete NaN in GPS values
+    def GPS_delete_accuracy(df_locations, min_gps_accuracy):
+        # define analytics dataframe
+        df_analytics = pd.DataFrame(
+            columns=["event", "n_rows", "n_columns", "n_events", "percentage_of_rows_deleted", "percentage_of_columns_deleted", "percentage_of_events_deleted"])
+
+        if "ESM_timestamp" in df_locations.columns:
+            df_analytics.loc[0] = ["before", df_locations.shape[0], df_locations.shape[1], df_locations["ESM_timestamp"].nunique(),  np.nan, np.nan, np.nan]
+        else:
+            df_analytics.loc[0] = ["before", df_locations.shape[0], df_locations.shape[1], np.nan, np.nan, np.nan, np.nan]
+
+        # rename columns
+        for column in df_locations.columns:
+            # if "accuracy" is in column name, rename column to "gps_accuracy"
+            if "accuracy" in column:
+                df_locations = df_locations.rename(columns={column: "accuracy"})
+            # if "latitude" is in column name, rename column to "latitude"
+            if "latitude" in column:
+                df_locations = df_locations.rename(columns={column: "latitude"})
+            # if "longitude" is in column name, rename column to "longitude"
+            if "longitude" in column:
+                df_locations = df_locations.rename(columns={column: "longitude"})
+            if "2" in column:
+                # check if any of the columns is already named "ESM_timestamp"
+                if "ESM_timestamp" in df_locations.columns:
+                    pass
+                else:
+                    df_locations = df_locations.rename(columns={column: "ESM_timestamp"})
+
+        # delete rows which have less accuracy
+        df_locations = df_locations[df_locations["accuracy"] <= min_gps_accuracy]
+
+        #include information in df_analytics
+        ## if ESM_timestamp is included: include also information about number of events
+        if "ESM_timestamp" in df_locations.columns:
+            df_analytics.loc[1] = ["after deleting rows with accuracy < " + str(min_gps_accuracy), df_locations.shape[0],
+                                   df_locations.shape[1], df_locations["ESM_timestamp"].nunique(),
+                                   (df_locations.shape[0] - df_analytics.loc[0, "n_rows"]) / df_analytics.loc[0, "n_rows"],
+                                   (df_locations.shape[1] - df_analytics.loc[0, "n_columns"]) / df_analytics.loc[
+                                       0, "n_columns"], (df_locations["ESM_timestamp"].nunique() - df_analytics.loc[0, "n_events"]) / df_analytics.loc[0, "n_events"]]
+        else:
+            df_analytics.loc[1] = ["after deleting rows with accuracy < " + str(min_gps_accuracy), df_locations.shape[0],
+                                   df_locations.shape[1], np.nan,
+                                   (df_locations.shape[0] - df_analytics.loc[0, "n_rows"]) / df_analytics.loc[0, "n_rows"],
+                                   (df_locations.shape[1] - df_analytics.loc[0, "n_columns"]) / df_analytics.loc[
+                                       0, "n_columns"], np.nan]
+        return df_locations, df_analytics
+
+    # only keep first sensor event after each event
+    def first_sensor_record_after_event(df_sensor):
+        ## delete, for every event, all records with a timestamp earlier than the ESM timestamp
+        df_sensor = df_sensor[df_sensor["timestamp"] >= df_sensor["ESM_timestamp"]]
+
+        ## now keep only one record per event, the one with the timestamp closest to the ESM timestamp (which is the first record after the event)
+        df_sensor = df_sensor.sort_values(by=['ESM_timestamp', 'timestamp'])
+        df_sensor = df_sensor.drop_duplicates(subset=['ESM_timestamp'], keep='first')
+
+        return df_sensor
+
+
+
+
+
+
+
+    # the subsequent functions are used in the first round of classification and might be outdated
+
     # get locations closest to events
     #TODO could not only take the closest location at time of event, but build a cluster of locations around the event and then take the cluster centroid
     def get_locations_for_labels(df, label_column_name):
@@ -51,7 +118,7 @@ class GPS_computations:
 
         return df_locations_for_labels
 
-    # get locations closest to events
+    # classify locations based on a list of location classifications
     def classify_locations(df_locations, location_classifications):
         # iterate through df_locations and compute distance between location and the locations classifications in location_classifications for this participant
         for index, row in df_locations.iterrows():

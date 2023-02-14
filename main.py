@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import json
 import itertools
 import string
+import pytz
 
 # computing distance
 import geopy.distance
@@ -394,7 +395,7 @@ test= df_results.groupby("ESM_timestamp")["ESM_timestamp"].count()
 
 #region general data exploration
 #region Naturalistic Data
-# visualize label data distribution
+# visualize label-data distribution
 path_esm = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv"
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
 threshold = 5 #only events which have at least this number of occurences are visualized
@@ -3037,20 +3038,17 @@ for label_segment in label_segments:
 
 #region data exploration for locations
 #region data exploration labels
+#region create table with users x relevant ESM-answers (without sensor data)
 label_column_name = "label_location"
 df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/labels/"
-
-## create table with users x relevant ESM-answers
 ## merge participant IDs
 df_labels = Merge_Transform.merge_participantIDs(df_labels, users, device_id_col = None, include_cities = True)
 df_label_counts_participants_locations = data_exploration_labels.create_table_user_classes_eventcount(df_labels, label_column_name)
 df_label_counts_participants_locations.to_csv(path_storage + "label_counts_participants_locations.csv")
-
 #endregion
 
-#region data exploration sensors
-#region find out how many labels have sensor data: visualize as barplot and table
+#region find out how many labels have sensor data: visualize as table and barplot
 segment_around_events = 90 # timeperiod considered around events
 min_sensordata_percentage = 50 #in percent; only sensordata above this threshold will be considered
 gps_accuracy_min = 100 # in meters; only gps data with accuracy below this threshold was considered when counting GPS records for each event
@@ -3076,6 +3074,10 @@ df_esm_including_sensordata_above_threshold.to_csv(path_storage + "location_even
 fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_location", "Frequent Locations - Number of Answers per Class with Sensor Data")
 fig.savefig(path_storage + "human_motion_class-counts_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
 #endregion
+#endregion
+
+#region data exploration sensors
+
 
 #region visualize GPS: generic maps with locations for each participant
 ## based on all location data
@@ -3087,10 +3089,10 @@ for participant in df["loc_device_id"].unique():
     figure_title = "GPS Data of User " + str(participant)
     df_participant = df[df["loc_device_id"] == participant]
     fig = GPS_visualization.gps_utm_genericmap(df_participant, figure_title, colour_based_on_labels = "no")
-    fig.savefig(path_storage + "GPS_data_user_" + str(participant) + ".png", dpi=300)
+    fig.savefig(path_storage + "GPSData_all_user_" + str(participant) + ".png", dpi=600, bbox_inches = "tight")
     print("finished with participant: " + str(participant) + " in " + str((time.time() - t0)/60) + " minutes")
 
-## based on 1 record per event & coloured regarding to location classes
+#region based on 1 record per event & coloured regarding to location classes
 label_column_name = "label_location"
 colour_based_on_labels = "yes"
 min_gps_accuracy = 100 # only use GPS points with accuracy below this value
@@ -3102,9 +3104,8 @@ df_locations = labeling_sensor_df(df_locations, dict_label, label_column_name, E
 df_locations = df_locations.dropna(subset=[label_column_name]) # drop NaN values in label column
 df_locations = Merge_Transform.merge_participantIDs(df_locations, users, device_id_col = None, include_cities = False)# merge participant IDs
 ### keep for each event the GPS record with a timestamp closest to the ESM timestamp (first one after ESM timestamp)
-df_locations = df_locations[df_locations["timestamp"] >= df_locations["ESM_timestamp"]] ## delete, for every event, all records with a timestamp earlier than the ESM timestamp
-df_locations = df_locations.sort_values(by=['ESM_timestamp', 'timestamp']) ## now keep only one record per event, the one with the timestamp closest to the ESM timestamp
-df_locations = df_locations.drop_duplicates(subset=['ESM_timestamp'], keep='first')
+df_locations = GPS_computations.first_sensor_record_after_event(df_locations)
+
 df_locations = df_locations.rename(columns={label_column_name: "Location Classes"}) # rename label_column into "Location Classes" (necessary for visualization)
 for participant in df_locations["device_id"].unique():
     t0 = time.time()
@@ -3112,34 +3113,78 @@ for participant in df_locations["device_id"].unique():
     figure_title = "GPS Data of Events for User " + str(participant)
     df_participant = df_locations[df_locations["device_id"] == participant]
     fig = GPS_visualization.gps_utm_genericmap(df_participant, figure_title, "Location Classes", colour_based_on_labels)
-    fig.savefig(path_storage +  "GPSData_OnlyEvents_only-active-smartphon-seessions-yes" + "_min-gps-acc-" + str(min_gps_accuracy) +"_user_" + str(participant) + ".png", dpi=300)
+    fig.savefig(path_storage +  "GPSData_OnlyEvents_only-active-smartphon-seessions-yes" + "_min-gps-acc-" + str(min_gps_accuracy) +"_user_" + str(participant) + ".png", dpi=600, bbox_inches = "tight")
     print("finished with participant: " + str(participant) + " in " + str((time.time() - t0)/60) + " minutes")
+#endregion
 #endregion
 
 # region visualize WiFi
-# xmin around event WiFi data: scatterplots with WiFi BSSID x location classes for each participant
-label_column_name = "label_location"
-point_size_based_on_point_occurence = "yes"
-df_wifi = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/sensor_wifi_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-path_storage = '/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/sensors/WiFi/'
-df_wifi = labeling_sensor_df(df_wifi, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp") #add labels to df
-df_wifi = df_wifi.dropna(subset=[label_column_name]) #drop nan in label column
-df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = None, include_cities = False)# merge participant IDs
-
-#TODO NOTE AND DOCUMENT IN SENSOR EXPLORATION: many NaN values in WiFi data; dlete theme
-print("NaN values in sen_ssid column: " + str(df_wifi["sen_ssid"].isna().sum()))## how many NaN values in sen_ssid column?
-df_wifi = df_wifi.dropna(subset=["sen_ssid"])#drop nan values in sen_ssid and sen_bssid column
-# create anonymized BSSID column: replaece each BSSID with a letter combination
+#region all WiFi data: histograms of different WiFi BSSID for each participant
+df_wifi = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/sensor_wifi_all.csv")
+y_label = "Minutes Connected to This WiFi Network"
+df_wifi = df_wifi.dropna(subset=["sen_wifi_bssid"])#drop nan values in sen_ssid and sen_bssid column
+df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = "sen_wifi_device_id", include_cities = False)# merge participant IDs
+## create anonymized BSSID column: replaece each BSSID with a letter combination
 df_wifi["Anonymized WiFi BSSID"] = np.nan
-for bssid in df_wifi["sen_bssid"].unique():
+counter = 1
+BSSID_RandomBSSID_mapping = {}
+for bssid in df_wifi["sen_wifi_bssid"].unique():
+    print("started with BSSID " + str(counter) + " of " + str(len(df_wifi["sen_wifi_bssid"].unique())))
     #create random letter combination of length 6
     random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
     #make sure that the letter combination is not already used
     while random_letters in df_wifi["Anonymized WiFi BSSID"].unique():
         random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
     #replace BSSID with letter combination
-    df_wifi.loc[df_wifi["sen_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
+    df_wifi.loc[df_wifi["sen_wifi_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
+    #add mapping to dictionary
+    BSSID_RandomBSSID_mapping[bssid] = random_letters
+    counter += 1
+df_wifi.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/WiFi_Anonymization/sensor_wifi_all_BSSIDNaNDropped_IDsMerged_anonymized.csv")
+# save BSSID_RandomBSSID_mapping as pkl
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/WiFi_Anonymization/BSSID_RandomBSSID_mapping.pkl", 'wb') as f:
+    pickle.dump(BSSID_RandomBSSID_mapping, f)
+
+##create histogram for each participant
+df_wifi = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/WiFi_Anonymization/sensor_wifi_all_BSSIDNaNDropped_IDsMerged_anonymized.csv")
+conversion_factor = 1/60 # with this the counts will be multiplied: should be 1/(sampling frequency per minute)
+number_bars_to_plot = 70 # maximum number of bars/bins in barplot
+for participant in df_wifi["sen_wifi_device_id"].unique():
+    print("started with participant " + str(participant))
+    figure_title = "WiFi BSSID Distribution of User " + str(participant)
+    df_participant = df_wifi[df_wifi["sen_wifi_device_id"] == participant]
+    fig = data_exploration_sensors.vis_barplot(df_participant, "Anonymized WiFi BSSID", figure_title, y_label, number_bars_to_plot, conversion_factor = conversion_factor)
+    fig.savefig(path_storage + "WiFiBSSID_histogram_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=600, bbox_inches='tight')
+#endregion
+
+#region xmin around event WiFi data: scatterplots with WiFi BSSID x location classes for each participant
+label_column_name = "label_location"
+point_size_based_on_point_occurence = "yes"
+df_wifi = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/sensor_wifi_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+BSSID_RandomBSSID_mapping = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/WiFi_Anonymization/BSSID_RandomBSSID_mapping.pkl")
+
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+path_storage = '/Users/benediktjordan/Documents/MTS/Iteration01/location/data_exploration/sensors/WiFi/'
+df_wifi = labeling_sensor_df(df_wifi, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp") #add labels to df
+df_wifi = df_wifi.dropna(subset=[label_column_name]) #drop nan in label column
+df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = None, include_cities = False)# merge participant IDs
+
+print("NaN values in sen_ssid column: " + str(df_wifi["sen_ssid"].isna().sum()))## how many NaN values in sen_ssid column?
+df_wifi = df_wifi.dropna(subset=["sen_ssid"])#drop nan values in sen_ssid and sen_bssid column
+# create anonymized BSSID column: replaece each BSSID with THE SAME COMBINATION OF LETTERS used for anonymizing the whole WiFi dataset
+df_wifi["Anonymized WiFi BSSID"] = np.nan
+for bssid in df_wifi["sen_bssid"].unique():
+    if bssid in BSSID_RandomBSSID_mapping.keys():
+        df_wifi.loc[df_wifi["sen_bssid"] == bssid, "Anonymized WiFi BSSID"] = BSSID_RandomBSSID_mapping[bssid]
+    else:
+        print("BSSID " + str(bssid) + " not found in mapping dictionary")
+        #create random letter combination of length 6
+        random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+        #make sure that the letter combination is not already used
+        while random_letters in df_wifi["Anonymized WiFi BSSID"].unique():
+            random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
+        #replace BSSID with letter combination
+        df_wifi.loc[df_wifi["sen_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
 
 df_wifi = df_wifi.rename(columns={label_column_name: "Location Classes"})# rename "label_location" into "Location Classes"
 x_column = "Location Classes"
@@ -3149,42 +3194,15 @@ y_column = "Anonymized WiFi BSSID"
 df_wifi = df_wifi[df_wifi["timestamp"] >= df_wifi["ESM_timestamp"]] ## delete, for every event, all records with a timestamp earlier than the ESM timestamp
 df_wifi = df_wifi.sort_values(by=['ESM_timestamp', 'timestamp']) ## now keep only one record per event, the one with the timestamp closest to the ESM timestamp
 df_wifi = df_wifi.drop_duplicates(subset=['ESM_timestamp'], keep='first')
-
 for participant in df_wifi["device_id"].unique():
     print("started with participant " + str(participant))
-    figure_title = "WiFi BSSID x Location Classes for User " + str(participant)
+    figure_title = "Location Classes x WiFi BSSID Counts for User " + str(participant)
     df_participant = df_wifi[df_wifi["device_id"] == participant]
     fig = data_exploration_sensors.vis_scatterplot(df_participant, x_column, y_column, figure_title, point_size_based_on_point_occurence)
-    fig.savefig(path_storage + "WiFiBSSIDxLocationClasses_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=300)
-
-# all WiFi data: histograms of different WiFi BSSID for each participant
-df_wifi = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/sensor_wifi_all.csv")
-df_wifi = df_wifi.dropna(subset=["sen_wifi_bssid"])#drop nan values in sen_ssid and sen_bssid column
-df_wifi = Merge_Transform.merge_participantIDs(df_wifi, users, device_id_col = "sen_wifi_device_id", include_cities = False)# merge participant IDs
-
-## create anonymized BSSID column: replaece each BSSID with a letter combination
-df_wifi["Anonymized WiFi BSSID"] = np.nan
-for bssid in df_wifi["sen_wifi_bssid"].unique():
-    #create random letter combination of length 6
-    random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
-    #make sure that the letter combination is not already used
-    while random_letters in df_wifi["Anonymized WiFi BSSID"].unique():
-        random_letters = ''.join(random.choice(string.ascii_uppercase) for i in range(6))
-    #replace BSSID with letter combination
-    df_wifi.loc[df_wifi["sen_wifi_bssid"] == bssid, "Anonymized WiFi BSSID"] = random_letters
-##create histogram for each participant
-for participant in df_wifi["sen_wifi_device_id"].unique():
-    print("started with participant " + str(participant))
-    figure_title = "WiFi-Complete-Dataset-BSSID_User-" + str(participant)
-    df_participant = df_wifi[df_wifi["sen_wifi_device_id"] == participant]
-    number_bins = len(df_participant["Anonymized WiFi BSSID"].unique())
-    fig = data_exploration_sensors.vis_histogram(df_participant, "Anonymized WiFi BSSID", figure_title, number_bins)
-    fig.savefig(path_storage + "WiFiBSSID_histogram_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=300)
-
-
+    fig.savefig(path_storage + "WiFiBSSIDxLocationClasses_only-active-smartphon-seessions-yes_user_" + str(participant) + ".png", dpi=600, bbox_inches = 'tight')
 #endregion
 
-
+#endregion
 
 #endregion
 
