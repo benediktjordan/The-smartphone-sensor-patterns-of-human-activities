@@ -4,15 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data Preparation&#10;-&gt; A lot of things, nearly everything">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/GPS_visualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_GPS.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_clustering.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Data Preparation/GPS_computations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -56,9 +50,9 @@
     </option>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/02_Data Exploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/04_Data Analysis/Decision Forest.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/04_Data Analysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/02_DataExploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/04_Transform.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/Classification_LSTM.py" root0="FORCE_HIGHLIGHTING" />
@@ -85,7 +79,7 @@
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -308,21 +302,8 @@
       <workItem from="1675957947907" duration="1670000" />
       <workItem from="1675959848217" duration="19638000" />
       <workItem from="1676036493628" duration="13336000" />
-      <workItem from="1676206337785" duration="62740000" />
-    </task>
-    <task id="LOCAL-00005" summary="This is the first commit message">
-      <created>1664550802811</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1664550802811</updated>
-    </task>
-    <task id="LOCAL-00006" summary="This is the first commit message">
-      <created>1664550838261</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1664550838261</updated>
+      <workItem from="1676206337785" duration="64560000" />
+      <workItem from="1676387485221" duration="7910000" />
     </task>
     <task id="LOCAL-00007" summary="This is the first commit message">
       <created>1664630357518</created>
@@ -653,7 +634,21 @@
       <option name="project" value="LOCAL" />
       <updated>1675761337789</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="Data Preparation&#10;-&gt; A lot of things, nearly everything">
+      <created>1676385647873</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1676385647874</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Data Preparation&#10;-&gt; A lot of things, nearly everything">
+      <created>1676385881804</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1676385881805</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -699,7 +694,8 @@
     <MESSAGE value="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula" />
     <MESSAGE value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
     <MESSAGE value="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user" />
-    <option name="LAST_COMMIT_MESSAGE" value="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user" />
+    <MESSAGE value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
+    <option name="LAST_COMMIT_MESSAGE" value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -735,37 +731,37 @@
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
+          <url>file://$PROJECT_DIR$/01_DataCollection/00_downloadDB_and_transform_uniform_format.py</url>
           <line>386</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_Data Collection/00_downloadDB_and_transform_uniform_format.py</url>
+          <url>file://$PROJECT_DIR$/01_DataCollection/00_downloadDB_and_transform_uniform_format.py</url>
           <line>387</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
+          <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
           <line>2</line>
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_Data Preparation/FeatureExtraction_merge.py</url>
+          <url>file://$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_merge.py</url>
           <line>7</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/04_Data Analysis/LSTM.py</url>
+          <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
           <line>381</line>
           <option name="timeStamp" value="42" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/02_Data Exploration/data_exploration_sensors.py</url>
+          <url>file://$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py</url>
           <line>635</line>
           <option name="timeStamp" value="65" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_Data Collection/Merge_Transform.py</url>
+          <url>file://$PROJECT_DIR$/01_DataCollection/Merge_Transform.py</url>
           <line>46</line>
           <option name="timeStamp" value="67" />
         </line-breakpoint>
