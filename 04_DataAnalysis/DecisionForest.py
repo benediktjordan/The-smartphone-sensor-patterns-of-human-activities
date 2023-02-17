@@ -503,8 +503,10 @@ class DecisionForest:
 		df = df.reset_index(drop = True)
 
 		# convert timestamp and ESM_timestamp to datetime
-		df["timestamp"] = pd.to_datetime(df["timestamp"])
-		df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+		# check if ESM_timestamp is in the df (since it isnt in the "location" datasets)
+		if "ESM_timestamp" in df.columns:
+			df["timestamp"] = pd.to_datetime(df["timestamp"])
+			df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
 
 		# initialize
 		test_proband = list()
@@ -551,8 +553,13 @@ class DecisionForest:
 				df_test = df[df["device_id_traintest"] == LOOCV_O]
 
 			# define Test data - the person left out of training
-			X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
-												"timestamp"])  # add sensor_timestamp here as soon as available
+			##  check if ESM_timestamp is in the df (since it isnt in the "location" datasets)
+			if "ESM_timestamp" in df_test.columns:
+				X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp",
+													"timestamp"])  # add sensor_timestamp here as soon as available
+			else:
+				X_test_df = df_test.drop(columns=[label_column_name, "device_id"])
+
 			if combine_participants == True:
 				X_test_df = df_test.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "device_id_traintest",
 												  "timestamp"])  # add sensor_timestamp here as soon as available
@@ -601,7 +608,12 @@ class DecisionForest:
 				df_train = df_train.drop(columns=["device_id_traintest"])
 
 			# drop other columns
-			X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "timestamp"])  # add sensor_timestamp later on here
+			## check if ESM_timestamp is in the df (since it isnt in the "location" datasets)
+			if "ESM_timestamp" in X_train_df.columns:
+				X_train_df = X_train_df.drop(columns=[label_column_name, "device_id", "ESM_timestamp", "timestamp"])  # add sensor_timestamp later on here
+			else:
+				X_train_df = X_train_df.drop(columns=[label_column_name, "device_id"])
+
 			if combine_participants == True:
 				X_train_df = X_train_df.drop(columns=[ "device_id_traintest"])  # add sensor_timestamp later on here
 
@@ -661,8 +673,13 @@ class DecisionForest:
 			# data_permutation = data_permutation.drop(columns=dropcols)
 
 			##Create X and y dataset
-			X_permutation = data_permutation.drop(
-				columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp"])
+			### check if ESM_timestamp is in the df (since it isnt in the "location" datasets)
+			if "ESM_timestamp" in data_permutation.columns:
+				X_permutation = data_permutation.drop(
+					columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp"])
+			else:
+				X_permutation = data_permutation.drop(columns=[label_column_name, "device_id"])
+
 			if combine_participants == True:
 				X_permutation = data_permutation.drop(
 					columns=[label_column_name, "device_id", "timestamp", "ESM_timestamp", "device_id_traintest"])

@@ -168,8 +168,35 @@ before_after_sleep = {
 
     "lying in bed at another time": ["lying in bed at other times"],
 
-    "lying on couch": ["lying on the couch"],
+    "lying on couch": ["lying on the couch"]
 
+}
+
+before_after_sleep_updated = {
+    "lying in bed after sleeping": pd.DataFrame(
+        data={"activity": ["lying in bed after sleeping"]}),
+    "lying in bed before sleeping": pd.DataFrame(
+        data={"activity": ["lying in bed before sleeping"]}),
+    "lying in bed at other times": pd.DataFrame(
+        data={"activity": ["lying in bed at another time"]}),
+    "lying on the couch": pd.DataFrame(
+        data={"activity": ["lying on couch"]}),
+
+    "not lying: stationary": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table", "sitting: on the couch",
+                               "sitting: somewhere else", "standing"]}),
+    "not lying: dynamic": pd.DataFrame(
+        data={"bodyposition": ["walking", "cycling"]}),
+
+    np.nan: pd.DataFrame(
+        data={"bodyposition": ["sitting: on the couch", "sitting: somewhere else", "sitting: somewhere else",
+                               "sitting: somewhere else\",\"Other: sitting on bed", "Other: sitting in bed",
+                               "sitting: on the couch", "sitting: somewhere else",
+                               "Other: sitting on bed"],
+              "activity": ["lying on couch", "lying in bed after sleeping", "lying in bed at another time",
+                           "lying in bed before sleeping", "lying in bed before sleeping",
+                           "lying in bed before sleeping", "lying in bed before sleeping",
+                           "lying in bed before sleeping"]})
 }
 
 #endregion
@@ -255,7 +282,7 @@ users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88", 1, 1, 
                       ["Bini_2", "84afe4cb-3572-46bc-bc29-d982ac375341", 12, 1, "Witten", "Europe/Berlin"],
                       ["Tanzi", "e9d3ed5e-1d52-445c-82ac-8bbe8066b3d7", 13, 1, "Leipzig", "Europe/Berlin"],
                       ["Pauli", "6ab9716e-e6d8-4492-ad86-f051a9a4b62a", 14, 1, "Leipzig", "Europe/Berlin"],
-                      ["Margherita ?", "b23b3f4e-7fc1-452f-be16-b9388451f3f6", 15, 1, "Berlin", "Europe/Berlin"],
+                      ["Margherita ? (office is in Factory)", "b23b3f4e-7fc1-452f-be16-b9388451f3f6", 15, 1, "Berlin", "Europe/Berlin"],
                       ["Margherita_2", "25f1657f-5a39-4dba-8a3b-e6efbfec0e4d", 19, 1, "Turin", "Europe/Berlin"],
                       ["Unknown", "3936a8f9-8be0-4523-bd0f-2a03943cb5f0", 18, 1, "Berlin", "Europe/Berlin"],
                       ["Felix", "b7b013b7-f78c-4325-a7ab-2dfc128fba27", 16, 1, "Leipzig", "Europe/Berlin"],

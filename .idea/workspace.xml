@@ -4,9 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data Preparation&#10;-&gt; A lot of things, nearly everything">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data Preparation&#10;-&gt; Finished data preparation for GPS data">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -79,7 +84,7 @@
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.grazie&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -303,14 +308,12 @@
       <workItem from="1675959848217" duration="19638000" />
       <workItem from="1676036493628" duration="13336000" />
       <workItem from="1676206337785" duration="64560000" />
-      <workItem from="1676387485221" duration="7910000" />
-    </task>
-    <task id="LOCAL-00007" summary="This is the first commit message">
-      <created>1664630357518</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1664630357518</updated>
+      <workItem from="1676387485221" duration="9330000" />
+      <workItem from="1676398267823" duration="60000" />
+      <workItem from="1676398339447" duration="14373000" />
+      <workItem from="1676468109884" duration="33617000" />
+      <workItem from="1676562933908" duration="5154000" />
+      <workItem from="1676571600771" duration="4500000" />
     </task>
     <task id="LOCAL-00008" summary="This is the first commit message">
       <created>1664650204401</created>
@@ -648,7 +651,14 @@
       <option name="project" value="LOCAL" />
       <updated>1676385881805</updated>
     </task>
-    <option name="localTasksCounter" value="56" />
+    <task id="LOCAL-00056" summary="Data Preparation&#10;-&gt; Finished data preparation for GPS data">
+      <created>1676396842819</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1676396842819</updated>
+    </task>
+    <option name="localTasksCounter" value="57" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -695,7 +705,8 @@
     <MESSAGE value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
     <MESSAGE value="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user" />
     <MESSAGE value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
-    <option name="LAST_COMMIT_MESSAGE" value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
+    <MESSAGE value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
+    <option name="LAST_COMMIT_MESSAGE" value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -761,9 +772,9 @@
           <option name="timeStamp" value="65" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_DataCollection/Merge_Transform.py</url>
-          <line>46</line>
-          <option name="timeStamp" value="67" />
+          <url>file://$PROJECT_DIR$/03_DataPreparation/label_transformation.py</url>
+          <line>25</line>
+          <option name="timeStamp" value="70" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

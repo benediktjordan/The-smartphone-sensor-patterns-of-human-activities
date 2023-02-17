@@ -47,7 +47,7 @@ import pyarrow.feather as feather
 class Merge_Transform:
 
     # join sensorfiles from different databases
-    def join_sensor_files(dir_databases, sensor, sensor_appendix = None):
+    def join_sensor_files(dir_databases, sensor, sensor_appendix = None, participant_id = None):
         counter = 0
         for root, dirs, files in os.walk(dir_databases):  # iterate through different subfolders
             for subfolder in dirs:
@@ -58,11 +58,18 @@ class Merge_Transform:
                     print("In Subfolder " + subfolder + " the file " + sensor + " exists")
                     if counter == 0:
                         sensor_all = pd.read_csv(path_sensor)
+                        # if participant_id is not None, only keep rows with participant_id
+                        if participant_id != None:
+                            sensor_all = sensor_all[sensor_all["2"] == participant_id]
                         counter += 1
                         print("This file was used as the base: " + str(path_sensor))
                     else:
                         #concatenate sensorfiles
-                        sensor_all = pd.concat([sensor_all, pd.read_csv(path_sensor)])
+                        df_sensor = pd.read_csv(path_sensor)
+                        # if participant_id is not None, only keep rows with participant_id
+                        if participant_id != None:
+                            df_sensor = df_sensor[df_sensor["2"] == participant_id]
+                        sensor_all = pd.concat([sensor_all, df_sensor])
                         print("len of sensor_all is : " + str(len(sensor_all)))
                         print("This files was added: " + str(path_sensor))
                         counter += 1
@@ -133,7 +140,40 @@ class Merge_Transform:
 
         return df
 
+    # function to convert a single UNIX timestamp to local timezone
+    def convert_timestamp_to_local_timezone(timestamp, time_zone):
+        timestamp = timestamp / 1000  # in order to convert to milliseconds
+        dt = datetime.datetime.fromtimestamp(timestamp, time_zone)
+        return dt
+
+    # create local timestamp column
+    # Note: IMPORTANT: the timestamp column must be in Unix format!
+    def add_local_timestamp_column(df, users):
+        # if timestamp is not in columns, create it from column which has timestamp in it
+        if "timestamp" not in df.columns:
+            for col in df.columns:
+                if "timestamp" in col:
+                    #rename column into "timestamp"
+                    df = df.rename(columns={col: "timestamp"})
+
+        ## create from users a dictionary with device_id as key and timezone as value
+        time_zones = {}
+        for index, row in users.iterrows():
+            time_zones[row["new_ID"]] = pytz.timezone(row["Timezone"])
+
+        ## add "timestamp_local" column
+        df['timestamp_local'] = df.apply(
+            lambda x: Merge_Transform.convert_timestamp_to_local_timezone(x['timestamp'], time_zones[x['device_id']]), axis=1)
+        # change format from object to datetime for timestamp_local
+        df["timestamp_local"] = df["timestamp_local"].astype(str)
+        df["timestamp_local"] = df["timestamp_local"].str.rsplit("+", expand=True)[0]
+        df["timestamp_local"] = pd.to_datetime(df["timestamp_local"])
+
+        return df
+
+
     # add beginning, end, and duration of smartphone session around each ESM event
+
     def add_smartphone_session_start_end_to_esm(df_esm, df_screen):
         df_esm["session_start"] = None
         df_esm["session_end"] = None

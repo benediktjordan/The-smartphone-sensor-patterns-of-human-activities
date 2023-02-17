@@ -49,13 +49,14 @@ class label_transformation:
 
     # adds to df_esm the different activity classes based on the mappings provided
     # OLD, CREATE BETTER NEW ONE AND INTEGRATE IN FUNCTION ABOVE
-    def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep,
+    def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep, before_after_sleep_updated,
                                   on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
                                   location, smartphonelocation, aligned):
 
-        # special case for "human_motion", since more than one column in df_esm have to be evaluated to create each label
-        #iterate through dictionary human_motion
+        # special case for "human_motion" and "before_after_sleep_updated", since more than one column in df_esm have to be evaluated to create each label
+        #iterate through dictionary human_motion and dictionary before_after_sleep_updated
         df_esm = label_transformation.add_activity_classes(df_esm, human_motion, "label_human motion")
+        df_esm = label_transformation.add_activity_classes(df_esm, before_after_sleep_updated, "label_sleep")
 
         # create dataframe with details of new columns
         new_columns = [["label_human motion - general", "humanmotion_general", "bodyposition"],

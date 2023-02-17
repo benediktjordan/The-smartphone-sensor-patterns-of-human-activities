@@ -38,11 +38,7 @@ def labeling_sensor_df(df_sensor, dict_label, label_column_name, ESM_identifier_
 
     return df_sensor
 
-#convert timestamp to local timezone
-def convert_timestamp_to_local_timezone(timestamp, time_zone):
-    timestamp = timestamp / 1000 # in order to convert to milliseconds
-    dt = datetime.fromtimestamp(timestamp, time_zone)
-    return dt
+
 
 #calculate figure width for matplotlib so it conforms with Latex based on this tutorial: https://jwalton.info/Embed-Publication-Matplotlib-Latex/
 # Note: something doesnt quite work, figures still in Latex much smaller than page. Check current Latex settings
