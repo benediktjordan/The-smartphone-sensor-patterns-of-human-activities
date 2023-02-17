@@ -156,6 +156,12 @@ class Merge_Transform:
                     #rename column into "timestamp"
                     df = df.rename(columns={col: "timestamp"})
 
+        if "device_id" not in df.columns:
+            for col in df.columns:
+                if "device_id" in col:
+                    #rename column into "timestamp"
+                    df = df.rename(columns={col: "device_id"})
+
         ## create from users a dictionary with device_id as key and timezone as value
         time_zones = {}
         for index, row in users.iterrows():

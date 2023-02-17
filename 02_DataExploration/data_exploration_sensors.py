@@ -789,6 +789,48 @@ class data_exploration_sensors:
 
         return fig
 
+    # visualize time of events over 24 hours of a day (by participant)
+    # Note: this function is needed for the sleep-activity to visualize if sleep-events are at certain times
+    def vis_time_of_events(df_esm, label_column_name, list_activities, fig_title, legend_label):
+
+        # create dataframe including only the relevant activities
+        # esm_final = esm_final[esm_final[activity_type].str.contains("|".join(list_activities), na=False)]
+        df_esm = df_esm[df_esm[label_column_name].isin(list_activities)]
+
+        # create local timestamp (IMPORTANT that timestamp has still unix format for this step!)
+        df_esm = Merge_Transform.add_local_timestamp_column(df_esm, users)
+
+        # convert timestamp into datetime using ms
+        df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit='ms')
+
+        # create column containing the hour of the event
+
+        df_esm["timestamp_hour"] = pd.to_datetime(df_esm['timestamp_local'], unit='ms').astype("string").str[11:16]
+        # esm_final["timestamp_hour"]  = datetime.strptime(esm_final["timestamp_hour"][i], '%H:%M')
+        df_esm = df_esm.reset_index(drop=True)
+        df_esm["Hour of Day"] = 0
+        for i in range(0, len(df_esm)):
+            df_esm["Hour of Day"][i] = datetime.datetime.strptime(df_esm["timestamp_hour"][i], '%H:%M')
+            df_esm["Hour of Day"][i] = (datetime.datetime.combine(datetime.date.min, df_esm["Hour of Day"][
+                i].time()) - datetime.datetime.min).total_seconds() / 3600
+
+        # visualize time of events x participant x activity
+        ## rename device_id to Participant ID for plot
+        df_esm = df_esm.rename(columns={"device_id": "Participant ID"})
+        import matplotlib.dates as mdates
+        # create plot
+        fig, axs = plt.subplots(1, 1, figsize=(15, 10))
+        fig.suptitle(fig_title, fontsize=18)
+        sns.scatterplot(x="Hour of Day", y="Participant ID", hue=label_column_name, data=df_esm, ax=axs)
+        axs.set_xlim(0, 24)
+        axs.set_xticks(range(1, 24))
+        # label legend
+        axs.legend(title=legend_label)
+        plt.tight_layout()
+        plt.show()
+        # return figure
+        return fig
+
     #visualize scatterplot
     def vis_scatterplot(df, x_column, y_column, figure_title, point_size_based_on_point_occurence = "no"):
 

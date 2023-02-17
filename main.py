@@ -4516,59 +4516,160 @@ df_esm = Merge_Transform.merge_participantIDs(df_esm, users, device_id_col = Non
 legend_label = "Classes"
 fig_title = "Times of Before/After Sleeping Events"
 
-fig = vis_time_of_events(df_esm, label_column_name, list_activities, fig_title, legend_label)
+fig = data_exploration_sensors.vis_time_of_events(df_esm, label_column_name, list_activities, fig_title, legend_label)
 #save figure
 fig.savefig(path_storage + "time_of_events_" + label_column_name + ".png", dpi=600, bbox_inches='tight')
 
 
-def vis_time_of_events(df_esm, label_column_name, list_activities, fig_title, legend_label):
+# endregion
 
-    # create dataframe including only the relevant activities
-    # esm_final = esm_final[esm_final[activity_type].str.contains("|".join(list_activities), na=False)]
-    df_esm = df_esm[df_esm[label_column_name].isin(list_activities)]
+#region visualize time distance between long static periods and before/after sleep events
+label_column_name = "label_sleep"
+threshold_time_distance = 120 # in minutes
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+df_static_periods = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/long_static_periods_results_all.csv")
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_exploration/sensors/long_static_periods/"
 
-    # create local timestamp (IMPORTANT that timestamp has still unix format for this step!)
-    df_esm = Merge_Transform.add_local_timestamp_column(df_esm, users)
+# some preprocessing
+df_esm = df_esm.dropna(subset=[label_column_name])#drop nan in label column
+df_esm = Merge_Transform.merge_participantIDs(df_esm, users, device_id_col = None, include_cities = False)# merge participant IDs
+df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit='ms')
+df_results = df_esm[["device_id", "timestamp", label_column_name]]
 
-    # convert timestamp into datetime using ms
-    df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit='ms')
+# compute time distance between static periods and events
+df_results = Static_Periods.static_periods_distance_to_events(df_results, df_static_periods, threshold_time_distance)
 
-    # create column containing the hour of the event
+# some analytics: find out percentages for which long static period exists before/after sleep event for target vs. non target classes
+df_results_target_classes = df_results[df_results[label_column_name].isin(["lying in bed before sleeping", "lying in bed after sleeping"])]
+#  percentage of records for which either "static_period_start_distance" or "static_period_end_distance" is not nan
+print("Percentage of records for which either 'static_period_start_distance' or 'static_period_end_distance' is not nan: " + str(len(df_results_target_classes[df_results_target_classes["static_period_start_distance"].notna() | df_results_target_classes["static_period_end_distance"].notna()])/len(df_results_target_classes)))
+df_results_not_target_classes = df_results[~df_results[label_column_name].isin(["lying in bed before sleeping", "lying in bed after sleeping"])]
+print("Percentage of records for which either 'static_period_start_distance' or 'static_period_end_distance' is not nan: " + str(len(df_results_not_target_classes[df_results_not_target_classes["static_period_start_distance"].notna() | df_results_not_target_classes["static_period_end_distance"].notna()])/len(df_results_not_target_classes)))
 
-    df_esm["timestamp_hour"] = pd.to_datetime(df_esm['timestamp_local'], unit='ms').astype("string").str[11:16]
-    # esm_final["timestamp_hour"]  = datetime.strptime(esm_final["timestamp_hour"][i], '%H:%M')
-    df_esm = df_esm.reset_index(drop=True)
-    df_esm["Hour of Day"] = 0
-    for i in range(0, len(df_esm)):
-        df_esm["Hour of Day"][i] = datetime.datetime.strptime(df_esm["timestamp_hour"][i], '%H:%M')
-        df_esm["Hour of Day"][i] = (datetime.datetime.combine(datetime.date.min, df_esm["Hour of Day"][
-            i].time()) - datetime.datetime.min).total_seconds() / 3600
+# visualize in histogram for target class "lying in bed before sleeping" the "static_period_start_distance
+target_classes = [["lying in bed before sleeping", "static_period_start_distance", "Time Distance Between Long Static Periods and Lying in Bed Before Sleep Events"],
+                  ["lying in bed after sleeping", "static_period_end_distance", "Time Distance Between Long Static Periods and Lying in Bed After Sleep Events"]]
 
-    # visualize time of events x participant x activity
-    ## rename device_id to Participant ID for plot
-    df_esm = df_esm.rename(columns={"device_id": "Participant ID"})
-    import matplotlib.dates as mdates
-    # create plot
-    fig, axs = plt.subplots(1, 1, figsize=(15, 5))
-    fig.suptitle(fig_title, fontsize=18)
-    sns.scatterplot(x="Hour of Day", y="Participant ID", hue=label_column_name, data=df_esm, ax=axs)
-    axs.set_xlim(0, 24)
-    axs.set_xticks(range(1, 24))
-    # label legend
-    axs.legend(title=legend_label)
+for target_class in target_classes:
+    df_results_target_class = df_results[df_results[label_column_name] == target_class[0]]
+    df_results_target_class = df_results_target_class[df_results_target_class[target_class[1]].notna()]
+
+    fig, axs = plt.subplots(1, 1, figsize=(15, 10))
+    fig.suptitle(target_class[2], fontsize=18)
+    # create histogram and show also negative values
+    sns.histplot(data=df_results_target_class, x=target_class[1], ax=axs, bins=range(-120, 120, 30))
+    axs.set_xlim(-120, 120)
+    axs.set_xticks(range(-120, 120, 30))
+    axs.set_xlabel("Time Distance in Minutes")
     plt.tight_layout()
     plt.show()
-    # return figure
-    return fig
+    #save figure
+    fig.savefig(path_storage + target_class[2] + ".png", dpi=600, bbox_inches='tight')
 
 
-# endregion
+
+
+df_events = df_results
+
+
+#endregion
 
 #endregion
 #endregion
 
 #region data preparation for sleep
+#region compute long periods of static for all linear accelerometer data of each participant
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/linear_accelerometer/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/"
+threshold_expected = 0.7
+threshold_statis = 0.99
+window_size_minutes = 300
+window_step_minutes = 5
+sensor_frequency = 10 # in Hz
 
+## iterate through unique User_IDs in users dataframe
+for participant in tqdm(users["new_ID"].unique()):
+    # check if participant has already been processed
+    if os.path.exists(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv"):
+        print("participant " + str(participant) + " already processed")
+        continue
+    print("start with participant: " + str(participant))
+    users_participant = users[users["new_ID"] == participant]
+
+    # merge all linear accelerometer data of participant (for different device IDs)
+    t0 = time.time()
+    df_participant_all = pd.DataFrame()
+    for participant_device_id in users_participant["ID"].unique():
+        print("participant_device_id: " + str(participant_device_id))
+        # load data
+        df_participant = pd.read_pickle(path_datasets + "linear_accelerometer_device-id-" + str(participant_device_id) + "_all.pkl")
+        # check if df_participant is empty
+        if df_participant.empty:
+            print("df_participant is empty")
+            continue
+        # concatenate data
+        df_participant_all = pd.concat([df_participant_all, df_participant], ignore_index=True)
+    print("time to merge all data: " + str((time.time() - t0)/60) + " min")
+
+    # merge participant IDs
+    # drop any nan values in device_id column
+    print("Number of NaN values in device_id column: " + str(df_participant_all["lin_accelerometer_device_id"].isna().sum()))
+    df_participant_all = df_participant_all.dropna(subset=["lin_accelerometer_device_id"])
+    df_participant_all = Merge_Transform.merge_participantIDs(df_participant_all, users, device_id_col = None, include_cities = False)
+
+    # drop duplicates in timestamp
+    print("number of duplicates in timestamp: " + str(df_participant_all["lin_accelerometer_timestamp"].duplicated().sum()))
+    df_participant_all = df_participant_all.drop_duplicates(subset=["lin_accelerometer_timestamp"], keep="first")
+
+    # create local timestamp
+    df_participant_all = Merge_Transform.add_local_timestamp_column(df_participant_all, users)
+    # convert timestamp into datetime using ms
+    df_participant_all["timestamp"] = pd.to_datetime(df_participant_all["timestamp"], unit='ms')
+
+    # change sensor column names
+    for col in df_participant_all.columns:
+        if "double_values_0" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_0"})
+        if "double_values_1" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_1"})
+        if "double_values_2" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_2"})
+
+    # compute long periods of static
+    print("start with computing long periods of static")
+    df_results, df_analytics = Static_Periods.compute_long_periods_of_static(df_participant_all, threshold_expected, threshold_statis, window_size_minutes, window_step_minutes, sensor_frequency)
+
+    # save results
+    df_results.to_csv(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv")
+    df_analytics.to_csv(path_storage + "long_static_periods_analytics_participant_" + str(participant) + ".csv")
+
+# merge all static periods of all participants
+df_results_all = pd.DataFrame()
+df_analytics_all = pd.DataFrame()
+for participant in tqdm(users["new_ID"].unique()):
+    # load data
+    df_results = pd.read_csv(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv")
+    df_analytics = pd.read_csv(path_storage + "long_static_periods_analytics_participant_" + str(participant) + ".csv")
+    # concatenate data
+    df_results_all = pd.concat([df_results_all, df_results], ignore_index=True)
+    df_analytics_all = pd.concat([df_analytics_all, df_analytics], ignore_index=True)
+# save
+df_results_all.to_csv(path_storage + "long_static_periods_results_all.csv")
+df_analytics_all.to_csv(path_storage + "long_static_periods_analytics_all.csv")
+
+
+#testarea
+# sort df_participant by timestamp
+df_participant_all = df_participant_all.sort_values(by=["timestamp"])
+df_test = df_participant_all.iloc[0:1000000]
+df_test = df_participant_all.iloc[0:1000]
+
+df_results_2 = df_results.copy()
+df_results = df_results_2.copy()
+
+df_participant = pd.read
+#endregion
 
 #endregion
 

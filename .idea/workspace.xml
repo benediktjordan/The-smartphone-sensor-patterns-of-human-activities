@@ -4,14 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Data Preparation&#10;-&gt; Finished data preparation for GPS data">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done">
+      <change afterPath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -313,14 +310,7 @@
       <workItem from="1676398339447" duration="14373000" />
       <workItem from="1676468109884" duration="33617000" />
       <workItem from="1676562933908" duration="5154000" />
-      <workItem from="1676571600771" duration="4500000" />
-    </task>
-    <task id="LOCAL-00008" summary="This is the first commit message">
-      <created>1664650204401</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1664650204401</updated>
+      <workItem from="1676571600771" duration="32317000" />
     </task>
     <task id="LOCAL-00009" summary="This is the first commit message">
       <created>1664655560547</created>
@@ -658,7 +648,14 @@
       <option name="project" value="LOCAL" />
       <updated>1676396842819</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done">
+      <created>1676621773075</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1676621773075</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -681,7 +678,6 @@
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
     </ignored-roots>
-    <MESSAGE value="This is the first commit message" />
     <MESSAGE value="restructured the folder &amp; files" />
     <MESSAGE value="restructured the folder &amp; files; created new branch" />
     <MESSAGE value="added requirements.txt" />
@@ -706,7 +702,8 @@
     <MESSAGE value="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user" />
     <MESSAGE value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
     <MESSAGE value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
-    <option name="LAST_COMMIT_MESSAGE" value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
+    <MESSAGE value="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
