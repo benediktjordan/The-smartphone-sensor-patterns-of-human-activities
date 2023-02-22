@@ -126,7 +126,7 @@ class Static_Periods:
 
             # check if distance is smaller than threshold
             if len(df_closest_static_period_start) > 0:
-                time_distance = (row["timestamp"] - df_closest_static_period_start["start_time"].iloc[0]).total_seconds() / 60
+                time_distance = ( df_closest_static_period_start["start_time"].iloc[0] - row["timestamp"]).total_seconds() / 60
                 if abs(time_distance) < threshold_time_distance:
                     # add time distance in minutes
                     df_events.loc[index, "static_period_start_distance"] = time_distance

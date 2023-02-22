@@ -4,11 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done">
-      <change afterPath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -310,14 +312,8 @@
       <workItem from="1676398339447" duration="14373000" />
       <workItem from="1676468109884" duration="33617000" />
       <workItem from="1676562933908" duration="5154000" />
-      <workItem from="1676571600771" duration="32317000" />
-    </task>
-    <task id="LOCAL-00009" summary="This is the first commit message">
-      <created>1664655560547</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1664655560547</updated>
+      <workItem from="1676571600771" duration="132046000" />
+      <workItem from="1677083597783" duration="4220000" />
     </task>
     <task id="LOCAL-00010" summary="This is the first commit message">
       <created>1664804601193</created>
@@ -655,7 +651,14 @@
       <option name="project" value="LOCAL" />
       <updated>1676621773075</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done">
+      <created>1676658352927</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1676658352927</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -678,7 +681,6 @@
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
     </ignored-roots>
-    <MESSAGE value="restructured the folder &amp; files" />
     <MESSAGE value="restructured the folder &amp; files; created new branch" />
     <MESSAGE value="added requirements.txt" />
     <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
@@ -703,7 +705,8 @@
     <MESSAGE value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
     <MESSAGE value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
     <MESSAGE value="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done" />
-    <option name="LAST_COMMIT_MESSAGE" value="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done" />
+    <MESSAGE value="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done" />
+    <option name="LAST_COMMIT_MESSAGE" value="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -772,6 +775,21 @@
           <url>file://$PROJECT_DIR$/03_DataPreparation/label_transformation.py</url>
           <line>25</line>
           <option name="timeStamp" value="70" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>535</line>
+          <option name="timeStamp" value="71" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>3704</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/00_general/databases.py</url>
+          <line>301</line>
+          <option name="timeStamp" value="78" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

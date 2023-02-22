@@ -66,6 +66,44 @@ class GPS_computations:
 
         return df_sensor
 
+    # label a dataframe with GPS data based on the distance to a dictionary which maps participant classes to locations
+    def location_labeling_based_on_dict(df, dict_mapping, distance_threshold, participants_to_skip):
+        df[label_column_name] = np.nan
+        df["label_distance_to_label"] = np.nan
+        for index, row in df.iterrows():
+            # check if participant is in participants_to_skip
+            if row["device_id"] in participants_to_skip:
+                print("Participant is skipped " + str(row["device_id"]) + " at index " + str(index))
+                continue
+
+            # get mapping for participant
+            dict_mapping_participant = dict_mapping[row["device_id"]]
+            # iterate through mappings and check if distance is smaller than 100m
+            for key, value in dict_mapping_participant.items():
+                distance = haversine.haversine((row["latitude"], row["longitude"]),
+                                               (value["latitude"], value["longitude"]))
+                # check if at that index there is already a label
+                if distance < distance_threshold:
+                    # check if th label is either not NaN or not "other"
+                    if not pd.isnull(df.loc[index, label_column_name]):
+                        if df.loc[index, label_column_name] != "other":
+                            print("label " + str(
+                                df.loc[
+                                    index, label_column_name]) + " already exists for participant " + str(
+                                row["device_id"]) + " and index " + str(index))
+                            print("but label " + str(key) + " is also distance " + str(distance) + " away")
+                            continue
+
+                    df.loc[index, label_column_name] = key
+                    df.loc[index, "label_distance_to_label"] = distance
+                else:
+                    # check if th label is either not NaN or not "other"
+                    if not pd.isnull(df.loc[index, label_column_name]):
+                        if df.loc[index, label_column_name] != "other":
+                            continue
+                    df.loc[index, label_column_name] = "other"
+
+        return df
 
 
 

@@ -263,7 +263,10 @@ class FeatureExtraction_GPS:
         #  for participant and place_id: calculate fraction of visits on place of all places (trusted)
         visits_on_place_trusted = df_participant[(df_participant["device_id"] == participant) & (df_participant["cluster_label"] == place_id) & (df_participant["stay_first_record_trusted"] == 1)].shape[0]
         visits_on_all_places_trusted = df_participant[(df_participant["device_id"] == participant) & (df_participant["stay_first_record_trusted"] == 1)].shape[0]
-        visits_fraction_trusted = visits_on_place_trusted / visits_on_all_places_trusted
+        if visits_on_all_places_trusted == 0:
+            visits_fraction_trusted = 0
+        else:
+            visits_fraction_trusted = visits_on_place_trusted / visits_on_all_places_trusted
 
         return visits_fraction, visits_fraction_trusted
 
@@ -407,18 +410,24 @@ class FeatureExtraction_GPS:
 
     # compute rank ascend and descend: they put the features into relation to each other across places
     def gps_features_places_rank_ascent_descent(df_results, feature_list):
+        #reset index
+        df_results = df_results.reset_index(drop=True)
         for participant in df_results["device_id"].unique():
+            df_participant = df_results[df_results["device_id"] == participant]
             # iterate through all features
             for feature in feature_list:
                 # sort df_results by feature
-                df_results_sorted = df_results.sort_values(by=feature, ascending=False)
+                df_results_sorted = df_participant.sort_values(by=feature, ascending=False)
                 # get rank of each place: ascending and descending
                 df_results_sorted[feature + "_rank_ascent"] = df_results_sorted[feature].rank(ascending=False)
                 df_results_sorted[feature + "_rank_descent"] = df_results_sorted[feature].rank(ascending=True)
 
-                # add rank ascend and descend to df_results
-                df_results[feature + "_rank_ascent"] = df_results_sorted["rank_ascent"]
-                df_results[feature + "_rank_descent"] = df_results_sorted["rank_descent"]
+                # add rank ascend and descend to df_results based on index
+                for index, row in df_results_sorted.iterrows():
+                    # add rank ascend and descend to df_results for index
+                    df_results.loc[index, feature + "_rank_ascent"] = row[feature + "_rank_ascent"]
+                    df_results.loc[index, feature + "_rank_descent"] = row[feature + "_rank_descent"]
+
         return df_results
 
 
