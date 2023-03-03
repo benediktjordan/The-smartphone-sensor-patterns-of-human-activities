@@ -15,16 +15,15 @@ class data_exploration_labels:
 
         # create summary of ESM data
         esm_summary = {
-            "location": df_esm["location"].value_counts(),
-            "bodyposition": df_esm["bodyposition"].value_counts(),
-            "activity": df_esm["activity"].value_counts(),
-            "smartphonelocation": df_esm["smartphonelocation"].value_counts(),
-            "aligned": df_esm["aligned"].value_counts(),
-            "Human Motion General": df_esm["label_human motion - general"].value_counts(),
-            "Human Motion Specific": df_esm["label_human motion - specific"].value_counts(),
+            "Location Question": df_esm["location"].value_counts(),
+            "Body-Position Question": df_esm["bodyposition"].value_counts(),
+            "Activity Question": df_esm["activity"].value_counts(),
+            "Smartphone Location Question": df_esm["smartphonelocation"].value_counts(),
+            "Alignment Question": df_esm["aligned"].value_counts(),
+            "Human Motion": df_esm["label_human motion"].value_counts(),
             "Public Transport": df_esm["label_public transport"].value_counts(),
             "Before & After Sleep ": df_esm["label_before and after sleep"].value_counts(),
-            "Bathroom": df_esm["label_on the toilet"].value_counts(),
+            "Lavatory Use": df_esm["label_on the toilet"].value_counts(),
             "Location": df_esm["location"].value_counts(),
             "Smartphone Location": df_esm["smartphonelocation"].value_counts()
         }
@@ -41,21 +40,21 @@ class data_exploration_labels:
 
             plt.figure(figsize=(15, 10))
             plt.suptitle("Answer Distribution for " + activity, fontsize=24)
-            sns.barplot(x=esm_summary[activity][0:30].index, y=esm_summary[activity][0:30].values,
+            sns.barplot(x=esm_summary[activity][0:15].index, y=esm_summary[activity][0:15].values,
                         palette="Blues_d")
 
             plt.xticks(rotation=15)
             # if there are more than 10 classes, rotate x-axis labels more
-            if len(esm_summary[activity][0:30].index) > 10:
+            if len(esm_summary[activity][0:15].index) > 10:
                 plt.xticks(rotation=45)
             # include actual number of events in bar plot
-            for i, v in enumerate(esm_summary[activity][0:30].values):
+            for i, v in enumerate(esm_summary[activity][0:15].values):
                 plt.text(i - 0.1, v + 0.1, str(v), color='black')
             # add y-label
             plt.ylabel("number of events")
 
             plt.tight_layout()
-            plt.savefig(dir_results + "/" + activity + "_ESM activity count.png", dpi=300, bbox_inches='tight')
+            plt.savefig(dir_results + "/" + activity + "_ESM activity count.png", dpi=400, bbox_inches='tight')
             #plt.show()
 
         return df_analytics

@@ -285,6 +285,14 @@ on_the_toilet = {
 
     "sitting not on the toilet": pd.DataFrame(
         data={"user activity": ["sitting_attable_phoneinhand", "sitting_onthecouch"]}),
+
+    "other stationary": pd.DataFrame(
+        data={"user activity": ["standing", "lying_phoneinfront_onstomach", "lying_ontheside",
+                                                "lying_phoneoverhead", "lying_phoneinfront_onback", "lying_phoneonbed"]}),
+
+    "other dynamic": pd.DataFrame(
+        data={"user activity": ["walking_lowspeed", "walking_mediumspeed",
+                                                "walking_fastspeed", "walking", "running", "cycling"]})
 }
 
 #endregion

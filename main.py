@@ -6,7 +6,7 @@ import os
 import random
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+#import tensorflow as tf
 import math
 import time
 import matplotlib.pyplot as plt
@@ -57,11 +57,11 @@ from scipy.stats import binom_test
 from sklearn.model_selection import permutation_test_score
 
 #Keras Tuner
-import keras
-import keras_tuner as kt
-from kerastuner.tuners import RandomSearch
-from kerastuner.tuners import BayesianOptimization
-from kerastuner.tuners import Hyperband
+#import keras
+#import keras_tuner as kt
+#from kerastuner.tuners import RandomSearch
+#from kerastuner.tuners import BayesianOptimization
+#from kerastuner.tuners import Hyperband
 
 # visualization
 import seaborn as sns
@@ -113,14 +113,12 @@ print("GPU is", "available" if gpu else "NOT AVAILABLE")
 #endregion
 
 # region general data transformation
-#TODO merge ID´s if they are from the same participant for "xmin around events" and "merged timeseries" files
-#TODO make sure that not same ESM_timestamps for different participants! CURRENT TASK
-
 #region Laboratory Data
-#merge sensor files for same participant (necessary for Benedikt´s data)
+#region merge sensor files for same participant (necessary for Benedikt´s data)
 path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt_old/"
 sensor_list = ["accelerometer", "gyroscope", "magnetometer", "plugin_ios_activity_recognition",
                "rotation", "linear_accelerometer", "locations"]
+
 #iterate through folders in path_datasets and merge sensor files for same participant
 for sensor in sensor_list:
     print("start with sensor: " + sensor)
@@ -143,8 +141,9 @@ for sensor in sensor_list:
     print("Number of duplicates after deletion: " + str(df_sensor.duplicated().sum()))
     #save to csv
     df_sensor.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt_old/" + sensor + ".csv")
+#endregion
 
-# add participant activity to sensordata (=label sensordata) & add ESM timestamp
+#region add participant activity to sensordata (=label sensordata) & add ESM timestamp
 length_of_esm_events = 90 # in seconds; this is the length of the ESM events in which the sensor data will be segmented
 dir_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
 dicts_esm_labels = dict()
@@ -187,8 +186,9 @@ for index, user in users_iteration02.iterrows():
         print("Sensorfile labeled and ESM_timestamps added for user " + user["Name"] + " and sensor " + sensor["Sensor"])
 with open(dir_dataset + "dicts_esmtimestamp-label-mapping.pkl", "wb") as f:
     pickle.dump(dicts_esm_labels, f)
+#endregion
 
-# merge sensorfiles of different users
+#region merge sensorfiles of different users
 path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
 for index, sensor in sensors_and_frequencies.iterrows():
     print("start with sensor: " + sensor["Sensor"])
@@ -196,7 +196,7 @@ for index, sensor in sensors_and_frequencies.iterrows():
     if df_sensor is None or df_sensor.empty:
         continue
     df_sensor.to_csv(path_datasets + sensor["Sensor"] + "_labeled_esm_timestamps_allparticipants.csv", index=False)
-
+#endregion
 #endregion
 
 #endregion
@@ -341,14 +341,6 @@ plt.tight_layout()
 plt.show()
 #endregion
 
-
-
-# Rules (NOT DOCUMENTED YET):
-## ESM_timestamp is timestamp when "Send" button for first answer is clicked -> IMPLEMENT!!
-## events are discarded if more than 5 minutes between first and last answer (location and smartphone location) (reduces number of events from 1113 to 1065)
-## NOTE: there are events for which no smartphone session start or no end could be found
-
-
 #region delete all sensor data which is not inside the "smartphone session" of each ESM event & drop also duplicates
 ## save it as an extra file
 sensor_list = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "locations", "sensor_wifi"]
@@ -428,18 +420,56 @@ test= df_results.groupby("ESM_timestamp")["ESM_timestamp"].count()
 
 #region general data exploration
 #region Naturalistic Data
-# visualize label-data distribution
+#region visualize label-data distribution
 path_esm = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv"
 dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/labels/"
 threshold = 5 #only events which have at least this number of occurences are visualized
 df_esm = data_exploration_labels.load_esm(path_esm)
 ## visualize for every answer and every activity the number of classes & count analytics
-df_analytics = data_exploration_labels.visualize_esm_activities_all(dir_results,df_esm, threshold)
+df_analytics = data_exploration_labels.visualize_esm_activities_all(dir_results, df_esm, threshold)
 df_analytics.to_csv(dir_results + "analytics.csv")
     ## visualize in one plot the number of labels per activity (bar plot)
 data_exploration_labels.visualize_esm_notNaN( df_esm)
+#endregion
 
-# calculate number of sensor-datapoints for each event
+#region calculate number of ES events as well as per participant
+dir_results = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/"
+
+df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
+df_participants = df_esm["device_id"].value_counts()
+df_participants = df_participants.reset_index()
+df_participants.columns = ["device_id", "Number of ES Events"]
+#convert timestamp into datetime
+df_esm["timestamp"] = pd.to_datetime(df_esm["timestamp"], unit = "ms")
+# get for each device_id the early and latest timestamp in df_esm
+df_participants["earliest_timestamp"] = ""
+df_participants["latest_timestamp"] = ""
+for index, row in df_participants.iterrows():
+    # get earliest timestamp for device_id
+    df_temp = df_esm[df_esm["device_id"] == row["device_id"]]
+    df_temp = df_temp.sort_values(by = "timestamp")
+    df_participants.at[index, "earliest_timestamp"] = df_temp["timestamp"].iloc[0]
+    df_participants.at[index, "latest_timestamp"] = df_temp["timestamp"].iloc[-1]
+
+df_participants["duration"] = df_participants["latest_timestamp"] - df_participants["earliest_timestamp"]
+
+#merge participant IDs
+df_participants = Merge_Transform.merge_participantIDs(df_participants, users, include_cities=True)
+## add duration of rows which have same device_id
+df_participants = df_participants.groupby(["device_id", "city"]).agg({"Number of ES Events": "sum", "duration": "sum"}).reset_index()
+# add column with total hours and days in decimals
+df_participants["duration_hours"] = df_participants["duration"].dt.total_seconds() / 3600
+df_participants["duration_days"] = df_participants["duration_hours"] / 24
+# cut to 1 decimal
+df_participants["duration_hours"] = df_participants["duration_hours"].round(1)
+df_participants["duration_days"] = df_participants["duration_days"].round(1)
+print("The average, median, and standard deviation of the number of ES events is " + str(df_participants["Number of ES Events"].mean()) + ", " + str(df_participants["Number of ES Events"].median()) + ", and " + str(df_participants["Number of ES Events"].std()) + " respectively.")
+print("The total number of days and hours recorded is " + str(df_participants["duration"].sum().days) + " and " + str(df_participants["duration"].sum().total_seconds() / 3600) + " respectively.")
+print("The average, median, and standard deviation of the duration of the recording is " + str(df_participants["duration"].mean()) + ", " + str(df_participants["duration"].median()) + ", and " + str(df_participants["duration"].std()) + " respectively.")
+df_participants.to_csv(dir_results + "participants_NumberESEvents_and_DurationOfRecording.csv")
+#endregion
+
+#region calculate number of sensor-datapoints for each event
 # find out how many labels have sensor data -> ##temporary -> make later into function!
 df_esm = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled.csv")
 gps_accuracy_min = 100
@@ -450,8 +480,9 @@ sensors = ["accelerometer", "linear_accelerometer", "gyroscope", "magnetometer",
 path_sensor_database = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
 df_esm = data_exploration_sensors.volume_sensor_data_for_events(df_esm, time_period, sensors, path_sensor_database, gps_accuracy_min, only_active_smartphone_sessions)
 df_esm.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/esm-events_with-number-of-sensorrecords_segment-around-events-" + str(time_period) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_gps-accuracy-min-" + str(gps_accuracy_min) + " .csv")
+#endregion
 
-# calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
+#region calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
 ## Note: this data is relevant for, for example, public transport -> data exploration -> visualizing mean & std of GPS data
 ## calculate summary stats for GPS
 dir_sensors = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/"
@@ -487,9 +518,10 @@ for sensor in sensors:
                 summary_statistics.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv", index=False)
                 missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "_missing_sensordata.csv", index=False)
 #endregion
+#endregion
 
 #region Laboratory Data
-# calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
+#region calculate mean/std & max of GPS and linear accelerometer data (over different time periods)
 ## Note: this data is relevant for, for example, public transport -> data exploration -> visualizing mean & std of GPS data
 ## calculate summary stats for GPS
 dir_sensors = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
@@ -518,8 +550,7 @@ for sensor in sensors:
                 summary_statistics.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(label_segment) + ".csv", index=False)
                 missing_sensordata_df.to_csv(dir_results + sensor + "_summary-stats_time-period-around-event-" + str(label_segment) + "_missing_sensordata.csv", index=False)
 #endregion
-
-
+#endregion
 
 #endregion
 
@@ -527,951 +558,6 @@ for sensor in sensors:
 
 #region human motion
 #TODO add noise removal & normalization to data preparation. Here are some ideas from the HAR review paper: Concerning the Noise Removal step, 48 CML-based articles and 12 DL-based articles make use of different noise removal techniques. Among all such techniques the most used ones are: z-normalization [75], [120], min-max [70], [127], and linear interpolation [102], [111] are the most used normalization steps, preceded by a filtering step based on the application of outlier detection [70], [117], [163], Butterworth [82], [101], [117], [123], [127], [128], [152], [155], [174], [189], median [74], [101], [117], [127], [132], [147], [155], [182], [183], high-pass [92], [96], [117], [128], [169], [173], [208], or statistical [58] filters.
-#TODO create other features (using tsfresh). Here are the ones most used in the HAR literature (compare review): compare my documentation!
-
-#region Laboratory Data
-
-#region data exploration for human motion
-#region data exploration labels
-label_column_name = "label_human motion"
-df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes.csv")
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/labels/"
-esm_segment_length = 90 #in seconds; the length of the ESM_events which were created for the laboratory data in order to be able to use the functions from naturalistic data
-
-## create barplot: human motion classes x total minutes
-## delete some of the human motion classes (reason: they are only present in one participant and therefore not enough data for training LOSOCV models
-classes_to_drop = ["lying (on flat surface)", "sitting: at a table (on flat surface)", "sitting: on the couch (in hand/s)"]
-df_labels = df_labels[~df_labels[label_column_name].isin(classes_to_drop)]
-
-df_labels_humanmotion= df_labels.copy()
-fig = data_exploration_labels.visualize_esm_activity_minutes(df_labels_humanmotion, "label_human motion", esm_segment_length, "Volume of Human Motion Data")
-fig.savefig(path_storage + "human_motion_class-minutes.png", dpi=300)
-
-##create table: users x label classes x minutes
-df_labels_humanmotion =  Merge_Transform.merge_participantIDs(df_labels_humanmotion, users_iteration02, include_cities = True)
-df_label_counts = data_exploration_labels.create_table_user_classes_minutes(df_labels_humanmotion, "label_human motion", esm_segment_length)
-df_label_counts.to_csv(path_storage + "human_motion_labels_users_classes_minutes.csv")
-
-#endregion
-
-#region data exploration sensors
-# summary stats: visualize mean/std x max x human motion classes in scatterplot for GPS and accelerometer data
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes_dict.pkl")
-time_periods = [10, 90]
-list_activities = ["standing (in hand/s)", "sitting: at a table (in hand/s)", "lying (in hand/s)"] #stationary classes
-#list_activities = ["walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)"] # dynamic classes
-list_activities = ["walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)",
-                   "standing (in hand/s)", "sitting: at a table (in hand/s)", "lying (in hand/s)"] # all classes
-
-visualize_participants = "no"
-gps_accuracy_min = 10 # minimum accuracy of GPS data to be included in analysis
-sensors = [["Linear Accelerometer", "linear_accelerometer"],
-           ["Rotation", "rotation"],
-           ["Gyroscope", "gyroscope"],
-              ["Magnetometer", "magnetometer"]]
-only_sensordata_of_active_smartphone_sessions = "yes"
-label_column_name = ["Human Motion Classes", "label_human motion"]
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_exploration/sensors/SummaryStats_Visualizations/"
-
-for sensor in sensors:
-    for time_period in time_periods:
-        if sensor[0] == "GPS":
-            df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
-            # add label
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1],
-                                                  ESM_identifier_column="ESM_timestamp")
-
-            # change label_column_name in df_summary_stats
-            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
-
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1] , label_column_name[0], list_activities,
-                                    "Mean and Maximum Speed and Acceleration of Human Motion Events", visualize_participants)
-            fig.savefig(path_storage + "SummaryStatsVisualization_GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
-                        + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
-
-        else:
-            df_summary_stats = pd.read_csv(
-                "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/summary_stats/" + sensor[1] + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
-            # add label
-            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1], ESM_identifier_column="ESM_timestamp")
-
-            # change label_column_name in df_summary_stats
-            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
-
-            figure_title = "Mean and Maximum of the " + sensor[0] + " of Human Motion Classes"
-            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1], label_column_name[0], list_activities, figure_title , visualize_participants)
-
-            list_activities_forsaving = [x.replace("/", "_") for x in list_activities]
-            fig.savefig(
-                path_storage + "SummaryStatsVisualization_" + sensor[1] + "_std-max_including-participants-" + visualize_participants + "_time-period-around-event-"
-                + str(time_period) + "s_scatterplot.png", dpi=300)
-
-
-
-
-#testarea for location data
-df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration.csv")
-#label data
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
-# delete rows with nan values in label_public transport
-df_locations = df_locations.dropna(subset=["label_public transport"])
-
-#calculate summary stats for column accuracy
-df_locations["loc_accuracy"].describe()
-
-# only retain rows with accuracy < 35
-df_locations_new = df_locations[df_locations["loc_accuracy"] < 35]
-#count number of unique ESM_timestamps
-df_locations["ESM_timestamp"].nunique()
-df_locations_new["ESM_timestamp"].nunique()
-
-#retain only data which is in 90s time period around ESM_timestamp
-time_period = 90
-#convert timestamp to datetime
-df_locations_new["ESM_timestamp"] = pd.to_datetime(df_locations_new["ESM_timestamp"])
-df_locations_new["timestamp"] = pd.to_datetime(df_locations_new["timestamp"])
-df_locations_new = df_locations_new[(df_locations_new['timestamp'] >= df_locations_new['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
-        df_locations_new['timestamp'] <= df_locations_new['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
-
-df_locations_new["ESM_timestamp"].nunique()
-# take only the unique ESM_timestamps and count from them the number of label_public transport
-df_locations_new_unique_ESM_timestamps = df_locations_new.drop_duplicates(subset=["ESM_timestamp"])
-df_locations_new_unique_ESM_timestamps["label_public transport"].value_counts()
-
-
-
-
-
-# add labels
-df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
-#delete NaN values in label_public transport
-df_locations = df_locations[df_locations["label_public transport"].notna()]
-#get only data from user with loc_device_id = 590f0faf-d932-4a57-998d-e3da667a91dc
-df_locations_user = df_locations[df_locations["loc_device_id"] == "b7b013b7-f78c-4325-a7ab-2dfc128fba27"]
-
-#endregion
-
-#endregion
-
-#region data preparation for human motion
-
-#region merge different sensors linear accelerometer & rotation
-## NOTE: in difference to "Naturalistic Data", accelerometer will not be included as it has a lot of missing values!
-sensor_sets_to_merge = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"],
-                        ["linear_accelerometer", "rotation"]]
-timedelta = "100ms" #must be in format compatible with pandas.Timedelta
-columns_to_delete = ["device_id", "ESM_timestamp", "user activity", "Unnamed: 0"]
-label_column_name = "label_human motion"
-path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
-path_intermediate_files = None
-add_prefix_to_merged_columns = True
-for sensor_set in sensor_sets_to_merge:
-    counter = 1
-    for sensor in sensor_set:
-        print("start with sensor: " + sensor)
-        if counter == 1:
-            sensor_base = sensor
-            df_base = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
-            df_base = df_base.drop(columns=["timestamp", "user activity", "Unnamed: 0"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
-            df_base = df_base.rename(columns={"timestamp_datetime": "timestamp"})
-            for col in df_base.columns: #rename columns of df_base so that they can be still identified later on
-            if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp" and col != label_column_name:
-                df_base = df_base.rename(columns={col: sensor_base[:3] + "_" + col})
-            counter += 1
-            continue
-        if counter > 1:
-            sensor_tomerge = sensor
-            df_tomerge = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
-            df_tomerge = df_tomerge.drop(columns=["timestamp"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
-            df_tomerge = df_tomerge.rename(columns={"timestamp_datetime": "timestamp"})
-            df_base = Merge_and_Impute.merge(df_base, df_tomerge, sensor_tomerge, timedelta, columns_to_delete, path_intermediate_files, add_prefix_to_merged_columns)
-            counter += 1
-    #save to csv
-    df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/" + str(sensor_set) + "_allparticipants.csv", index=False)
-
-    #endregion
-#endregion
-
-#region calculate distance, speed & acceleration
-accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
-path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
-
-#load GPS data
-df_locations_events = pd.read_csv(path_datasets + "locations_labeled_esm_timestamps_allparticipants.csv")
-df_locations_events = df_locations_events.drop(columns=["Unnamed: 0", "timestamp_unix", "label_human motion - general"])
-# rename "timestamp" to "timestamp_unix" and "timestamp_datetime" to "timestamp"
-df_locations_events = df_locations_events.rename(columns={"timestamp": "timestamp_unix"})
-df_locations_events = df_locations_events.rename(columns={"timestamp_datetime": "timestamp"})
-
-# calculate distance, speed and acceleration (class build in "FeatureExtraction_GPS.py")
-df_features = FeatureExtraction_GPS().calculate_distance_speed_acceleration(df_locations_events)
-
-# drop rows where distance, speed or acceleration contain NaN (they contain NaN if it is first entry of every event)
-df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (km/h/s)"])
-# drop rows with unrealistic speed values  & GPS accuracy values
-df_features = df_features[df_features["speed (km/h)"] < 300]
-# create different GPS accuracy thresholds
-for accuracy_threshold in accuracy_thresholds:
-    df_features_final = df_features[df_features["accuracy"] < accuracy_threshold]
-    df_features_final = df_features_final.reset_index(drop=True)
-    print("Number of rows with accuracy < " + str(accuracy_threshold) + "m: " + str(len(df_features_final)))
-    #save to csv
-    df_features_final.to_csv(path_datasets + "locations_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + ".csv")
-#endregion
-
-#region feature extraction of high-frequency features: for both sensor subsets
-## COMPARE CODE IN OTHER PROJECT
-### what is missing:
-### - feature extraction for all highfreq: done
-### - combining chunks: for LinAcc-Rot set: done
-#endregion
-
-#region feature selection of high frequency sensors: data driven approach
-##NOTE: the following code regarding feature extraction and selection with tsfresh is copied from "pythonProject", as the
-## code can only be deployed there (due to requirements of tsfresh); therefore this code needs to be updated regularly
-#endregion
-
-#region NOT CURRENTLY USED feature selection of high frequency sensors and GPS data: hypothesis driven approach
-
-#testcase
-df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/highfrequency-sensors_timeperiod-30_tsfresh-features-extracted.pkl")
-all_features = df_test.columns
-# get list of features in all_features which contain "fft"
-fft_features = [feature for feature in all_features if "fft" in feature]
-lin_fft_features = [feature for feature in fft_features if "lin_double_values" in feature]
-#convert lin_fft_features to dataframe
-df_lin_fft_features = df_test[lin_fft_features]
-
-#endregion
-
-#endregion
-
-#region modeling for human motion
-
-##region Decision Forest for comparing different feature segments
-# training DF
-feature_segments = [30,10, 5,2,1] #in seconds; define length of segments of parameters (over which duration they have been created)
-combinations_sensors = [["linear_accelerometer", "rotation"],
-                        ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
-                        ]  # define which sensor combinations should be considered
-combinations_sensors = [ ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]]  # define which sensor combinations should be considered
-min_gps_accuracy = 35
-label_column_name = "label_human motion"
-n_permutations = 0 # define number of permutations; better 1000
-label_segment = 90 #define how much data around each event will be considered
-# if label classes should be joint -> define in label mapping
-label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
-                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
-parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
-drop_cols = [] # columns that should be dropped
-feature_importance = "shap"
-label_mapping = None
-
-parameter_set = {
-    "n_estimators": 100, #default
-    "criterion": "gini", #default
-    "max_depth": None, #default
-    "min_samples_split": 2,#default
-    "min_samples_leaf": 1,#default
-    "min_weight_fraction_leaf": 0.,#default
-    "max_features": None, # THIS IS CHANGED
-    "max_leaf_nodes": None,#default
-    "min_impurity_decrease": 0.0,#default
-    "bootstrap": True,#default
-    "oob_score": False,#default
-    "n_jobs": None,#default
-    "verbose": 0,#default
-    "warm_start": False,#default
-    "class_weight": "balanced", # THIS IS CHANGED
-    "n_jobs": -1,#default
-    "random_state": 11#default
-}
-df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
-                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
-df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
-for combination_sensors in combinations_sensors:
-
-    for feature_segment in feature_segments:
-        # create path to data based on sensor combination and feature segment
-        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
-            combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
-        t0 = time.time()
-        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(feature_segment))
-        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/"+ str(combination_sensors)+ "_feature-segment-" +str(feature_segment) + "s/"
-        if not os.path.exists(path_storage):
-            os.makedirs(path_storage)
-        with open(path_dataset, "rb") as f:
-            df = pickle.load(f)
-        #update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "Dataset loaded",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        df = df.drop(columns=drop_cols)
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
-
-        #drop NaN in device_id:
-        #TODO: probably error that there are still NaN in device_id -> probably from Merging step -> resolve if time
-        df = df.dropna(subset=["device_id"])
-        #update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in device_id dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        #drop NaN in label_column_name
-        df = df.dropna(subset=[label_column_name])
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in label_column_name dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-        df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
-
-        # drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
-        df = df.dropna()
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in any column dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        #combine label classes if necessary
-        if label_mapping != None:
-            df = df.reset_index(drop=True)
-            for mapping in label_mapping:
-                df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
-        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "Label Classes which are not included are dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        # selects only features which are calculated in the label_segment around event.
-        ## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
-        df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
-        df_decisionforest = df_decisionforest.reset_index(drop=True)
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "data outside of label segment around events dropped",
-                                            "Number Participants": len(df_decisionforest["device_id"].unique()),
-                                            "Number Events": len(df_decisionforest["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df_decisionforest),
-                                            "Number Features": len(df_decisionforest.columns) - 1}, ignore_index=True)
-
-        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
-        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
-        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
-        df_label_counts["total"] = df_label_counts.sum(axis=1)
-        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
-        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
-
-        # check if df_decisionforest is empty
-        if df_decisionforest.empty:
-            print("df_decisionforest is empty")
-            continue
-
-        #run DF
-        df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, feature_importance = feature_importance, confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning, parameter_set = parameter_set)
-        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
-        df_decisionforest_results["Feature Segments"] = str(feature_segment)
-
-        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
-        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
-        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
-
-df_analytics.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "s_parameter_tuning-" + parameter_tuning + "_analytics.csv")
-df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
-
-
-#visualizing different ML results
-label_segment = 90
-parameter_tuning = "no"
-df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall_final.csv")
-# add dataset description depending on value in "Sensor Combination" and "Feature Segments"
-df_results["Feature Set and Feature Segment"] = ""
-for index, row in df_results.iterrows():
-    if row["Sensor Combination"] == "['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']":
-        if row["Feature Segments"] == 30:
-            df_results.loc[index, "Feature Segment"] = "30s"
-        elif row["Feature Segments"] == 10:
-            df_results.loc[index, "Feature Segment"] = "10s"
-        elif row["Feature Segments"] == 5:
-            df_results.loc[index, "Feature Segment"] = "5s"
-        elif row["Feature Segments"] == 2:
-            df_results.loc[index, "Feature Segment"] = "2s"
-        elif row["Feature Segments"] == 1:
-            df_results.loc[index, "Feature Segment"] = "1s"
-# visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot
-sns.set_style("whitegrid")
-sns.set_context("paper", font_scale=1.5)
-sns.set_palette("colorblind")
-fig, ax = plt.subplots(figsize=(10, 5))
-#visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot; use pandas.melt
-sns.lineplot(x="Feature Segment", y="value", hue="variable", data=pd.melt(df_results, id_vars=["Feature Segment"], value_vars=["Balanced Accuracy", "F1"]))
-plt.title("Model Performance of Different Feature Segments")
-plt.xlabel("Feature Segments")
-plt.ylabel("Score")
-plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
-#set y-axis limits
-plt.ylim(0, 1)
-plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-plt.tight_layout()
-#plt.show()
-#save with bbox_inches="tight" to avoid cutting off x-axis labels
-plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + parameter_tuning + "_results_overall_visualization.png",
-            bbox_inches="tight", dpi= 300)
-
-
-
-#visualizing performances of the different DF (balanced accuracy & F1 score)
-label_segment = 90
-parameter_tuning = "no"
-df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
-# add dataset description depending on value in "Sensor Combination" and "Feature Segments"
-df_results["Feature Set and Feature Segment"] = ""
-for index, row in df_results.iterrows():
-    if row["Sensor Combination"] == "['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']":
-        if row["Feature Segments"] == 60:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (60s)"
-        elif row["Feature Segments"] == 30:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (30s)"
-        elif row["Feature Segments"] == 10:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (10s)"
-        elif row["Feature Segments"] == 5:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (5s)"
-        elif row["Feature Segments"] == 2:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (2s)"
-        elif row["Feature Segments"] == 1:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (1s)"
-    elif row["Sensor Combination"] == "['linear_accelerometer', 'rotation']":
-        if row["Feature Segments"] == 60:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (60s)"
-        elif row["Feature Segments"] == 30:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (30s)"
-        elif row["Feature Segments"] == 10:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (10s)"
-        elif row["Feature Segments"] == 5:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (5s)"
-        elif row["Feature Segments"] == 2:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (2s)"
-        elif row["Feature Segments"] == 1:
-            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (1s)"
-# visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot
-sns.set_style("whitegrid")
-sns.set_context("paper", font_scale=1.5)
-sns.set_palette("colorblind")
-fig, ax = plt.subplots(figsize=(10, 5))
-#visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot; use pandas.melt
-sns.lineplot(x="Feature Set and Feature Segment", y="value", hue="variable", data=pd.melt(df_results, id_vars=["Feature Set and Feature Segment"], value_vars=["Balanced Accuracy", "F1"]))
-plt.title("Model Performance of Different Datasets and Feature Segments")
-plt.xlabel("Dataset and Feature-Segment")
-plt.ylabel("Score")
-plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
-#set y-axis limits
-plt.ylim(0, 1)
-plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-plt.tight_layout()
-#plt.show()
-#save with bbox_inches="tight" to avoid cutting off x-axis labels
-plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall_visualization.png",
-            bbox_inches="tight", dpi= 300)
-#endregion
-
-#region hyperparameter tune the best model from previous comparison step
-feature_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
-combinations_sensors = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]]
-label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
-                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
-label_mapping = None
-min_gps_accuracy = 35
-label_column_name = "label_human motion"
-n_permutations = 0 # define number of permutations; better 1000
-label_segment = 90 #define how much data around each event will be considered
-parameter_tuning = "yes" # if yes: parameter tuning is performed; if False: default parameters are used
-drop_cols = [] # columns that should be dropped
-feature_importance = "shap"
-
-# set CV mode
-combine_participants = False
-participants_test_set = [2,4,6,9]
-
-parameter_set = {
-    "n_jobs": -1,# use all cores
-    "random_state": 11 # set random state for reproducibility
-}
-
-# if parameter tuning is true, define search space
-n_estimators = [50, 100, 500, 800]  # default 100
-max_depth = [2, 5, 15, None] # default None
-min_samples_split = [2, 10, 30] # default 2
-min_samples_leaf = [1, 5] # default 1
-max_features = ["sqrt", 5, "log2", 20, None] # default "sqrt"
-oob_score = [True, False] # default False;
-class_weight = ["balanced", "balanced_subsample", None] # default None
-criterion =[ "gini", "entropy", "log_loss"] # default "gini"
-max_samples = [None, 0.5, 0.8] # default None which means that 100% of the samples are used for each tree
-bootstrap = [True]
-
-# smaller parameter tuning set in order to have less runtime
-n_estimators = [100, 800]  # default 100
-max_depth = [15, None, 25] # default None
-min_samples_split = [2, 8] # default 2
-min_samples_leaf = [1] # default 1
-max_features = ["sqrt", "log2", None] # default "sqrt"
-oob_score = [False, True] # default False;
-class_weight = ["balanced", "balanced_subsample"] # default None
-criterion =[ "gini", "entropy"] # default "gini"
-max_samples = [None, 0.5] # default None which means that 100% of the samples are used for each tree
-bootstrap = [True]
-
-grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
-             min_samples_leaf=min_samples_leaf, max_features=max_features, oob_score = oob_score, class_weight = class_weight,
-                            criterion = criterion, max_samples = max_samples, bootstrap = bootstrap)
-
-# select only data which are in the label_segment around ESM_event & drop columns
-df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
-                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
-df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
-for combination_sensors in combinations_sensors:
-
-    for feature_segment in feature_segments:
-        # create path to data based on sensor combination and feature segment
-        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
-            combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
-        t0 = time.time()
-        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(feature_segment))
-        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/"+ str(combination_sensors)+ "_feature-segment-" +str(feature_segment) + "s/"
-        if not os.path.exists(path_storage):
-            os.makedirs(path_storage)
-        if path_dataset.endswith(".csv"):
-            df = pd.read_csv(path_dataset)
-        elif path_dataset.endswith(".pkl"):
-            with open(path_dataset, "rb") as f:
-                df = pickle.load(f)
-
-        #update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "Dataset loaded",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        df = df.drop(columns=drop_cols)
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
-
-        #drop NaN in device_id:
-        #TODO: probably error that there are still NaN in device_id -> probably from Merging step -> resolve if time
-        df = df.dropna(subset=["device_id"])
-        #update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in device_id dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        #drop NaN in label_column_name
-        df = df.dropna(subset=[label_column_name])
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in label_column_name dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-        df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
-
-        #in case commbine_participants == "yes", merge participant IDs into either 1 (=train) or 2 (=test)
-        if combine_participants == True:
-            # iterate through all IDs in "device_id" column and replace with 1 or 2: if ID is in participants_test_set, replace with 2, else replace with 1
-            df["device_id_traintest"] = df["device_id"].apply(lambda x: 2 if x in participants_test_set else 1)
-
-            # update analytics
-            df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                                "Feature Segment": str(feature_segment),
-                                                "Event Description": "Training and Test Participants Merged",
-                                                "Number Participants": len(df["device_id_traintest"].unique()),
-                                                "Number Events": len(df["ESM_timestamp"].unique()),
-                                                "Number Samples": len(df),
-                                                "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        # drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
-        df = df.dropna()
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "NaN in any column dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        #combine label classes if necessary
-        if label_mapping != None:
-            df = df.reset_index(drop=True)
-            for mapping in label_mapping:
-                df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
-        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "Label Classes which are not included are dropped",
-                                            "Number Participants": len(df["device_id"].unique()),
-                                            "Number Events": len(df["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df),
-                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
-
-        # selects only features which are calculated in the label_segment around event.
-        ## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
-        df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
-        df_decisionforest = df_decisionforest.reset_index(drop=True)
-        # update analytics
-        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
-                                            "Feature Segment": str(feature_segment),
-                                            "Event Description": "data outside of label segment around events dropped",
-                                            "Number Participants": len(df_decisionforest["device_id"].unique()),
-                                            "Number Events": len(df_decisionforest["ESM_timestamp"].unique()),
-                                            "Number Samples": len(df_decisionforest),
-                                            "Number Features": len(df_decisionforest.columns) - 1}, ignore_index=True)
-
-        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
-        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
-        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
-        df_label_counts["total"] = df_label_counts.sum(axis=1)
-        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
-        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
-
-        # check if df_decisionforest is empty
-        if df_decisionforest.empty:
-            print("df_decisionforest is empty")
-            continue
-
-        # change column names: replace in each column the "double_values_0" with "x-axis"
-        df_decisionforest.columns = [col.replace('double_values_0', 'x-axis') for col in df_decisionforest.columns]
-        df_decisionforest.columns = [col.replace('double_values_1', 'y-axis') for col in df_decisionforest.columns]
-        df_decisionforest.columns = [col.replace('double_values_2', 'z-axis') for col in df_decisionforest.columns]
-
-        #run DF
-        df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name,
-                                                              n_permutations, path_storage, feature_importance = feature_importance,
-                                                              confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning,
-                                                              parameter_set = parameter_set, grid_search_space = grid_search_space, combine_participants = combine_participants)
-        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
-        df_decisionforest_results["Feature Segments"] = str(feature_segment)
-
-        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
-        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
-        df_labels_predictions.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_labels_predictions.csv")
-        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
-
-df_analytics.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "s_parameter_tuning-" + parameter_tuning + "_analytics.csv")
-df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
-
-
-#endregion
-
-#region create deployment model
-# Note: this trains a DF on whole dataset without any CV, parameter tuning, feature importance, or validation
-# parameter initializations
-feature_segment = 30 #in seconds; define length of segments of parameters (over which duration they have been created)
-combination_sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]
-label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
-                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
-label_column_name = "label_human motion"
-label_segment = 90 #define how much data around each event will be considered
-drop_cols = [] # columns that should be dropped
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/deployment_model/" + str(
-    combination_sensors) + "_feature-segment-" + str(feature_segment) + "s/"
-parameter_set = {"n_estimators": 800,
-                    "max_depth": 15,
-                    "min_samples_split": 2,
-                    "min_samples_leaf": 1,
-                    "max_features": None,
-                    "bootstrap": True,
-                    "criterion": "gini",
-                 "oob_score": False,
-                 "class_weight": "balanced",
-                 "max_samples": None,
-                 "n_jobs": -1,# use all cores
-                 "random_state": 11 # set random state for reproducibility
-                 }
-
-# initial data transformations
-if not os.path.exists(path_storage):
-    os.makedirs(path_storage)
-path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
-    combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
-df = pd.read_pickle(path_dataset)
-df = df.drop(columns=drop_cols)
-df["timestamp"] = pd.to_datetime(df["timestamp"])
-df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
-df = df.dropna(subset=["device_id"])
-df = df.dropna(subset=[label_column_name])
-df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
-df = df.dropna()
-df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment / 2)))) & (
-            df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment / 2)) - pd.Timedelta(
-        seconds=feature_segment)))]
-df_decisionforest = df_decisionforest.reset_index(drop=True)
-print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
-# create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
-df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
-df_label_counts["total"] = df_label_counts.sum(axis=1)
-df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
-df_label_counts.to_csv(
-    path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
-
-# change column names: replace in each column the "double_values_0" with "x-axis"
-df_decisionforest.columns = [col.replace('double_values_0', 'x-axis') for col in df_decisionforest.columns]
-df_decisionforest.columns = [col.replace('double_values_1', 'y-axis') for col in df_decisionforest.columns]
-df_decisionforest.columns = [col.replace('double_values_2', 'z-axis') for col in df_decisionforest.columns]
-
-#run and save model
-model = DecisionForest.DF_sklearn_deployment(df_decisionforest, label_segment, label_column_name, parameter_set, path_storage)
-pickle.dump(model, open(
-    path_storage + label_column_name + "_timeperiod_around_event-" + str(
-        label_segment) + "_FinalDeploymentModel.sav", "wb"))
-
-#endregion
-
-#region apply laboratoy model(s) to naturalistic data 
-## Note: in this region the models trained in hyperparameter tuning and deployment model wil be applied to the naturalistic data;
-## the choice of the model depends on the participant
-
-# NOTE: the code is transferred to the other project since only there is the imputation possible...
-
-# load and transform naturalistic dataset in right format
-label_column_name = "label_human motion"
-path_model_deployment = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/deployment_model/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/label_human motion_timeperiod_around_event-90_FinalDeploymentModel.sav"
-path_models_hyperparametertrained = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/"
-df_features = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-label_segment = 90 #define the segment of data which will be considered in df_features around each ES event
-feature_segment = 30 #define the feature segment since this is necessary for the selection of data around each ES event
-#define the label maping
-label_mapping = [["lying (in one hand)", "lying (hand/s)"],
-                            ["lying (in two hands)", "lying (hand/s)"],
-                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                         ["standing (in one hand)", "standing (hand/s)"],
-                            ["standing (in two hands)", "standing (hand/s)"],
-                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                            ["sitting: at a table (in one hand)", "sitting (hand/s)"],
-                               ["sitting: at a table (in two hands)", "sitting (hand/s)"],
-                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                         ["sitting: on the couch (in one hand)", "sitting (hand/s)"],
-                            ["sitting: on the couch (in two hands)", "sitting (hand/s)"],
-                         ["sitting: somewhere else (in one hand)", "sitting (hand/s)"],
-                            ["sitting: somewhere else (in two hands)", "sitting (hand/s)"],
-                         ["walking (in one hand)", "walking (hand/s)"],
-                            ["walking (in two hands)", "walking (hand/s)"],
-                         ["cycling (in one hand)", "cycling (hand/s)"],
-                            ["cycling (in two hands)", "cycling (hand/s)"]
-                         ]
-label_classes = ["lying (hand/s)", "sitting (hand/s)", "standing (hand/s)",
-                 "standing, sitting, or lying (on flat surface)",
-                 "walking (hand/s)", "cycling (hand/s)"]
-
-
-# some preprocessing
-##  change column names: replace in each column the "double_values_0" with "x-axis"
-df_features.columns = [col.replace('double_values_0', 'x-axis') for col in df_features.columns]
-df_features.columns = [col.replace('double_values_1', 'y-axis') for col in df_features.columns]
-df_features.columns = [col.replace('double_values_2', 'z-axis') for col in df_features.columns]
-
-## label df_features, transform labels and choose only the labels which are in label_classes
-df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
-df_features = df_features.reset_index(drop=True)
-for mapping in label_mapping:
-    print(mapping)
-    df_features.loc[df_features[label_column_name] == mapping[0], label_column_name] = mapping[1]
-df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-
-df_features = df_features.dropna(subset=["device_id"])
-df_features = df_features.dropna(subset=[label_column_name])
-df_features = Merge_Transform.merge_participantIDs(df_features, users)
-
-# select only features which are in the model
-#deployment_model = pd.read_pickle(path_model_deployment)
-#print(dir(deployment_model))
-#features_used = list(deployment_model.feature_names_in_)
-#list_features = features_used + [label_column_name, "timestamp", "ESM_timestamp"]
-## temporary: find out which columns are missing
-#missing_cols = [col for col in list_features if col not in df_features.columns]
-#print(missing_cols)
-# select only features which are in list_features in df_features
-#df_features = df_features.drop(columns=[col for col in df_features.columns if col not in list_features])
-
-## select only data which is in the timeperiod around the event
-df_decisionforest = df_features[(df_features['timestamp'] >= (df_features['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df_features['timestamp'] <= (df_features['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
-df_decisionforest = df_decisionforest.reset_index(drop=True)
-
-#iterate through participants in df_features
-df_results = pd.DataFrame()
-for participant in df_decisionforest["device_id"].unique():
-    # load DF model
-    # check if model exists
-    if os.path.exists(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav"):
-        print("For participant " + str(participant) + " the hyperparameter tuned model is used.")
-        model = pd.load_pickle(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav")
-    else:
-        print("For participant " + str(participant) + " the deployment model is used.")
-        # if no model tested on this participant exists: the participant was not in the human motion data collection -> load deployment model
-        model = pd.read_pickle(path_model_deployment)
-
-    # select only data of participant
-    df_decisionforest_participant = df_decisionforest[df_decisionforest["device_id"] == participant]
-
-    # store labels
-    true_labels = df_decisionforest_participant[label_column_name]
-
-    # select correct features
-    features_used = list(model.feature_names_in_)
-    df_decisionforest_participant = df_decisionforest_participant.drop(columns=[col for col in df_decisionforest_participant.columns if col not in features_used])
-    # put the columns in same order as in the model
-    df_decisionforest_participant = df_decisionforest_participant[features_used]
-
-    #impute the NaN values the same way they were imputed during "feature selection"
-    impute(df_decisionforest_participant)
-
-    # predict labels
-    df_decisionforest_participant["predicted_label"] = model.predict(df_decisionforest_participant)
-
-    # add labels again
-    df_decisionforest_participant[label_column_name] = true_labels
-
-    # add participant to df_results by concatenating
-    df_results = pd.concat([df_results, df_decisionforest_participant[[label_column_name, "predicted_label"]]], axis=0)
-
-#temp
-missing_cols = [col for col in features_used if col not in df_features.columns]
-#print(missing_cols)
-
-#testarea
-
-# evaluate
-balanced_accuracy = balanced_accuracy_score(df_results[label_column_name], df_results["predicted_label"])
-
-
-#endregion
-
-#region OUTDATED; FIRST TRY: modeling with decision forest for human motion
-### initialize parameters
-parameter_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
-#combinations_sensors = [["highfrequencysensors-all", "GPS"],
-#                        ["linear_accelerometer", "rotation", "GPS"],
-#                        ["linear_accelerometer", "GPS"]]  # define which sensor combinations should be considered
-combinations_sensors = [["highfrequency-sensors"]]
-
-label_column_name = "label_human motion - general"
-n_permutations = 2 # define number of permutations; better 1000
-label_segment = 90 #define how much data around each event will be considered
-label_classes = ["standing", "sitting_attable_phoneinhand", "lying_phoneinfront_onback", "wallking", "running", "cycling"]
-#label_classes = ["walking", "walking_mediumspeed", "walking_fastspeed", "running", "cycling"] # which label classes should be considered
-#label_classes = ["standing", "sitting_attable_phoneinhand", "sitting_attable_phoneontable", "lying_ontheside","lying_phoneinfront_onback"]
-
-# label_classes_all_possible =['sitting_attable_phoneinhand', 'standing', 'on_the_toilet',
-#        'cycling', 'running', 'walking', 'walking_fastspeed',
-#        'cycling_includingstops', 'lying_phoneoverhead',
-#        'lying_phoneonbed', 'sitting_attable_phoneontable',
-#        'walking_mediumspeed', 'sitting_on_the_toilet', 'lying_ontheside',
-#        'walking_lowspeed', 'on the toilet', 'lying_phoneinfront_onback']
-parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
-drop_cols = [] # columns that should be dropped
-
-#testarea
-#get unique labels from label_column_name
-
-
-# if parameter tuning is true, define search space
-n_estimators = [50, 100, 500, 800]  # default 500
-max_depth = [2, 5, 15]
-min_samples_split = [2, 10, 30]
-min_samples_leaf = [1, 5]
-max_features = ["sqrt", 3, "log2", 20]
-grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
-             min_samples_leaf=min_samples_leaf, max_features=max_features)
-
-
-# select only data which are in the label_segment around ESM_event & drop columns
-df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
-                                             "Precision", "Recall", "Sensor Combination", "Parameter Segments"])
-
-for combination_sensors in combinations_sensors:
-    for parameter_segment in parameter_segments:
-        t0 = time.time()
-        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(parameter_segment))
-        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_analysis/decision_forest/label_human motion - general/sensor-"+ combination_sensors[0]+"("+ str(parameter_segment) +"seconds)/"
-        if not os.path.exists(path_storage):
-            os.makedirs(path_storage)
-        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/activity-"+ label_column_name +"_"+ combination_sensors[0]+ "_feature-segment-"+ str(parameter_segment) +" s_tsfresh-features-exctracted_featuresselected.pkl"
-        df = pd.read_pickle(path_dataset)
-        #if len(combination_sensors) == 3: #this is necessary to make the code work for the case with three merged sensors
-        #    df = df.rename(columns={"timestamp_merged_x": "timestamp_merged", "label_human motion - general_x": "label_human motion - general"})
-        #    df = df.drop(columns=["timestamp_merged_y", "label_human motion - general_y"])
-        df = df.rename(columns={"sensor_timestamp": "timestamp"})
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
-        df = df.drop(columns=drop_cols)
-        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-
-        df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
-        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
-        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
-        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
-        df_label_counts["total"] = df_label_counts.sum(axis=1)
-        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
-        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
-        df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, grid_search_space)
-        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
-        df_decisionforest_results["Parameter Segments"] = str(parameter_segment)
-
-        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
-        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
-            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
-        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
-df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_analysis/decision_forest/label_human motion - general/parameter_tuning-" + parameter_tuning + "_results_overall.csv")
-
-
-#endregion
-
-#endregion
-
-#endregion
-
-
 
 #region Naturalistic Data
 
@@ -1491,13 +577,37 @@ df_label_counts_bodyposition_locations.loc["total"] = df_label_counts_bodypositi
 
 ## create barplot with all human motion classes
 df_labels_humanmotion= df_labels.copy()
+
+#merge classes
+label_mapping = [["lying (in one hand)", "lying (hand/s)"],
+                            ["lying (in two hands)", "lying (hand/s)"],
+                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["standing (in one hand)", "standing (hand/s)"],
+                            ["standing (in two hands)", "standing (hand/s)"],
+                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                            ["sitting: at a table (in one hand)", "sitting (hand/s)"],
+                               ["sitting: at a table (in two hands)", "sitting (hand/s)"],
+                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["sitting: on the couch (in one hand)", "sitting (hand/s)"],
+                            ["sitting: on the couch (in two hands)", "sitting (hand/s)"],
+                         ["sitting: somewhere else (in one hand)", "sitting (hand/s)"],
+                            ["sitting: somewhere else (in two hands)", "sitting (hand/s)"],
+                         ["walking (in one hand)", "walking (hand/s)"],
+                            ["walking (in two hands)", "walking (hand/s)"],
+                         ["cycling (in one hand)", "cycling (hand/s)"],
+                            ["cycling (in two hands)", "cycling (hand/s)"],
+                        ["running (in two hands)", "running (hand/s)"]
+                         ]
+df_labels_humanmotion = df_labels_humanmotion.reset_index(drop=True)
+for mapping in label_mapping:
+    df_labels_humanmotion.loc[df_labels_humanmotion["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
 #df_labels_publictransport["label_public transport"] = df_labels_publictransport["label_public transport"].replace("train", "public transport")
 fig = data_exploration_labels.visualize_esm_activity(df_labels_humanmotion, "label_human motion", "Human Motion - Number of Answers per Class")
 fig.savefig(path_storage + "human_motion_class-counts.png")
 
 ##create table with users x label classes
 df_labels_humanmotion =  Merge_Transform.merge_participantIDs(df_labels_humanmotion, users, include_cities = True)
-df_label_counts = data_exploration_labels.create_table_user_activity(df_labels_humanmotion, "label_human motion")
+df_label_counts = data_exploration_labels.create_table_user_classes_eventcount(df_labels_humanmotion, "label_human motion")
 df_label_counts.to_csv(path_storage + "human_motion_labels-overview.csv")
 
 
@@ -1524,7 +634,6 @@ df_esm_including_sensordata_above_threshold.to_csv("/Users/benediktjordan/Docume
 ## visualize as barplot
 fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_human motion", "Human Motion - Number of Answers per Class with Sensor Data")
 fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/label_human motion/human_motion_class-counts_event-segments-" + str(segment_around_events) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
-
 
 # create plots for all events visualizing linear accelerometer, magnetometer, gyroscope, rotation, and speed data
 label_column_name = "label_human motion"
@@ -1599,8 +708,6 @@ for event_time in tqdm(event_times):
     # print progress
     print("Finished event " + str(num_events) + " of " + str(len(event_times)) + " in " + str((time.time() - time0)/60) + " minutes.")
     num_events += 1
-
-
 
 # visualize sensordata of specific events for documentation
 event_times_and_activity = [["2022-06-23 13:08:15.327000064", "Walking (Smartphone in One Hand)", [["Linear Accelerometer", "linear_accelerometer"],
@@ -1829,21 +936,281 @@ for accuracy_threshold in accuracy_thresholds:
     df_features_final.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
 #endregion
 
-#region feature extraction of high-frequency features: for both sensor subsets
-## COMPARE CODE IN OTHER PROJECT
-### what is missing:
-### - feature extraction for all highfreq: 2,5, and 10s feature segments
-### - combining chunks: for LinAcc-Rot set: 1s and 2s chunks; for all highfreq: all feature segments chunks
+#region feature extraction: for both sensor subsets as well as Speed & Acceleration features
+## code from this region only runs in a slightly different environment
+
+sensor_sets_to_extract = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"],
+                          ["linear_accelerometer", "rotation"],
+                          "GPS"]
+feature_segments = [1, 2, 5, 10, 30, 60]  # in seconds
+feature_segments = [30, 60]  # in seconds
+
+sensor_sets_to_extract = ["GPS"]
+frequency = 10  # in Hz
+min_gps_accuracy = 35
+only_active_smartphone_sessions = "yes"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/"
+
+# find out how much deleting rows with NaN values (in sensor_column columns) affects the number of rows
+for sensor_set in sensor_sets_to_extract:
+    #load data
+    path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/_esm_timeperiod_5 min_only-active-smartphone-sessions_timeseries-merged_sensors-" + str(
+        sensor_set) + ".csv"
+    df_sensor = pd.read_csv(path_sensorfile)
+
+    # create sensor columns
+    sensor_column_names = []
+    for sensor in sensor_set:
+        sensor_column_names.append(database_sensor_columns[sensor])
+    sensor_column_names = [item for sublist in sensor_column_names for item in sublist]
+
+    # delete rows with NaN values in sensor_column columns
+    row_count = df_sensor.shape[0]
+    df_sensor.dropna(subset=sensor_column_names, inplace=True)
+    percentage_deleted = (row_count - df_sensor.shape[0]) / row_count * 100
+    print("The following numbers are for the subset of sensors: ", sensor_set)
+    print("percentage of rows deleted: ", percentage_deleted)
+    print("number of rows before deleting: ", row_count)
+    print("number of rows left: ", df_sensor.shape[0])
+    print("number of rows deleted: ", row_count - df_sensor.shape[0])
+
+## run feature extraction in chunks
+for sensor_set in sensor_sets_to_extract:
+        # create sensor path
+        if only_active_smartphone_sessions == "yes":
+            path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/_esm_timeperiod_5 min_only-active-smartphone-sessions_timeseries-merged_sensors-" + str(
+                sensor_set) + ".csv"
+            if sensor_set == "GPS":
+                path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(
+                    min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + ".csv"
+        else:
+            path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/" + \
+                              sensors[0] + "_esm_timeperiod_5 min.csv_JSONconverted.pkl"
+
+        # create sensor columns
+        sensor_column_names = []
+        if sensor_set != "GPS":
+            for sensor in sensor_set:
+                sensor_column_names.append(database_sensor_columns[sensor])
+            sensor_column_names = [item for sublist in sensor_column_names for item in sublist]
+        else:
+            sensor_column_names = ["speed (km/h)", "acceleration (km/h/s)"]
+
+        # get sensor frequency
+        if sensor_set != "GPS":
+            sensor_frequency = 10  # in Hz
+        else:
+            sensor_frequency = 1  # in Hz
+
+        for feature_segment in feature_segments:
+            print("Start with Feature Segment: ", feature_segment)
+
+            # check if feature segment == sensor_frequency: if yes, skip feature extraction
+            if feature_segment == sensor_frequency and sensor_set == "GPS":
+                print("feature segment == sensor frequency: for sensor set ", sensor_set,
+                      " skip feature extraction")
+                continue
+
+            # iterate through sensor dataframe in steps of 500000
+            chunksize_counter = 1
+            if path_sensorfile.endswith(".csv"):
+                print("path_sensorfile is .csv")
+                for df_sensor in tqdm(pd.read_csv(path_sensorfile, chunksize=500000)):
+                    # delete and import tsfresh packages
+                    del tsfresh
+                    del extract_features
+                    import tsfresh
+                    from tsfresh import extract_features
+
+                    # print the current time
+                    print(f"date: {datetime.datetime.now()}")
+                    # check if chunk was already computed
+                    path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(
+                        feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + " s_chunknumber-" + str(
+                        chunksize_counter) + ".pkl"
+                    if os.path.exists(path_features):
+                        print("Jump over chunksize ", chunksize_counter, " in time_period ", feature_segment,
+                              " and sensor ", str(sensor_set), " , was already computed, continuing with next chunk")
+                        chunksize_counter += 1
+                        continue
+
+                    print("Start with chunk numer ", chunksize_counter)
+                    time.start = time.time()
+
+                    # drop rows which have at least one NaN value in any of the sensor_column_names columns
+                    number_of_rows_before = df_sensor.shape[0]
+                    df_sensor.dropna(subset=sensor_column_names, inplace=True)
+                    percentage_of_rows_dropped = (number_of_rows_before - df_sensor.shape[0]) / number_of_rows_before
+                    print("percentage of rows dropped due to NaN: ", str(percentage_of_rows_dropped * 100))
+                    if percentage_of_rows_dropped == 1:
+                        print("all rows dropped, continuing with next chunk")
+                        continue
+                    df_features = computeFeatures.feature_extraction(df_sensor, sensor_column_names, feature_segment,
+                                                                     sensor_frequency,
+                                                                     time_column_name="timestamp",
+                                                                     ESM_event_column_name="ESM_timestamp")
+                    # check if df_features is an empty DataFrame; if so, continues with next chunksize
+                    if df_features.empty:
+                        print("df_features is empty for chunksize ", chunksize_counter, " in time_period ",
+                              feature_segment,
+                              ", was removed, continuing with next chunk")
+                        chunksize_counter += 1
+                        continue
+
+                    print(f"date: {datetime.datetime.now()}")
+                    print(
+                        "Time for " + str(feature_segment) + " seconds: " + str(
+                            (time.time() - time.start) / 60) + " - without saving")
+
+                    # save features with pickle
+                    with open(path_features, 'wb') as f:
+                        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+                    # df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+                    print("Time for " + str(feature_segment) + " seconds and chunknumber: " + str(
+                        chunksize_counter) + ":" + str(
+                        (time.time() - time.start) / 60) + " with saving")
+                    # print shape of df_features
+                    print(df_features.shape)
+                    # increase chunksize_counter
+                    chunksize_counter += 1
+
+            elif path_sensorfile.endswith(".pkl"):
+                print("path_sensorfile is .pkl")
+                df_sensor_complete = pd.read_pickle(path_sensorfile)
+                print("Size of df_sensor_complete: ", df_sensor_complete.shape)
+                chunksize_total = int(df_sensor_complete.shape[0] / 100000)
+
+                # iterate through df_sensor_complete in steps of 100000
+                for i in tqdm(range(0, df_sensor_complete.shape[0], 100000)):
+                    # check if chunk was already computed
+                    dir_storage = path_storage + sensor + "/"
+                    # create directory if it does not exist
+                    if not os.path.exists(dir_storage):
+                        os.makedirs(dir_storage)
+                    path_features = dir_storage + sensor + "_timeperiod-" + str(
+                        feature_segment) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + " s_chunknumber-" + str(
+                        chunksize_counter) + ".pkl"
+
+                    if os.path.exists(path_features):
+                        print("Jump over chunksize ", chunksize_counter, " in time_period ", feature_segment,
+                              " and sensor ", sensor, " , was already computed, continuing with next chunk")
+                        chunksize_counter += 1
+                        continue
+
+                    df_sensor = df_sensor_complete[i:i + 100000]
+                    print("The shape of this chunk is ", df_sensor.shape)
+                    print("The chunksize_counter is ", chunksize_counter)
+                    print("i is ", i)
+
+                    # print the current time
+                    print(f"date: {datetime.datetime.now()}")
+                    time.start = time.time()
+                    df_features = computeFeatures.feature_extraction(df_sensor, sensor_column_names, feature_segment,
+                                                                     sensor_frequency,
+                                                                     time_column_name="timestamp",
+                                                                     ESM_event_column_name="ESM_timestamp")
+                    # check if df_features is an empty DataFrame; if so, continues with next chunksize
+                    if df_features.empty:
+                        print("df_features is empty for chunksize ", chunksize_counter, " in time_period ", seconds,
+                              ", was removed, continuing with next chunk")
+                        chunksize_counter += 1
+                        continue
+
+                    print(f"date: {datetime.datetime.now()}")
+                    print(
+                        "Time for " + str(feature_segment) + " seconds: " + str(
+                            (time.time() - time.start) / 60) + " - without saving")
+
+                    # save features with pickle
+                    with open(path_features, 'wb') as f:
+                        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+                    # df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+                    print("Time for " + str(feature_segment) + " seconds and chunknumber: " + str(
+                        chunksize_counter) + "/" + str(chunksize_total) + ":" + str(
+                        (time.time() - time.start) / 60) + " with saving")
+
+                    # print shape of df_features
+                    print("Size of the features: ", df_features.shape)
+                    # increase chunksize_counter
+                    chunksize_counter += 1
+
+
+
+## combining the chunks
+## Note: as this repetitively crahed: can set for which chunknumber the concatenated file is saved in for
+## loop below; if crash appears: just delete all other chunk files before that one and start with
+## that one again (have to manually rename the intermediate file)
+
+time_periods = [10,5,2,1] #in seconds
+time_periods = [30,60] #in seconds
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/"
+min_gps_accuracy = 35
+only_active_smartphone_sessions = "yes"
+chunksize_counter = 60
+sensor_sets_to_extract = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"],
+                          ["linear_accelerometer", "rotation"],
+                          "GPS"]
+sensor_set = "GPS"
+
+min_gps_accuracy = 35
+for second in time_periods:
+    # create empty dataframe
+    df_features = pd.DataFrame()
+    # iterate through all chunks
+    for chunknumber in range(1, chunksize_counter):
+
+        if sensor_set == "GPS":
+            path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + " s_chunknumber-" + str(chunknumber) + ".pkl"
+        else:
+            path_features = path_storage +  str(sensor_set) + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions +" s_chunknumber-" + str(chunknumber)+ ".pkl"
+
+        # try to load chunk; if doesn´t exist - continue
+        try:
+            path_features = path_storage  + str(sensor_set) + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + " s_chunknumber-" + str(chunknumber)+ ".pkl"
+            with open(path_features, 'rb') as f:
+                df_features_chunk = pickle.load(f)
+        except:
+            print("chunknumber ", chunknumber, " in time_period ", second, " does not exist, continuing with next chunk")
+            continue
+
+        # load chunk which exists
+        with open(path_features, 'rb') as f:
+            df_features_chunk = pickle.load(f)
+
+        # print size of chunk and df_features
+        print("chunknumber ", chunknumber, " in time_period ", second, " has size ", df_features_chunk.shape)
+
+        # concatenate chunk to df_features
+        df_features = pd.concat([df_features, df_features_chunk], axis=0)
+        print("chunknumber ", chunknumber, " in time_period ", second, " loaded and concatenated")
+        print("df_features has size ", df_features.shape)
+
+        # save intermediate results
+        if chunknumber == 54:
+            df_features.reset_index(drop=True, inplace=True)
+            path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl"
+            with open(path_features, 'wb') as f:
+                pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+    # reset index
+    df_features.reset_index(drop=True, inplace=True)
+
+    # save df_features
+    if sensor_set == "GPS":
+        path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(
+            second) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl"
+    else:
+        path_features = path_storage + str(sensor_set)  + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl"
+    with open(path_features, 'wb') as f:
+        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+
+
 #endregion
 
-#region feature extraction of Speed & Acceleration features
-## COMPARE CODE IN OTHER PROJECT
-#endregion
-
-#region merge high-frequency features with speed & acceleration features (or, for feature_segment == 1: merge high-frequency features with speed & acceleration)
-## WHAT STILL MISSING: for set "LinAcc-Rot": everything; for set "all highfreq": everything
-### NOTE: for LinAcc-Rot set, it crashed always; therefore I implemented a "chunk" approach: after data for one user is merged,
-### the intermediate result is stored in "path_intermediate_files". If the function is called again, it starts only after this user
+#region merge motion features with speed & acceleration features (or, for feature_segment == 1: merge high-frequency features with speed & acceleration)
 high_freq_sensor_sets = [["linear_accelerometer", "rotation"],
                          ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]]
 high_freq_sensor_sets = [["linear_accelerometer", "rotation"]]
@@ -1889,9 +1256,67 @@ df_merged_timecolumns["GPS_timestamp_merged"].isnull().sum()
 #endregion
 
 #region feature selection: data-driven approach
-## COMPARE CODE IN OTHER PROJECT
-### What is missing:
-### - feature selection for all highfreq AND GPS: all feature segments
+## code from this region only runs in a slightly different environment
+label_column_name = "label_human motion"
+time_periods = [60,30, 10, 5,2,1] # second 1 is excluded as my system always crushes
+time_periods = [30,60]
+sensor_set = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"] #note: this dataset includes also
+# the GPS features which have been merged to it before (compare "path_features" construction below)
+min_gps_accuracy = 35
+only_active_smartphone_sessions = "yes"
+apply_tsfresh_feature_selection = "yes"
+path_features_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/"
+time_column_name = "timestamp"
+ESM_identifier_column="ESM_timestamp"
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl",
+        'rb') as f:
+    dict_label = pickle.load(f)
+
+for seconds in time_periods:
+    print("seconds started: ", seconds)
+
+    t0 = time.time()
+    # load df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + str(sensors_included) + "_timeperiod-" + str(seconds) + " s.pkl"
+    path_features = path_features_storage + str(sensor_set) + "-merged-to-GPSFeatures_feature-segment-" + str(seconds) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted_Merged.pkl"
+    df_features = pd.read_pickle(path_features)
+
+    #drop columns
+    #    drop_columns = ["GPS_timestamp_merged", "Unnamed: 0.21", "Unnamed: 0.20", "Unnamed: 0.19", "Unnamed: 0.18", "Unnamed: 0.17", "Unnamed: 0.16", "Unnamed: 0.15", "Unnamed: 0.14", "Unnamed: 0.13", "Unnamed: 0.12", "Unnamed: 0.11", "Unnamed: 0.10", "Unnamed: 0.9", "Unnamed: 0.8", "Unnamed: 0.7", "Unnamed: 0.6", "Unnamed: 0.5", "Unnamed: 0.4", "Unnamed: 0.3", "Unnamed: 0.2", "Unnamed: 0.1", ]
+    drop_columns = ["GPS_timestamp_merged"]
+    df_features.drop(drop_columns, axis=1, inplace=True)
+
+    #temporary: only select part of rows
+    #df_features = df_features.iloc[0:10000, :].copy()
+    #print("df_features loaded")
+    #temporary set first row device_id == 1
+    #df_features.at[0, "device_id"] = 1
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+    #df_features.drop(columns=["timestamp_beginning_of_feature_segment"], inplace=True)
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+
+    features_filtered, df_analytics = computeFeatures.feature_selection(df_features, label_column_name, apply_tsfresh_feature_selection)
+
+    # save df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/activity-" + label_column_name + "_highfrequencysensors-all_timeperiod-" + str(seconds) + " s_featureselection.pkl"
+    path_features = path_storage + label_column_name + "_" + str(sensor_set) + "-merged-to-GPSFeatures_feature-segment-" + str(seconds) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted_Merged_Selected.pkl"
+
+    with open(path_features, 'wb') as f:
+        pickle.dump(features_filtered, f, pickle.HIGHEST_PROTOCOL)
+    print("df_features saved")
+
+
+#temporary: convert pickle to csv (since in other environments pickle is not working)
+feature_segments = [10, 5, 2, 1]
+for seconds in feature_segments:
+    print("seconds started: ", seconds)
+    path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/label_human motion_['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-" + str(seconds) + "_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged_Selected.pkl"
+    df_features = pd.read_pickle(path_features)
+    df_features.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/label_human motion_['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-" + str(seconds) + "_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged_Selected.csv")
+
 #endregion
 
 #region feature selection: hypothesis-driven approach
@@ -2101,8 +1526,7 @@ plt.ylabel('Amplitude')
 plt.show()
 #endregion
 
-
-#region create different combinations of sensor features OUTDATED!!!
+#region OUTDATED: create different combinations of sensor features
 combinations_sensors = [["highfrequencysensors-all", "GPS"],
                         ["linear_accelerometer", "rotation", "GPS"],
                         ["linear_accelerometer", "GPS"]]
@@ -2141,10 +1565,11 @@ for combination in combinations_sensors:
 #endregion
 #endregion
 
+#region modeling for human motion
 #region testing label segments for human motion
 #region testing the label segments
 label_column_name = "label_human motion"
-feature_segment = 2
+feature_segment = 30
 sensor_set = ['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']
 path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/label_human motion_" +str(sensor_set) + "-merged-to-GPSFeatures_feature-segment-" + str(feature_segment) + "_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged_Selected.csv"
 n_permutations = 0 # define number of permutations; better 1000
@@ -2204,11 +1629,6 @@ parameter_set = {
 }
 
 #drop rows in which device_id == nan
-#TODO: in relatively many rows the device_id == NaN and I have no idea why. Investigate this issue
-# by looking into the creation of the hypothesis driven dataset (maybe a side effect of merging somewhere...)
-# one idea: I think this is due to an incorrect code in merging features: similar problem which I had before with ESM_timestamps:
-# if a row cant be merged, it is concatenated in the end, but device_id is not included (I think)
-
 df = df.dropna(subset=["device_id"])
 
 # drop all rows which contain at least one missing value (didn´t do that before since I thought that I could train DF with missing values)
@@ -2292,8 +1712,6 @@ plt.show()
 fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/label_segment_testing/label_segment_for_different_feature_segments_comparison", dpi=600, bbox_inches='tight')
 #endregion
 #endregion
-
-#region modeling for human motion
 
 ##region Decision Forest for comparing different datasets (2 sensor combinations x 6 feature segments)
 #TODO: run DF comparison with only high-frequency sensor data (without GPS): should be a lot more data (check additionally
@@ -2503,7 +1921,45 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 #endregion
 
 #region visualize results
-# visualizing performances for 2 label segments x 11 feature segment-dataset combinations for balanced accuracy
+datasets = ["Data-Driven", "Theory-Driven"]
+label_segments = [45, 90]
+parameter_tuning = "no"
+for dataset in datasets:
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    for label_segment in label_segments:
+        if dataset == "Data-Driven":
+            # load csv with "," as separator
+            df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_data-driven-dataset.csv", sep = ";")
+        elif dataset == "Theory-Driven":
+            df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_theory-driven-dataset.csv", sep = ";")
+
+        # reorder the rows: first hypothesis-driven, then data-driven; and with those, ascending feature segments
+        df_results = df_results.sort_values(by=["Feature Segments"])
+        label = str(label_segment) + "s Label Segment"
+        if label_segment == 90:
+            label = "95s Label Segment"
+        # visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot
+        #sns.set_style("whitegrid")
+        #sns.set_context("paper", font_scale=1.5)
+        #sns.set_palette("colorblind")
+        #create sns lineplot
+        sns.lineplot(x="Feature Segments", y="Balanced Accuracy", data=df_results, label=label, ax=ax)
+    plt.title("Model Performance for " + dataset + " Dataset")
+    plt.xlabel("Feature Segment")
+    plt.ylabel("Balanced Accuracy")
+    plt.legend()
+    #plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+    #set y-axis limits
+    plt.ylim(0, 1)
+    #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout()
+    #plt.show()
+    #save with bbox_inches="tight" to avoid cutting off x-axis labels
+    fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segments) + "-GPS_parameter_tuning-" + parameter_tuning + "_" + str(dataset) + "_results_overall_visualization.png",
+                bbox_inches="tight", dpi= 600)
+
+#region OUTDATED VISUALIZE IN ONE PLOT: visualizing performances for 2 label segments x 11 feature segment-dataset combinations for balanced accuracy
 label_segments = [45, 90]
 parameter_tuning = "no"
 fig, ax = plt.subplots(figsize=(10, 5))
@@ -2563,7 +2019,7 @@ plt.tight_layout()
 #save with bbox_inches="tight" to avoid cutting off x-axis labels
 fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segments) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall_visualization.png",
             bbox_inches="tight", dpi= 600)
-
+#endregion
 
 
 
@@ -2623,13 +2079,13 @@ plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_a
 #endregion
 
 #region hyperparameter tune the best model from previous comparison step
-feature_segments = [10] #in seconds; define length of segments of parameters (over which duration they have been created)
+feature_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
 combinations_sensors = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]]
 min_gps_accuracy = 35
 only_active_smartphone_sessions = "yes"
 label_column_name = "label_human motion"
-n_permutations = 0 # define number of permutations; better 1000
-label_segment = 45 #define how much data around each event will be considered
+n_permutations = 50 # define number of permutations; better 1000
+label_segment = 90 #define how much data around each event will be considered
 # if label classes should be joint -> define in label mapping
 label_mapping = [["lying (in one hand)", "lying (hand/s)"],
                             ["lying (in two hands)", "lying (hand/s)"],
@@ -2657,7 +2113,7 @@ drop_cols = ["Unnamed: 0"] # columns that should be dropped
 feature_importance = "shap"
 
 # set CV mode
-combine_participants = True
+combine_participants = False
 participants_test_set = [2,4,6,9] #this test set was used for (feature segment = 30s and label segment = 90s) and
 # (feature segment = 10s and label segment =45s) , as these participants all include most classes while containing
 # around 20-30% of all data in both cases
@@ -3110,8 +2566,6 @@ for combination_sensors in combinations_sensors:
 
 
 #endregion
-#endregion
-
 
 ##region Decision Forest OLD
 ### initialize parameters
@@ -3189,8 +2643,1237 @@ for combination_sensors in combinations_sensors:
 df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/label_human motion - general/parameter_tuning-" + parameter_tuning + "_results_overall.csv")
 
 #endregion
+#endregion
 
-#region LSTM
+
+#endregion
+
+#region Laboratory Data
+
+#region data exploration for human motion
+#region data exploration labels
+label_column_name = "label_human motion"
+df_labels = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes.csv")
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/labels/"
+esm_segment_length = 90 #in seconds; the length of the ESM_events which were created for the laboratory data in order to be able to use the functions from naturalistic data
+
+## create barplot: human motion classes x total minutes
+## delete some of the human motion classes (reason: they are only present in one participant and therefore not enough data for training LOSOCV models
+classes_to_drop = ["lying (on flat surface)", "sitting: at a table (on flat surface)", "sitting: on the couch (in hand/s)"]
+df_labels = df_labels[~df_labels[label_column_name].isin(classes_to_drop)]
+
+df_labels_humanmotion= df_labels.copy()
+fig = data_exploration_labels.visualize_esm_activity_minutes(df_labels_humanmotion, "label_human motion", esm_segment_length, "Volume of Human Motion Data")
+fig.savefig(path_storage + "human_motion_class-minutes.png", dpi=300)
+
+##create table: users x label classes x minutes
+df_labels_humanmotion =  Merge_Transform.merge_participantIDs(df_labels_humanmotion, users_iteration02, include_cities = True)
+df_label_counts = data_exploration_labels.create_table_user_classes_minutes(df_labels_humanmotion, "label_human motion", esm_segment_length)
+df_label_counts.to_csv(path_storage + "human_motion_labels_users_classes_minutes.csv")
+
+#endregion
+
+#region data exploration sensors
+# summary stats: visualize mean/std x max x human motion classes in scatterplot for GPS and accelerometer data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes_dict.pkl")
+time_periods = [10, 90]
+list_activities = ["standing (in hand/s)", "sitting: at a table (in hand/s)", "lying (in hand/s)"] #stationary classes
+#list_activities = ["walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)"] # dynamic classes
+list_activities = ["walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)",
+                   "standing (in hand/s)", "sitting: at a table (in hand/s)", "lying (in hand/s)"] # all classes
+
+visualize_participants = "no"
+gps_accuracy_min = 10 # minimum accuracy of GPS data to be included in analysis
+sensors = [["Linear Accelerometer", "linear_accelerometer"],
+           ["Rotation", "rotation"],
+           ["Gyroscope", "gyroscope"],
+              ["Magnetometer", "magnetometer"]]
+only_sensordata_of_active_smartphone_sessions = "yes"
+label_column_name = ["Human Motion Classes", "label_human motion"]
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_exploration/sensors/SummaryStats_Visualizations/"
+
+for sensor in sensors:
+    for time_period in time_periods:
+        if sensor[0] == "GPS":
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_exploration/sensors/summary_stats/GPS_summary-stats_gps-accuracy-min-" + str(gps_accuracy_min) + "_time-period-around-event-" + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1],
+                                                  ESM_identifier_column="ESM_timestamp")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1] , label_column_name[0], list_activities,
+                                    "Mean and Maximum Speed and Acceleration of Human Motion Events", visualize_participants)
+            fig.savefig(path_storage + "SummaryStatsVisualization_GPS_mean_max_gps-accuracy-min-" + str(gps_accuracy_min) + "_activities-included-" + str(list_activities) + "_including-participants-" + visualize_participants + "_time-period-around-event-"
+                        + str(time_period) + "_only-active-smartphone-sessions-" + only_sensordata_of_active_smartphone_sessions + "s_scatterplot.png", dpi=300)
+
+        else:
+            df_summary_stats = pd.read_csv(
+                "/Users/benediktjordan/Documents/MTS/Iteration02/data_exploration/sensors/summary_stats/" + sensor[1] + "_summary-stats_time-period-around-event-" + str(time_period) + ".csv")
+            # add label
+            df_summary_stats = labeling_sensor_df(df_summary_stats, dict_label, label_column_name[1], ESM_identifier_column="ESM_timestamp")
+
+            # change label_column_name in df_summary_stats
+            df_summary_stats = df_summary_stats.rename(columns={label_column_name[1]: label_column_name[0]})
+
+            figure_title = "Mean and Maximum of the " + sensor[0] + " of Human Motion Classes"
+            fig = data_exploration_sensors.vis_summary_stats(df_summary_stats, sensor[1], label_column_name[0], list_activities, figure_title , visualize_participants)
+
+            list_activities_forsaving = [x.replace("/", "_") for x in list_activities]
+            fig.savefig(
+                path_storage + "SummaryStatsVisualization_" + sensor[1] + "_std-max_including-participants-" + visualize_participants + "_time-period-around-event-"
+                + str(time_period) + "s_scatterplot.png", dpi=300)
+
+
+
+
+#testarea for location data
+df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration.csv")
+#label data
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+# delete rows with nan values in label_public transport
+df_locations = df_locations.dropna(subset=["label_public transport"])
+
+#calculate summary stats for column accuracy
+df_locations["loc_accuracy"].describe()
+
+# only retain rows with accuracy < 35
+df_locations_new = df_locations[df_locations["loc_accuracy"] < 35]
+#count number of unique ESM_timestamps
+df_locations["ESM_timestamp"].nunique()
+df_locations_new["ESM_timestamp"].nunique()
+
+#retain only data which is in 90s time period around ESM_timestamp
+time_period = 90
+#convert timestamp to datetime
+df_locations_new["ESM_timestamp"] = pd.to_datetime(df_locations_new["ESM_timestamp"])
+df_locations_new["timestamp"] = pd.to_datetime(df_locations_new["timestamp"])
+df_locations_new = df_locations_new[(df_locations_new['timestamp'] >= df_locations_new['ESM_timestamp'] - pd.Timedelta(seconds=(time_period / 2))) & (
+        df_locations_new['timestamp'] <= df_locations_new['ESM_timestamp'] + pd.Timedelta(seconds=(time_period / 2)))]
+
+df_locations_new["ESM_timestamp"].nunique()
+# take only the unique ESM_timestamps and count from them the number of label_public transport
+df_locations_new_unique_ESM_timestamps = df_locations_new.drop_duplicates(subset=["ESM_timestamp"])
+df_locations_new_unique_ESM_timestamps["label_public transport"].value_counts()
+
+
+
+
+
+# add labels
+df_locations = labeling_sensor_df(df_locations, dict_label, "label_public transport", ESM_identifier_column="ESM_timestamp")
+#delete NaN values in label_public transport
+df_locations = df_locations[df_locations["label_public transport"].notna()]
+#get only data from user with loc_device_id = 590f0faf-d932-4a57-998d-e3da667a91dc
+df_locations_user = df_locations[df_locations["loc_device_id"] == "b7b013b7-f78c-4325-a7ab-2dfc128fba27"]
+
+#endregion
+
+#endregion
+
+#region data preparation for human motion
+
+#region merge different sensors linear accelerometer & rotation
+## NOTE: in difference to "Naturalistic Data", accelerometer will not be included as it has a lot of missing values!
+sensor_sets_to_merge = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"],
+                        ["linear_accelerometer", "rotation"]]
+timedelta = "100ms" #must be in format compatible with pandas.Timedelta
+columns_to_delete = ["device_id", "ESM_timestamp", "user activity", "Unnamed: 0"]
+label_column_name = "label_human motion"
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+path_intermediate_files = None
+add_prefix_to_merged_columns = True
+for sensor_set in sensor_sets_to_merge:
+    counter = 1
+    for sensor in sensor_set:
+        print("start with sensor: " + sensor)
+        if counter == 1:
+            sensor_base = sensor
+            df_base = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
+            df_base = df_base.drop(columns=["timestamp", "user activity", "Unnamed: 0"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
+            df_base = df_base.rename(columns={"timestamp_datetime": "timestamp"})
+            for col in df_base.columns: #rename columns of df_base so that they can be still identified later on
+            if col != "timestamp" and col != "device_id" and col != "timestamp_merged" and col != "ESM_timestamp" and col != label_column_name:
+                df_base = df_base.rename(columns={col: sensor_base[:3] + "_" + col})
+            counter += 1
+            continue
+        if counter > 1:
+            sensor_tomerge = sensor
+            df_tomerge = pd.read_csv(path_datasets + sensor + "_labeled_esm_timestamps_allparticipants.csv")
+            df_tomerge = df_tomerge.drop(columns=["timestamp"]) #delete "timestamp" column and rename "timestamp_datetime" to "timestamp"
+            df_tomerge = df_tomerge.rename(columns={"timestamp_datetime": "timestamp"})
+            df_base = Merge_and_Impute.merge(df_base, df_tomerge, sensor_tomerge, timedelta, columns_to_delete, path_intermediate_files, add_prefix_to_merged_columns)
+            counter += 1
+    #save to csv
+    df_base.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/" + str(sensor_set) + "_allparticipants.csv", index=False)
+
+    #endregion
+#endregion
+
+#region calculate distance, speed & acceleration
+accuracy_thresholds = [10, 35, 50, 100] #accuracy is measured in meters
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration02/datasets/"
+
+#load GPS data
+df_locations_events = pd.read_csv(path_datasets + "locations_labeled_esm_timestamps_allparticipants.csv")
+df_locations_events = df_locations_events.drop(columns=["Unnamed: 0", "timestamp_unix", "label_human motion - general"])
+# rename "timestamp" to "timestamp_unix" and "timestamp_datetime" to "timestamp"
+df_locations_events = df_locations_events.rename(columns={"timestamp": "timestamp_unix"})
+df_locations_events = df_locations_events.rename(columns={"timestamp_datetime": "timestamp"})
+
+# calculate distance, speed and acceleration (class build in "FeatureExtraction_GPS.py")
+df_features = FeatureExtraction_GPS().calculate_distance_speed_acceleration(df_locations_events)
+
+# drop rows where distance, speed or acceleration contain NaN (they contain NaN if it is first entry of every event)
+df_features= df_features.dropna(subset=["distance (m)", "speed (km/h)", "acceleration (km/h/s)"])
+# drop rows with unrealistic speed values  & GPS accuracy values
+df_features = df_features[df_features["speed (km/h)"] < 300]
+# create different GPS accuracy thresholds
+for accuracy_threshold in accuracy_thresholds:
+    df_features_final = df_features[df_features["accuracy"] < accuracy_threshold]
+    df_features_final = df_features_final.reset_index(drop=True)
+    print("Number of rows with accuracy < " + str(accuracy_threshold) + "m: " + str(len(df_features_final)))
+    #save to csv
+    df_features_final.to_csv(path_datasets + "locations_features-distance-speed-acceleration_accuracy-less-than" + str(accuracy_threshold) + ".csv")
+#endregion
+
+#region feature extraction of high-frequency features: for both sensor subsets
+## COMPARE CODE IN OTHER PROJECT
+
+sensor_sets_to_extract = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"],
+                          ["linear_accelerometer", "rotation"]]
+feature_segments = [1,2,5,10, 30] #in seconds
+frequency = 10 #in Hz
+#min_gps_accuracy = 35
+#only_active_smartphone_sessions = "yes"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/"
+
+# find out how much deleting rows with NaN values (in sensor_column columns) affects the number of rows
+for sensor_set in sensor_sets_to_extract:
+    #load data
+    path_sensorfile = ("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/" + str(
+        sensor_set) + "_allparticipants.csv")
+    df_sensor = pd.read_csv(path_sensorfile)
+
+    # create sensor columns
+    sensor_column_names = []
+    for sensor in sensor_set:
+        sensor_column_names.append(database_sensor_columns[sensor])
+    sensor_column_names = [item for sublist in sensor_column_names for item in sublist]
+
+    # delete rows with NaN values in sensor_column columns
+    row_count = df_sensor.shape[0]
+    df_sensor.dropna(subset=sensor_column_names, inplace=True)
+    percentage_deleted = (row_count - df_sensor.shape[0]) / row_count * 100
+    print("The following numbers are for the subset of sensors: ", sensor_set)
+    print("percentage of rows deleted: ", percentage_deleted)
+    print("number of rows before deleting: ", row_count)
+    print("number of rows left: ", df_sensor.shape[0])
+    print("number of rows deleted: ", row_count - df_sensor.shape[0])
+
+## run feature extraction in chunks
+
+for sensor_set in sensor_sets_to_extract:
+
+    # create sensor path
+    path_sensorfile = path_sensorfile = ("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/timeseries_merged/" + str(
+        sensor_set) + "_allparticipants.csv")
+    if sensor_set == "GPS":
+        path_sensorfile = "/Users/benediktjordan/Documents/MTS/Iteration02/Data/data_preparation/features/GPS/locations-aroundevents_features-distance-speed-acceleration_accuracy-less-than" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + ".csv"
+
+    # create sensor columns
+    sensor_column_names = []
+    if sensor_set != "GPS":
+        for sensor in sensor_set:
+            sensor_column_names.append(database_sensor_columns[sensor])
+        sensor_column_names = [item for sublist in sensor_column_names for item in sublist]
+    else:
+        sensor_column_names = ["speed (km/h)", "acceleration (km/h/s)"]
+
+    # get sensor frequency
+    if sensor_set != "GPS":
+        sensor_frequency = 10 #in Hz
+    else:
+        sensor_frequency = 1 #in Hz
+
+    for feature_segment in feature_segments:
+        print("Start with Feature Segment: ", feature_segment)
+
+        # check if feature segment == sensor_frequency: if yes, skip feature extraction
+        if feature_segment == sensor_frequency and sensor_set == "GPS":
+            print("feature segment == sensor frequency: for sensor set ", sensor_set,
+                  " skip feature extraction")
+            continue
+
+        # iterate through sensor dataframe in steps of 500000
+        chunksize_counter = 1
+        for df_sensor in tqdm(pd.read_csv(path_sensorfile, chunksize=50000)):
+            # print the current time
+            print(f"date: {datetime.datetime.now()}")
+            # check if chunk was already computed
+            path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(feature_segment) + " s_chunknumber-" + str(chunksize_counter) + ".pkl"
+            if os.path.exists(path_features):
+                print("Jump over chunksize ", chunksize_counter, " in time_period ", feature_segment, " and sensor " , str(sensor_set) , " , was already computed, continuing with next chunk")
+                chunksize_counter += 1
+                continue
+
+            print("Start with chunk numer ", chunksize_counter)
+            time.start = time.time()
+
+            # drop rows which have at least one NaN value in any of the sensor_column_names columns
+            number_of_rows_before = df_sensor.shape[0]
+            df_sensor.dropna(subset=sensor_column_names, inplace=True)
+            percentage_of_rows_dropped = (number_of_rows_before - df_sensor.shape[0]) / number_of_rows_before
+            print("percentage of rows dropped due to NaN: ", str(percentage_of_rows_dropped*100))
+            if percentage_of_rows_dropped == 1:
+                print("all rows dropped, continuing with next chunk")
+                continue
+            df_features = computeFeatures.feature_extraction(df_sensor, sensor_column_names, feature_segment, sensor_frequency,
+                                                             time_column_name="timestamp",
+                                                             ESM_event_column_name="ESM_timestamp")
+            # check if df_features is an empty DataFrame; if so, continues with next chunksize
+            if df_features.empty:
+                print("df_features is empty for chunksize ", chunksize_counter, " in time_period ", feature_segment,
+                      ", was removed, continuing with next chunk")
+                chunksize_counter += 1
+                continue
+
+            print(f"date: {datetime.datetime.now()}")
+            print(
+                "Time for " + str(feature_segment) + " seconds: " + str((time.time() - time.start) / 60) + " - without saving")
+
+            # save features with pickle
+            with open(path_features, 'wb') as f:
+                pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+            # df_features.to_csv(dir_sensorfiles + "features/" + str(seconds) + " seconds_high_frequency_sensors.csv")
+            print("Time for " + str(feature_segment) + " seconds and chunknumber: " + str(chunksize_counter) + ":" + str(
+                (time.time() - time.start) / 60) + " with saving")
+            # print shape of df_features
+            print(df_features.shape)
+            # increase chunksize_counter
+            chunksize_counter += 1
+
+## combining the chunks
+## Note: as this repetitively crahed: can set for which chunknumber the concatenated file is saved in for
+## loop below; if crash appears: just delete all other chunk files before that one and start with
+## that one again (have to manually rename the intermediate file)
+
+time_periods = [30, 10,5,2,1] #in seconds
+time_periods = [2,1] #in seconds
+
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/"
+min_gps_accuracy = 35
+only_active_smartphone_sessions = "yes"
+chunksize_counter = 10
+sensor_sets_to_extract = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"],
+                          ["linear_accelerometer", "rotation"],
+                          "GPS"]
+sensor_set = ["linear_accelerometer", "rotation"]
+min_gps_accuracy = 35
+for second in time_periods:
+    # create empty dataframe
+    df_features = pd.DataFrame()
+    # iterate through all chunks
+    for chunknumber in range(1, chunksize_counter):
+
+        if sensor_set == "GPS":
+            path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(second) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + " s_chunknumber-" + str(chunknumber) + ".pkl"
+        else:
+            path_features = path_storage +  str(sensor_set) + "_timeperiod-" + str(second)  +" s_chunknumber-" + str(chunknumber)+ ".pkl"
+
+        # try to load chunk; if doesn´t exist - continue
+        try:
+            path_features = path_storage  + str(sensor_set) + "_timeperiod-" + str(second) + " s_chunknumber-" + str(chunknumber)+ ".pkl"
+            with open(path_features, 'rb') as f:
+                df_features_chunk = pickle.load(f)
+        except:
+            print("chunknumber ", chunknumber, " in time_period ", second, " does not exist, continuing with next chunk")
+            continue
+
+        # load chunk which exists
+        with open(path_features, 'rb') as f:
+            df_features_chunk = pickle.load(f)
+
+        # print size of chunk and df_features
+        print("chunknumber ", chunknumber, " in time_period ", second, " has size ", df_features_chunk.shape)
+
+        # concatenate chunk to df_features
+        df_features = pd.concat([df_features, df_features_chunk], axis=0)
+        print("chunknumber ", chunknumber, " in time_period ", second, " loaded and concatenated")
+        print("df_features has size ", df_features.shape)
+
+    # reset index
+    df_features.reset_index(drop=True, inplace=True)
+
+    # save df_features
+    if sensor_set == "GPS":
+        path_features = path_storage + str(sensor_set) + "_timeperiod-" + str(
+            second) + "_min-gps-accuracy-" + str(min_gps_accuracy) + "_only-active-smartphone-sessions-" + only_active_smartphone_sessions + "_FeaturesExtracted.pkl"
+    else:
+        path_features = path_storage + str(sensor_set)  + "_timeperiod-" + str(second) + "_FeaturesExtracted.pkl"
+    with open(path_features, 'wb') as f:
+        pickle.dump(df_features, f, pickle.HIGHEST_PROTOCOL)
+
+#endregion
+
+#region feature selection of high frequency sensors: data driven approach
+
+# creat list of labels
+label_column_name = "label_human motion"
+time_periods = [30, 10, 5,2,1] # second 1 is excluded as my system always crushes
+sensor_set = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"] #note: this dataset includes also
+# the GPS features which have been merged to it before (compare "path_features" construction below)
+min_gps_accuracy = 35
+apply_tsfresh_feature_selection = "yes"
+path_features_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/"
+time_column_name = "timestamp"
+ESM_identifier_column="ESM_timestamp"
+with open("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes_dict.pkl",
+        'rb') as f:
+    dict_label = pickle.load(f)
+
+for seconds in time_periods:
+    print("seconds started: ", seconds)
+
+    t0 = time.time()
+    # load df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + str(sensors_included) + "_timeperiod-" + str(seconds) + " s.pkl"
+    path_features = path_features_storage + str(sensor_set) + "_timeperiod-" + str(seconds) +  "_FeaturesExtracted.pkl"
+    df_features = pd.read_pickle(path_features)
+
+    #drop columns
+    #    drop_columns = ["GPS_timestamp_merged", "Unnamed: 0.21", "Unnamed: 0.20", "Unnamed: 0.19", "Unnamed: 0.18", "Unnamed: 0.17", "Unnamed: 0.16", "Unnamed: 0.15", "Unnamed: 0.14", "Unnamed: 0.13", "Unnamed: 0.12", "Unnamed: 0.11", "Unnamed: 0.10", "Unnamed: 0.9", "Unnamed: 0.8", "Unnamed: 0.7", "Unnamed: 0.6", "Unnamed: 0.5", "Unnamed: 0.4", "Unnamed: 0.3", "Unnamed: 0.2", "Unnamed: 0.1", ]
+    drop_columns = []
+    df_features.drop(drop_columns, axis=1, inplace=True)
+
+    #temporary: only select part of rows
+    #df_features = df_features.iloc[0:10000, :].copy()
+    #print("df_features loaded")
+    #temporary set first row device_id == 1
+    #df_features.at[0, "device_id"] = 1
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+    #df_features.drop(columns=["timestamp_beginning_of_feature_segment"], inplace=True)
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+
+    features_filtered, df_analytics = computeFeatures.feature_selection(df_features, label_column_name, apply_tsfresh_feature_selection)
+
+    # save df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/activity-" + label_column_name + "_highfrequencysensors-all_timeperiod-" + str(seconds) + " s_featureselection.pkl"
+    path_features = path_storage + label_column_name + "_" + str(sensor_set) + "_timeperiod-" + str(seconds) + "_FeaturesExtracted_Selected.pkl"
+
+    with open(path_features, 'wb') as f:
+        pickle.dump(features_filtered, f, pickle.HIGHEST_PROTOCOL)
+    print("df_features saved")
+
+
+#endregion
+
+#region NOT CURRENTLY USED feature selection of high frequency sensors and GPS data: hypothesis driven approach
+
+#testcase
+df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/highfrequency-sensors_timeperiod-30_tsfresh-features-extracted.pkl")
+all_features = df_test.columns
+# get list of features in all_features which contain "fft"
+fft_features = [feature for feature in all_features if "fft" in feature]
+lin_fft_features = [feature for feature in fft_features if "lin_double_values" in feature]
+#convert lin_fft_features to dataframe
+df_lin_fft_features = df_test[lin_fft_features]
+
+#endregion
+
+#endregion
+
+#region modeling for human motion
+
+##region Decision Forest for comparing different feature segments
+# training DF
+feature_segments = [30,10, 5,2,1] #in seconds; define length of segments of parameters (over which duration they have been created)
+combinations_sensors = [["linear_accelerometer", "rotation"],
+                        ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
+                        ]  # define which sensor combinations should be considered
+combinations_sensors = [ ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]]  # define which sensor combinations should be considered
+min_gps_accuracy = 35
+label_column_name = "label_human motion"
+n_permutations = 0 # define number of permutations; better 1000
+label_segment = 90 #define how much data around each event will be considered
+# if label classes should be joint -> define in label mapping
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
+parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
+drop_cols = [] # columns that should be dropped
+feature_importance = "shap"
+label_mapping = None
+
+parameter_set = {
+    "n_estimators": 100, #default
+    "criterion": "gini", #default
+    "max_depth": None, #default
+    "min_samples_split": 2,#default
+    "min_samples_leaf": 1,#default
+    "min_weight_fraction_leaf": 0.,#default
+    "max_features": None, # THIS IS CHANGED
+    "max_leaf_nodes": None,#default
+    "min_impurity_decrease": 0.0,#default
+    "bootstrap": True,#default
+    "oob_score": False,#default
+    "n_jobs": None,#default
+    "verbose": 0,#default
+    "warm_start": False,#default
+    "class_weight": "balanced", # THIS IS CHANGED
+    "n_jobs": -1,#default
+    "random_state": 11#default
+}
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
+                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
+df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
+for combination_sensors in combinations_sensors:
+
+    for feature_segment in feature_segments:
+        # create path to data based on sensor combination and feature segment
+        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
+            combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
+        t0 = time.time()
+        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(feature_segment))
+        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/"+ str(combination_sensors)+ "_feature-segment-" +str(feature_segment) + "s/"
+        if not os.path.exists(path_storage):
+            os.makedirs(path_storage)
+        with open(path_dataset, "rb") as f:
+            df = pickle.load(f)
+        #update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "Dataset loaded",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        df = df.drop(columns=drop_cols)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+        #drop NaN in device_id:
+        df = df.dropna(subset=["device_id"])
+        #update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in device_id dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        #drop NaN in label_column_name
+        df = df.dropna(subset=[label_column_name])
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in label_column_name dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+        df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
+
+        # drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
+        df = df.dropna()
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in any column dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        #combine label classes if necessary
+        if label_mapping != None:
+            df = df.reset_index(drop=True)
+            for mapping in label_mapping:
+                df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
+        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "Label Classes which are not included are dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        # selects only features which are calculated in the label_segment around event.
+        ## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
+        df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+        df_decisionforest = df_decisionforest.reset_index(drop=True)
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "data outside of label segment around events dropped",
+                                            "Number Participants": len(df_decisionforest["device_id"].unique()),
+                                            "Number Events": len(df_decisionforest["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df_decisionforest),
+                                            "Number Features": len(df_decisionforest.columns) - 1}, ignore_index=True)
+
+        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+        df_label_counts["total"] = df_label_counts.sum(axis=1)
+        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+
+        # check if df_decisionforest is empty
+        if df_decisionforest.empty:
+            print("df_decisionforest is empty")
+            continue
+
+        #run DF
+        df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, feature_importance = feature_importance, confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning, parameter_set = parameter_set)
+        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
+        df_decisionforest_results["Feature Segments"] = str(feature_segment)
+
+        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
+        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
+        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
+
+df_analytics.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "s_parameter_tuning-" + parameter_tuning + "_analytics.csv")
+df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
+
+
+#visualizing different ML results
+label_segment = 90
+parameter_tuning = "no"
+df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall_final.csv")
+# add dataset description depending on value in "Sensor Combination" and "Feature Segments"
+df_results["Feature Set and Feature Segment"] = ""
+for index, row in df_results.iterrows():
+    if row["Sensor Combination"] == "['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']":
+        if row["Feature Segments"] == 30:
+            df_results.loc[index, "Feature Segment"] = "30s"
+        elif row["Feature Segments"] == 10:
+            df_results.loc[index, "Feature Segment"] = "10s"
+        elif row["Feature Segments"] == 5:
+            df_results.loc[index, "Feature Segment"] = "5s"
+        elif row["Feature Segments"] == 2:
+            df_results.loc[index, "Feature Segment"] = "2s"
+        elif row["Feature Segments"] == 1:
+            df_results.loc[index, "Feature Segment"] = "1s"
+# visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot
+sns.set_style("whitegrid")
+sns.set_context("paper", font_scale=1.5)
+sns.set_palette("colorblind")
+fig, ax = plt.subplots(figsize=(10, 5))
+#visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot; use pandas.melt
+sns.lineplot(x="Feature Segment", y="value", hue="variable", data=pd.melt(df_results, id_vars=["Feature Segment"], value_vars=["Balanced Accuracy", "F1"]))
+plt.title("Model Performance of Different Feature Segments")
+plt.xlabel("Feature Segments")
+plt.ylabel("Score")
+plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+#set y-axis limits
+plt.ylim(0, 1)
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.tight_layout()
+#plt.show()
+#save with bbox_inches="tight" to avoid cutting off x-axis labels
+plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + parameter_tuning + "_results_overall_visualization.png",
+            bbox_inches="tight", dpi= 300)
+
+
+
+#visualizing performances of the different DF (balanced accuracy & F1 score)
+label_segment = 90
+parameter_tuning = "no"
+df_results = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
+# add dataset description depending on value in "Sensor Combination" and "Feature Segments"
+df_results["Feature Set and Feature Segment"] = ""
+for index, row in df_results.iterrows():
+    if row["Sensor Combination"] == "['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']":
+        if row["Feature Segments"] == 60:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (60s)"
+        elif row["Feature Segments"] == 30:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (30s)"
+        elif row["Feature Segments"] == 10:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (10s)"
+        elif row["Feature Segments"] == 5:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (5s)"
+        elif row["Feature Segments"] == 2:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (2s)"
+        elif row["Feature Segments"] == 1:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Data-Driven (1s)"
+    elif row["Sensor Combination"] == "['linear_accelerometer', 'rotation']":
+        if row["Feature Segments"] == 60:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (60s)"
+        elif row["Feature Segments"] == 30:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (30s)"
+        elif row["Feature Segments"] == 10:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (10s)"
+        elif row["Feature Segments"] == 5:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (5s)"
+        elif row["Feature Segments"] == 2:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (2s)"
+        elif row["Feature Segments"] == 1:
+            df_results.loc[index, "Feature Set and Feature Segment"] = "Hypothesis-Driven (1s)"
+# visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot
+sns.set_style("whitegrid")
+sns.set_context("paper", font_scale=1.5)
+sns.set_palette("colorblind")
+fig, ax = plt.subplots(figsize=(10, 5))
+#visualize Balanced Accuracy and F1 Score for "Feature Set and Feature Segment" as two lines in a SNS lineplot; use pandas.melt
+sns.lineplot(x="Feature Set and Feature Segment", y="value", hue="variable", data=pd.melt(df_results, id_vars=["Feature Set and Feature Segment"], value_vars=["Balanced Accuracy", "F1"]))
+plt.title("Model Performance of Different Datasets and Feature Segments")
+plt.xlabel("Dataset and Feature-Segment")
+plt.ylabel("Score")
+plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+#set y-axis limits
+plt.ylim(0, 1)
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.tight_layout()
+#plt.show()
+#save with bbox_inches="tight" to avoid cutting off x-axis labels
+plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall_visualization.png",
+            bbox_inches="tight", dpi= 300)
+#endregion
+
+#region hyperparameter tune the best model from previous comparison step
+feature_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
+combinations_sensors = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]]
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
+label_mapping = None
+min_gps_accuracy = 35
+label_column_name = "label_human motion"
+n_permutations = 50 # define number of permutations; better 1000
+label_segment = 90 #define how much data around each event will be considered
+parameter_tuning = "yes" # if yes: parameter tuning is performed; if False: default parameters are used
+drop_cols = [] # columns that should be dropped
+feature_importance = "shap"
+
+# set CV mode
+combine_participants = False
+participants_test_set = [2,4,6,9]
+
+parameter_set = {
+    "n_jobs": -1,# use all cores
+    "random_state": 11 # set random state for reproducibility
+}
+
+# if parameter tuning is true, define search space
+n_estimators = [50, 100, 500, 800]  # default 100
+max_depth = [2, 5, 15, None] # default None
+min_samples_split = [2, 10, 30] # default 2
+min_samples_leaf = [1, 5] # default 1
+max_features = ["sqrt", 5, "log2", 20, None] # default "sqrt"
+oob_score = [True, False] # default False;
+class_weight = ["balanced", "balanced_subsample", None] # default None
+criterion =[ "gini", "entropy", "log_loss"] # default "gini"
+max_samples = [None, 0.5, 0.8] # default None which means that 100% of the samples are used for each tree
+bootstrap = [True]
+
+# smaller parameter tuning set in order to have less runtime
+n_estimators = [100, 800]  # default 100
+max_depth = [15, None, 25] # default None
+min_samples_split = [2, 8] # default 2
+min_samples_leaf = [1] # default 1
+max_features = ["sqrt", "log2", None] # default "sqrt"
+oob_score = [False, True] # default False;
+class_weight = ["balanced", "balanced_subsample"] # default None
+criterion =[ "gini", "entropy"] # default "gini"
+max_samples = [None, 0.5] # default None which means that 100% of the samples are used for each tree
+bootstrap = [True]
+
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+             min_samples_leaf=min_samples_leaf, max_features=max_features, oob_score = oob_score, class_weight = class_weight,
+                            criterion = criterion, max_samples = max_samples, bootstrap = bootstrap)
+
+# select only data which are in the label_segment around ESM_event & drop columns
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
+                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
+df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
+for combination_sensors in combinations_sensors:
+
+    for feature_segment in feature_segments:
+        # create path to data based on sensor combination and feature segment
+        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
+            combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
+        t0 = time.time()
+        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(feature_segment))
+        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/"+ str(combination_sensors)+ "_feature-segment-" +str(feature_segment) + "s/"
+        if not os.path.exists(path_storage):
+            os.makedirs(path_storage)
+        if path_dataset.endswith(".csv"):
+            df = pd.read_csv(path_dataset)
+        elif path_dataset.endswith(".pkl"):
+            with open(path_dataset, "rb") as f:
+                df = pickle.load(f)
+
+        #update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "Dataset loaded",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        df = df.drop(columns=drop_cols)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+        #drop NaN in device_id:
+        #TODO: probably error that there are still NaN in device_id -> probably from Merging step -> resolve if time
+        df = df.dropna(subset=["device_id"])
+        #update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in device_id dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        #drop NaN in label_column_name
+        df = df.dropna(subset=[label_column_name])
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in label_column_name dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+        df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
+
+        #in case commbine_participants == "yes", merge participant IDs into either 1 (=train) or 2 (=test)
+        if combine_participants == True:
+            # iterate through all IDs in "device_id" column and replace with 1 or 2: if ID is in participants_test_set, replace with 2, else replace with 1
+            df["device_id_traintest"] = df["device_id"].apply(lambda x: 2 if x in participants_test_set else 1)
+
+            # update analytics
+            df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                                "Feature Segment": str(feature_segment),
+                                                "Event Description": "Training and Test Participants Merged",
+                                                "Number Participants": len(df["device_id_traintest"].unique()),
+                                                "Number Events": len(df["ESM_timestamp"].unique()),
+                                                "Number Samples": len(df),
+                                                "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        # drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
+        df = df.dropna()
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "NaN in any column dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        #combine label classes if necessary
+        if label_mapping != None:
+            df = df.reset_index(drop=True)
+            for mapping in label_mapping:
+                df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
+        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "Label Classes which are not included are dropped",
+                                            "Number Participants": len(df["device_id"].unique()),
+                                            "Number Events": len(df["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df),
+                                            "Number Features": len(df.columns) - 1}, ignore_index=True)
+
+        # selects only features which are calculated in the label_segment around event.
+        ## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
+        df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+        df_decisionforest = df_decisionforest.reset_index(drop=True)
+        # update analytics
+        df_analytics = df_analytics.append({"Sensor Combination": str(combination_sensors),
+                                            "Feature Segment": str(feature_segment),
+                                            "Event Description": "data outside of label segment around events dropped",
+                                            "Number Participants": len(df_decisionforest["device_id"].unique()),
+                                            "Number Events": len(df_decisionforest["ESM_timestamp"].unique()),
+                                            "Number Samples": len(df_decisionforest),
+                                            "Number Features": len(df_decisionforest.columns) - 1}, ignore_index=True)
+
+        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+        df_label_counts["total"] = df_label_counts.sum(axis=1)
+        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+
+        # check if df_decisionforest is empty
+        if df_decisionforest.empty:
+            print("df_decisionforest is empty")
+            continue
+
+        # change column names: replace in each column the "double_values_0" with "x-axis"
+        df_decisionforest.columns = [col.replace('double_values_0', 'x-axis') for col in df_decisionforest.columns]
+        df_decisionforest.columns = [col.replace('double_values_1', 'y-axis') for col in df_decisionforest.columns]
+        df_decisionforest.columns = [col.replace('double_values_2', 'z-axis') for col in df_decisionforest.columns]
+
+        #run DF
+        df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name,
+                                                              n_permutations, path_storage, feature_importance = feature_importance,
+                                                              confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning,
+                                                              parameter_set = parameter_set, grid_search_space = grid_search_space, combine_participants = combine_participants)
+        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
+        df_decisionforest_results["Feature Segments"] = str(feature_segment)
+
+        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
+        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
+        df_labels_predictions.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_labels_predictions.csv")
+        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
+
+df_analytics.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "s_parameter_tuning-" + parameter_tuning + "_analytics.csv")
+df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
+
+
+#endregion
+
+#region create deployment model
+# Note: this trains a DF on whole dataset without any CV, parameter tuning, feature importance, or validation
+# parameter initializations
+feature_segment = 30 #in seconds; define length of segments of parameters (over which duration they have been created)
+combination_sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "running (in hand/s)", "cycling (in hand/s)" ] # which label classes should be considered
+label_column_name = "label_human motion"
+label_segment = 90 #define how much data around each event will be considered
+drop_cols = [] # columns that should be dropped
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/deployment_model/" + str(
+    combination_sensors) + "_feature-segment-" + str(feature_segment) + "s/"
+parameter_set = {"n_estimators": 800,
+                    "max_depth": 15,
+                    "min_samples_split": 2,
+                    "min_samples_leaf": 1,
+                    "max_features": None,
+                    "bootstrap": True,
+                    "criterion": "gini",
+                 "oob_score": False,
+                 "class_weight": "balanced",
+                 "max_samples": None,
+                 "n_jobs": -1,# use all cores
+                 "random_state": 11 # set random state for reproducibility
+                 }
+
+# initial data transformations
+if not os.path.exists(path_storage):
+    os.makedirs(path_storage)
+path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/label_human motion_" + str(
+    combination_sensors) + "_timeperiod-" + str(feature_segment) + "_FeaturesExtracted_Selected.pkl"
+df = pd.read_pickle(path_dataset)
+df = df.drop(columns=drop_cols)
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+df = df.dropna(subset=["device_id"])
+df = df.dropna(subset=[label_column_name])
+df = Merge_Transform.merge_participantIDs(df, users_iteration02)  # temporary: merge participant ids
+df = df.dropna()
+df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment / 2)))) & (
+            df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment / 2)) - pd.Timedelta(
+        seconds=feature_segment)))]
+df_decisionforest = df_decisionforest.reset_index(drop=True)
+print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+# create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+df_label_counts.to_csv(
+    path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+
+# change column names: replace in each column the "double_values_0" with "x-axis"
+df_decisionforest.columns = [col.replace('double_values_0', 'x-axis') for col in df_decisionforest.columns]
+df_decisionforest.columns = [col.replace('double_values_1', 'y-axis') for col in df_decisionforest.columns]
+df_decisionforest.columns = [col.replace('double_values_2', 'z-axis') for col in df_decisionforest.columns]
+
+#run and save model
+model = DecisionForest.DF_sklearn_deployment(df_decisionforest, label_segment, label_column_name, parameter_set, path_storage)
+pickle.dump(model, open(
+    path_storage + label_column_name + "_timeperiod_around_event-" + str(
+        label_segment) + "_FinalDeploymentModel.sav", "wb"))
+
+#endregion
+
+#region apply laboratoy model(s) to naturalistic data
+## Note: in this region the models trained in hyperparameter tuning and deployment model wil be applied to the naturalistic data;
+## the choice of the model depends on the participant
+
+# NOTE: the code is transferred to the other project since only there is the imputation possible...
+
+# load and transform naturalistic dataset in right format
+label_column_name = "label_human motion"
+path_model_deployment = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/deployment_model/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/label_human motion_timeperiod_around_event-90_FinalDeploymentModel.sav"
+path_models_hyperparametertrained = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/applying_models_on_naturalistic_data/"
+df_features = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+label_segment = 90 #define the segment of data which will be considered in df_features around each ES event
+feature_segment = 30 #define the feature segment since this is necessary for the selection of data around each ES event
+#define the label maping
+label_mapping = [["lying (in one hand)", "lying (in hand/s)"],
+                            ["lying (in two hands)", "lying (in hand/s)"],
+                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["standing (in one hand)", "standing (in hand/s)"],
+                            ["standing (in two hands)", "standing (in hand/s)"],
+                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                            ["sitting: at a table (in one hand)", "sitting: at a table (in hand/s)"],
+                               ["sitting: at a table (in two hands)", "sitting: at a table (in hand/s)"],
+                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["sitting: on the couch (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: on the couch (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["sitting: somewhere else (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: somewhere else (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["walking (in one hand)", "walking (in hand/s)"],
+                            ["walking (in two hands)", "walking (in hand/s)"],
+                         ["cycling (in one hand)", "cycling (in hand/s)"],
+                            ["cycling (in two hands)", "cycling (in hand/s)"]
+                         ]
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "cycling (in hand/s)"]
+
+
+# some preprocessing
+##  change column names: replace in each column the "double_values_0" with "x-axis"
+df_features.columns = [col.replace('double_values_0', 'x-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_1', 'y-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_2', 'z-axis') for col in df_features.columns]
+
+## label df_features, transform labels and choose only the labels which are in label_classes
+df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+df_features = df_features.reset_index(drop=True)
+for mapping in label_mapping:
+    print(mapping)
+    df_features.loc[df_features[label_column_name] == mapping[0], label_column_name] = mapping[1]
+df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+df_features = df_features.dropna(subset=["device_id"])
+df_features = df_features.dropna(subset=[label_column_name])
+df_features = Merge_Transform.merge_participantIDs(df_features, users)
+
+# select only features which are in the model
+#deployment_model = pd.read_pickle(path_model_deployment)
+print(dir(model))
+#features_used = list(deployment_model.feature_names_in_)
+#list_features = features_used + [label_column_name, "timestamp", "ESM_timestamp"]
+## temporary: find out which columns are missing
+#missing_cols = [col for col in list_features if col not in df_features.columns]
+#print(missing_cols)
+# select only features which are in list_features in df_features
+#df_features = df_features.drop(columns=[col for col in df_features.columns if col not in list_features])
+
+## select only data which is in the timeperiod around the event
+df_decisionforest = df_features[(df_features['timestamp'] >= (df_features['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df_features['timestamp'] <= (df_features['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+df_decisionforest = df_decisionforest.reset_index(drop=True)
+
+
+#temporary
+path_models_hyperparametertrained = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/temp/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/"
+
+
+
+
+#iterate through participants in df_features
+df_results = pd.DataFrame()
+for participant in df_decisionforest["device_id"].unique():
+    # load DF model
+    # check if model exists
+    if os.path.exists(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav"):
+        print("For participant " + str(participant) + " the hyperparameter tuned model is used.")
+        model = pd.read_pickle(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav")
+
+        #print("JUMP OVER THIS FOR TESTING PURPOSES")
+        #continue #this is just for testing
+    else:
+        print("For participant " + str(participant) + " the deployment model is used.")
+        # if no model tested on this participant exists: the participant was not in the human motion data collection -> load deployment model
+        model = pd.read_pickle(path_model_deployment)
+
+    # select only data of participant
+    df_decisionforest_participant = df_decisionforest[df_decisionforest["device_id"] == participant]
+
+    # store labels
+    true_labels = df_decisionforest_participant[label_column_name]
+
+    # select correct features
+    features_used = list(model.feature_names_in_)
+    df_decisionforest_participant = df_decisionforest_participant.drop(columns=[col for col in df_decisionforest_participant.columns if col not in features_used])
+    # put the columns in same order as in the model
+    df_decisionforest_participant = df_decisionforest_participant[features_used]
+
+    #impute the NaN values the same way they were imputed during "feature selection"
+    print("number of rows including nan values before imputation: " + str(df_decisionforest_participant.isna().sum().sum()))
+    impute(df_decisionforest_participant)
+    print("number of rows including nan values after imputation: " + str(df_decisionforest_participant.isna().sum().sum()))
+
+    # predict labels
+    df_decisionforest_participant["predicted_label"] = model.predict(df_decisionforest_participant)
+
+    # add labels again
+    df_decisionforest_participant[label_column_name] = true_labels
+
+    # add participant to df_results by concatenating
+    df_results = pd.concat([df_results, df_decisionforest_participant[[label_column_name, "predicted_label"]]], axis=0)
+
+#rename label_column_name into y_test
+df_results = df_results.rename(columns={label_column_name: "y_test"})
+df_results.to_csv(path_storage + "df_labels_predictions.csv")
+
+#temp: in order to visualize confusion matrix with "sitting (in hand/s)" instead of  "sitting: at a table (in hand/s)"
+# rename all entries in "y_test" and "predicted_label" which are "sitting: at a table (in hand/s) into "sitting: at a table"
+df_results.loc[df_results["y_test"] == "sitting: at a table (in hand/s)", "y_test"] = "sitting (in hand/s)"
+df_results.loc[df_results["predicted_label"] == "sitting: at a table (in hand/s)", "predicted_label"] = "sitting (in hand/s)"
+# change in label_classes as well
+label_classes = ["lying (in hand/s)", "sitting (in hand/s)", "standing (in hand/s)", "walking (in hand/s)"]
+
+# evaluate
+df_metrics = pd.DataFrame(columns = ["balanced accuracy", "accuracy", "f1", "precision", "recall"])
+
+# put balanced accuracy into df_metrics column and first row
+df_metrics.loc[0, "balanced accuracy"] = balanced_accuracy_score(df_results["y_test"], df_results["predicted_label"])
+df_metrics.loc[0, "accuracy"] = accuracy_score(df_results["y_test"], df_results["predicted_label"])
+df_metrics.loc[0, "f1"] = f1_score(df_results["y_test"], df_results["predicted_label"], average="macro")
+df_metrics.loc[0, "precision"] = precision_score(df_results["y_test"], df_results["predicted_label"], average="macro")
+df_metrics.loc[0, "recall"] = recall_score(df_results["y_test"], df_results["predicted_label"], average="macro" )
+df_metrics.to_csv(path_storage + "evaluation_metrics.csv")
+
+
+#### visualize confusion matrix for all y_test and y_pred data
+#### convert y_test to pandas series
+y_test_confusionmatrix = df_results["y_test"]
+y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
+label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
+
+#### also convert yhat to numerical labels using same mapping
+yhat_confusionmatrix = df_results["predicted_label"]
+yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
+label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
+
+#### create joint label mapping which is == confusion_matrix_order except the elements which are not in label_mapping or label_mapping2
+label_mapping_joint = list(set(label_mapping.values()) | set(label_mapping2.values()))
+label_mapping_confusion_matrix = label_classes.copy()
+for key in label_mapping_confusion_matrix:
+    if key not in label_mapping_joint:
+        # delete from list
+        label_mapping_confusion_matrix.remove(key)
+
+#### visualize confusion matrix with percentages and absolute values combined
+mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix, labels = label_mapping_confusion_matrix)
+matrix = mat.astype('float') / mat.sum(axis=1)[:, np.newaxis]
+matrix_abs = mat.astype('float')
+tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
+plt.figure(figsize=(16, 7))
+sns.set(font_scale=1.4)
+sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
+for i, j in itertools.product(range(mat.shape[0]), range(mat.shape[1])):
+    if matrix[i, j] > 0.5:
+        text_color = 'white'
+    else:
+        text_color = 'black'
+    plt.text(j + 0.5, i + 0.75, '({0})'.format(int(matrix_abs[i, j])), ha='center', va='center', fontsize=10,
+             color=text_color)
+plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title("Confusion Matrix of Frequent Location Model")
+plt.tight_layout()
+#plt.show()
+# save figure
+plt.savefig(path_storage + "confusion_matrix.png", dpi=600, bbox_inches='tight')
+
+
+#endregion
+
+#region OUTDATED; FIRST TRY: modeling with decision forest for human motion
+### initialize parameters
+parameter_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
+#combinations_sensors = [["highfrequencysensors-all", "GPS"],
+#                        ["linear_accelerometer", "rotation", "GPS"],
+#                        ["linear_accelerometer", "GPS"]]  # define which sensor combinations should be considered
+combinations_sensors = [["highfrequency-sensors"]]
+
+label_column_name = "label_human motion - general"
+n_permutations = 2 # define number of permutations; better 1000
+label_segment = 90 #define how much data around each event will be considered
+label_classes = ["standing", "sitting_attable_phoneinhand", "lying_phoneinfront_onback", "wallking", "running", "cycling"]
+#label_classes = ["walking", "walking_mediumspeed", "walking_fastspeed", "running", "cycling"] # which label classes should be considered
+#label_classes = ["standing", "sitting_attable_phoneinhand", "sitting_attable_phoneontable", "lying_ontheside","lying_phoneinfront_onback"]
+
+# label_classes_all_possible =['sitting_attable_phoneinhand', 'standing', 'on_the_toilet',
+#        'cycling', 'running', 'walking', 'walking_fastspeed',
+#        'cycling_includingstops', 'lying_phoneoverhead',
+#        'lying_phoneonbed', 'sitting_attable_phoneontable',
+#        'walking_mediumspeed', 'sitting_on_the_toilet', 'lying_ontheside',
+#        'walking_lowspeed', 'on the toilet', 'lying_phoneinfront_onback']
+parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
+drop_cols = [] # columns that should be dropped
+
+#testarea
+#get unique labels from label_column_name
+
+
+# if parameter tuning is true, define search space
+n_estimators = [50, 100, 500, 800]  # default 500
+max_depth = [2, 5, 15]
+min_samples_split = [2, 10, 30]
+min_samples_leaf = [1, 5]
+max_features = ["sqrt", 3, "log2", 20]
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+             min_samples_leaf=min_samples_leaf, max_features=max_features)
+
+
+# select only data which are in the label_segment around ESM_event & drop columns
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
+                                             "Precision", "Recall", "Sensor Combination", "Parameter Segments"])
+
+for combination_sensors in combinations_sensors:
+    for parameter_segment in parameter_segments:
+        t0 = time.time()
+        print("start of combination_sensors: " + str(combination_sensors) + " and parameter_segment: " + str(parameter_segment))
+        path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_analysis/decision_forest/label_human motion - general/sensor-"+ combination_sensors[0]+"("+ str(parameter_segment) +"seconds)/"
+        if not os.path.exists(path_storage):
+            os.makedirs(path_storage)
+        path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/features/highfrequency_sensors/activity-"+ label_column_name +"_"+ combination_sensors[0]+ "_feature-segment-"+ str(parameter_segment) +" s_tsfresh-features-exctracted_featuresselected.pkl"
+        df = pd.read_pickle(path_dataset)
+        #if len(combination_sensors) == 3: #this is necessary to make the code work for the case with three merged sensors
+        #    df = df.rename(columns={"timestamp_merged_x": "timestamp_merged", "label_human motion - general_x": "label_human motion - general"})
+        #    df = df.drop(columns=["timestamp_merged_y", "label_human motion - general_y"])
+        df = df.rename(columns={"sensor_timestamp": "timestamp"})
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+        df = df.drop(columns=drop_cols)
+        df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+        df_decisionforest = df[(df['timestamp'] >= df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2))) & (df['timestamp'] <= df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2)))]
+        print("Size of dataset for label_segment: " + str(label_segment) + " is " + str(df_decisionforest.shape))
+        # create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+        df_label_counts = df_decisionforest.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+        df_label_counts["total"] = df_label_counts.sum(axis=1)
+        df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+        df_label_counts.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+        df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, grid_search_space)
+        df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
+        df_decisionforest_results["Parameter Segments"] = str(parameter_segment)
+
+        df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
+        df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
+        print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
+df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/data_analysis/decision_forest/label_human motion - general/parameter_tuning-" + parameter_tuning + "_results_overall.csv")
+
 
 #endregion
 
@@ -3199,13 +3882,13 @@ df_decisionforest_results_all.to_csv("/Users/benediktjordan/Documents/MTS/Iterat
 #endregion
 #endregion
 
-#region public transport
+#region transportation mode
 ## what can be improved?
-#TODO add also motion features
-#TODO train LSTM on GPS data (and maybe motion data)
-#TODO add further control-group labels
+##TODO add also motion features
+##TODO train LSTM on GPS data (and maybe motion data)
+##TODO add further control-group labels
 
-#region data exploration for public transport
+#region data exploration for transportation mode
 
 #region data exploration labels
 label_column_name = "label_public transport"
@@ -3523,12 +4206,6 @@ for label_segment in label_segments:
 #endregion
 
 #region locations
-## What to improve (current accuracy: 54% (with 33% random accuracy))
-#TODO merge participant IDs and run model again
-#TODO change classification of frequent labels: "other sleep place" is often actually in reality "home". How to deal with this?
-#TODO look in detail into incorrect predictions: maybe need to delete "other frequent locations" label? Other improvements?
-#TODO maybe cluster the labeled location data since there are several different locations for i.e. label "home" -> maybe some of them are mistakes?
-#TODO use DBSCAN instead of KMeans to cluster locations (think first: why did Lennart propose this?)
 
 #region data exploration for locations
 #region data exploration labels
@@ -3597,6 +4274,9 @@ df_locations = df_locations.dropna(subset=[label_column_name]) # drop NaN values
 df_locations = Merge_Transform.merge_participantIDs(df_locations, users, device_id_col = None, include_cities = False)# merge participant IDs
 ### keep for each event the GPS record with a timestamp closest to the ESM timestamp (first one after ESM timestamp)
 df_locations = GPS_computations.first_sensor_record_after_event(df_locations)
+
+### relabel entries in "label_column_name" column from "at another place", "on the way", "at another workplace" to "at another place"
+df_locations[label_column_name] = df_locations[label_column_name].replace({"at another workplace": "at another place", "on the way": "at another place"})
 
 df_locations = df_locations.rename(columns={label_column_name: "Location Classes"}) # rename label_column into "Location Classes" (necessary for visualization)
 for participant in df_locations["device_id"].unique():
@@ -4035,8 +4715,6 @@ df_results = pd.DataFrame()
 ## add local timezone column
 df_locations = Merge_Transform.add_local_timestamp_column(df_locations, users)
 
-#TODO the assumption of one timezone for every participant is not entirely correct: for one participant there ws sometimes a different timezone used (Amsterdam instead of London)
-#TODO: you can check with this code:
 ## get timezones for participants
 #df_timezones = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/timezone_esm_timeperiod_5 min.csv_JSONconverted.pkl")
 #df_timezones = Merge_Transform.merge_participantIDs(df_timezones, users, device_id_col = None, include_cities = False)# merge participant IDs
@@ -4607,7 +5285,6 @@ path_features = "/Users/benediktjordan/Documents/MTS/Iteration01/location/data_p
 df = pd.read_csv(path_features + "places_min-GPS-accuracy-" + str(min_gps_accuracy)  + "_df-locations-including-clusters_OnlyBiggest" + str(number_biggest_clusters) + "Clusters_ClustersFromChunksMerged_NewClusterLabels_CloseClustersMerged_-" + str(merge_threshold) + "m_withPlacesFeatures_DeletedPlacesWithoutStays_labeled.csv")
 label_column_name = "label_location"
 
-
 # testarea
 df_test = df[[label_column_name, "device_id", "total_records_of_biggest_clusters_fraction", "total_records_of_biggest_clusters_fraction_rank_ascent", "total_records_of_biggest_clusters_fraction_rank_descent"]]
 
@@ -4871,11 +5548,6 @@ with open(path_storage + label_column_name + "_timeperiod_around_event-" + str(l
 
 #endregion
 
-
-#endregion
-
-#endregion
-
 #region location stuff: outdated
 input_path = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all_sorted.csv"
 
@@ -4999,17 +5671,12 @@ acc_balanced = balanced_accuracy_score(df_locations["label"], df_locations["loca
 acc_balanced, absolute_or_relative_values, title, label_mapping, save_path
 visualizations.confusion_matrix(df_locations["location_classification"], df_locations["label"], acc_balanced, "relative", "Confusion Matrix Location Classification", None, output_path + "confusion_matrix_location_classification.png")
 #endregion
+#endregion
 
 #region before and after sleep
 ## How to improve the model (currently I have 54% balanced accuracy (with 4 classes))?
-#TODO train seperate models for "before sleep" and "after sleep" (in "after sleep", add "time since last sleep period" as feature)
-#TODO get better data: right now I am using a feature set which has been created for "human motion" label (in features
-# selection). This doesnt contain some events (if there was no human motion label). Try creating a very limited
-# feature set which I can also create for the "before sleep" data
 #TODO train personalized models (think how to deal with very limited data)
-#TODO train LSTM model
 #TODO add feature: add battery charging events as feature
-
 
 #region data exploration for sleep
 #region data exploration labels
@@ -5038,11 +5705,11 @@ df_esm_including_sensordata_above_threshold, df_esm_user_class_counts = data_exp
 print("Number of Events for which all Sensor Data is available: " + str(len(df_esm_including_sensordata_above_threshold)))
 df_esm_user_class_counts.to_csv(path_storage + "location_user-class-counts_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
 ## this is necessary for the following visualiztion of sample events: from this df will get the relevant ESM timestamps
-df_esm_including_sensordata_above_threshold.to_csv(path_storage + "location_events_with-sensor-data_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
+df_esm_including_sensordata_above_threshold.to_csv(path_storage + "sleep_events_with-sensor-data_label-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".csv")
 
 ## visualize as barplot
 fig = data_exploration_labels.visualize_esm_activity(df_esm_including_sensordata_above_threshold, "label_sleep", "Frequent Locations - Number of Answers per Class with Sensor Data")
-fig.savefig(path_storage + "human_motion_class-counts_event-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
+fig.savefig(path_storage + "sleep_class-counts_label-segments-" + str(segment_around_events) + "_only-active-smartphone-sessions-" + str(only_active_smartphone_sessions) + "_min-sensor-percentage-" + str(min_sensordata_percentage) + "-sensors-" + str(sensors_included) + "_min-gps-accuracy-" + str(gps_accuracy_min) + ".png")
  #endregion
 
 #endregion
@@ -5149,9 +5816,93 @@ fig.savefig(path_storage + "long_static_periods_begin_times_distribution.png", d
 
 #endregion
 #endregion
+#endregion
 
 #region data preparation for sleep
-#region compute long periods of static for all linear accelerometer data of each participant
+#region long static periods: compute long static periods using linear accelerometer based on new approach
+path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/linear_accelerometer/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/"
+threshold_expected = 0.7 # percentage of linear accelerometer data of expected data which needs to be available in order for the window to be considered
+threshold_static = 0.01 # threshol above which linear accelerometer x-axis values are considered not to be stati anymore
+threshold_static_percentage = 0.999 # percentage of values in window that need to be below threshold_static to be considered static
+window_size_minutes = 300
+window_step_minutes = 5
+sensor_frequency = 10 # in Hz
+
+## iterate through unique User_IDs in users dataframe
+for participant in tqdm(users["new_ID"].unique()):
+    # check if participant has already been processed
+    if os.path.exists(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv"):
+        print("participant " + str(participant) + " already processed")
+        continue
+    print("start with participant: " + str(participant))
+    users_participant = users[users["new_ID"] == participant]
+
+    # merge all linear accelerometer data of participant (for different device IDs)
+    t0 = time.time()
+    df_participant_all = pd.DataFrame()
+    for participant_device_id in users_participant["ID"].unique():
+        print("participant_device_id: " + str(participant_device_id))
+        # load data
+        df_participant = pd.read_pickle(path_datasets + "linear_accelerometer_device-id-" + str(participant_device_id) + "_all.pkl")
+        # check if df_participant is empty
+        if df_participant.empty:
+            print("df_participant is empty")
+            continue
+        # concatenate data
+        df_participant_all = pd.concat([df_participant_all, df_participant], ignore_index=True)
+    print("time to merge all data: " + str((time.time() - t0)/60) + " min")
+
+    # merge participant IDs
+    # drop any nan values in device_id column
+    print("Number of NaN values in device_id column: " + str(df_participant_all["lin_accelerometer_device_id"].isna().sum()))
+    df_participant_all = df_participant_all.dropna(subset=["lin_accelerometer_device_id"])
+    df_participant_all = Merge_Transform.merge_participantIDs(df_participant_all, users, device_id_col = None, include_cities = False)
+
+    # drop duplicates in timestamp
+    print("number of duplicates in timestamp: " + str(df_participant_all["lin_accelerometer_timestamp"].duplicated().sum()))
+    df_participant_all = df_participant_all.drop_duplicates(subset=["lin_accelerometer_timestamp"], keep="first")
+
+    # create local timestamp
+    df_participant_all = Merge_Transform.add_local_timestamp_column(df_participant_all, users)
+    # convert timestamp into datetime using ms
+    df_participant_all["timestamp"] = pd.to_datetime(df_participant_all["timestamp"], unit='ms')
+
+    # change sensor column names
+    for col in df_participant_all.columns:
+        if "double_values_0" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_0"})
+        if "double_values_1" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_1"})
+        if "double_values_2" in col:
+            df_participant_all = df_participant_all.rename(columns={col: "double_values_2"})
+
+    # compute long periods of static
+    print("start with computing long periods of static")
+    df_results, df_analytics = Static_Periods.compute_long_periods_of_static_updated(df_participant_all, threshold_expected, threshold_static_percentage, threshold_static, window_size_minutes, window_step_minutes, sensor_frequency)
+
+    # save results
+    df_results.to_csv(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv")
+    df_analytics.to_csv(path_storage + "long_static_periods_analytics_participant_" + str(participant) + ".csv")
+
+# merge all static periods of all participants
+df_results_all = pd.DataFrame()
+df_analytics_all = pd.DataFrame()
+for participant in tqdm(users["new_ID"].unique()):
+    # load data
+    df_results = pd.read_csv(path_storage + "long_static_periods_results_participant_" + str(participant) + ".csv")
+    df_analytics = pd.read_csv(path_storage + "long_static_periods_analytics_participant_" + str(participant) + ".csv")
+    # concatenate data
+    df_results_all = pd.concat([df_results_all, df_results], ignore_index=True)
+    df_analytics_all = pd.concat([df_analytics_all, df_analytics], ignore_index=True)
+# save
+df_results_all.to_csv(path_storage + "long_static_periods_results_all.csv")
+df_analytics_all.to_csv(path_storage + "long_static_periods_analytics_all.csv")
+
+
+#endregion
+
+#region OUTDATES since old approahc of grouping long static periods: compute long periods of static for all linear accelerometer data of each participant
 path_datasets = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/linear_accelerometer/"
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/"
 threshold_expected = 0.7
@@ -5243,10 +5994,841 @@ df_results = df_results_2.copy()
 df_participant = pd.read
 #endregion
 
-#endregionpd.to_datetime(df_static_periods["start_time"])
+label_segment = 90 #define how much data around each event will be considered
+
+#region create human motion labels: apply laboratoy  model(s) to naturalistic data
+## Not: in this region the models trained in hyperparameter tuning and deployment model wil be applied to the naturalistic data;
+## the choice of the model depends on the participant
+
+# load and transform naturalistic dataset in right format
+label_column_name = "label_human motion"
+path_model_deployment = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/deployment_model/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/label_human motion_timeperiod_around_event-90_FinalDeploymentModel.sav"
+path_models_hyperparametertrained = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_analysis/decision_forest/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation']_feature-segment-30s/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/human_motion_labeling/"
+df_features = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+label_segment = 90 #define the segment of data which will be considered in df_features around each ES event
+feature_segment = 30 #define the feature segment since this is necessary for the selection of data around each ES event
+#define the label maping
+label_mapping = [["lying (in one hand)", "lying (in hand/s)"],
+                            ["lying (in two hands)", "lying (in hand/s)"],
+                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["standing (in one hand)", "standing (in hand/s)"],
+                            ["standing (in two hands)", "standing (in hand/s)"],
+                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                            ["sitting: at a table (in one hand)", "sitting: at a table (in hand/s)"],
+                               ["sitting: at a table (in two hands)", "sitting: at a table (in hand/s)"],
+                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["sitting: on the couch (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: on the couch (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["sitting: somewhere else (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: somewhere else (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["walking (in one hand)", "walking (in hand/s)"],
+                            ["walking (in two hands)", "walking (in hand/s)"],
+                         ["cycling (in one hand)", "cycling (in hand/s)"],
+                            ["cycling (in two hands)", "cycling (in hand/s)"]
+                         ]
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "cycling (in hand/s)"]
+
+
+# some preprocessing
+##  change column names: replace in each column the "double_values_0" with "x-axis"
+df_features.columns = [col.replace('double_values_0', 'x-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_1', 'y-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_2', 'z-axis') for col in df_features.columns]
+
+## label df_features, transform labels and choose only the labels which are in label_classes
+df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+df_features = df_features.reset_index(drop=True)
+for mapping in label_mapping:
+    print(mapping)
+    df_features.loc[df_features[label_column_name] == mapping[0], label_column_name] = mapping[1]
+df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+df_features = df_features.dropna(subset=["device_id"])
+df_features = df_features.dropna(subset=[label_column_name])
+df_features = Merge_Transform.merge_participantIDs(df_features, users)
+
+# select only features which are in the model
+#deployment_model = pd.read_pickle(path_model_deployment)
+print(dir(model))
+#features_used = list(deployment_model.feature_names_in_)
+#list_features = features_used + [label_column_name, "timestamp", "ESM_timestamp"]
+## temporary: find out which columns are missing
+#missing_cols = [col for col in list_features if col not in df_features.columns]
+#print(missing_cols)
+# select only features which are in list_features in df_features
+#df_features = df_features.drop(columns=[col for col in df_features.columns if col not in list_features])
+
+## select only data which is in the timeperiod around the event
+df_decisionforest = df_features[(df_features['timestamp'] >= (df_features['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df_features['timestamp'] <= (df_features['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+df_decisionforest = df_decisionforest.reset_index(drop=True)
+
+#iterate through participants in df_features
+df_results = pd.DataFrame()
+for participant in df_decisionforest["device_id"].unique():
+    # load DF model
+    # check if model exists
+    if os.path.exists(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav"):
+        print("For participant " + str(participant) + " the hyperparameter tuned model is used.")
+        model = pd.read_pickle(path_models_hyperparametertrained + "label_human motion_timeperiod_around_event-90_parameter_tuning-yes_test_proband-" + str(participant) + "_model.sav")
+
+        #print("JUMP OVER THIS FOR TESTING PURPOSES")
+        #continue #this is just for testing
+    else:
+        print("For participant " + str(participant) + " the deployment model is used.")
+        # if no model tested on this participant exists: the participant was not in the human motion data collection -> load deployment model
+        model = pd.read_pickle(path_model_deployment)
+
+    # select only data of participant
+    df_decisionforest_participant = df_decisionforest[df_decisionforest["device_id"] == participant]
+
+    # store labels
+    true_labels = df_decisionforest_participant[["timestamp", "ESM_timestamp", "device_id", label_column_name]]
+
+    # select correct features
+    features_used = list(model.feature_names_in_)
+    df_decisionforest_participant = df_decisionforest_participant.drop(columns=[col for col in df_decisionforest_participant.columns if col not in features_used])
+    # put the columns in same order as in the model
+    df_decisionforest_participant = df_decisionforest_participant[features_used]
+
+    #impute the NaN values the same way they were imputed during "feature selection"
+    print("number of rows including nan values before imputation: " + str(df_decisionforest_participant.isna().sum().sum()))
+    impute(df_decisionforest_participant)
+    print("number of rows including nan values after imputation: " + str(df_decisionforest_participant.isna().sum().sum()))
+
+    # predict labels
+    df_decisionforest_participant["predicted_label"] = model.predict(df_decisionforest_participant)
+
+    # add timestamp, ESM_timestamp and true label to df_decisionforest_participant
+    df_decisionforest_participant = pd.concat([df_decisionforest_participant, true_labels], axis=1)
+
+    # add participant to df_results by concatenating
+    df_results = pd.concat([df_results, df_decisionforest_participant[["timestamp", "ESM_timestamp", "device_id", label_column_name, "predicted_label"]]], axis=0)
+
+#rename columns
+df_results = df_results.rename(columns={label_column_name: "y_test"})
+df_results = df_results.rename(columns={"predicted_label": "human motion prediction"})
+df_results.to_csv(path_storage + "df_labels_predictions.csv")
+
+#temp: in order to visualize confusion matrix with "sitting (in hand/s)" instead of  "sitting: at a table (in hand/s)"
+# rename all entries in "y_test" and "predicted_label" which are "sitting: at a table (in hand/s) into "sitting: at a table"
+df_results.loc[df_results["y_test"] == "sitting: at a table (in hand/s)", "y_test"] = "sitting (in hand/s)"
+df_results.loc[df_results["human motion prediction"] == "sitting: at a table (in hand/s)", "human motion prediction"] = "sitting (in hand/s)"
+# change in label_classes as well
+label_classes = ["lying (in hand/s)", "sitting (in hand/s)", "standing (in hand/s)", "walking (in hand/s)"]
+
+# evaluate
+df_metrics = pd.DataFrame(columns = ["balanced accuracy", "accuracy", "f1", "precision", "recall"])
+
+# put balanced accuracy into df_metrics column and first row
+df_metrics.loc[0, "balanced accuracy"] = balanced_accuracy_score(df_results["y_test"], df_results["human motion prediction"])
+df_metrics.loc[0, "accuracy"] = accuracy_score(df_results["y_test"], df_results["human motion prediction"])
+df_metrics.loc[0, "f1"] = f1_score(df_results["y_test"], df_results["human motion prediction"], average="macro")
+df_metrics.loc[0, "precision"] = precision_score(df_results["y_test"], df_results["human motion prediction"], average="macro")
+df_metrics.loc[0, "recall"] = recall_score(df_results["y_test"], df_results["human motion prediction"], average="macro" )
+df_metrics.to_csv(path_storage + "evaluation_metrics.csv")
+
+
+#### visualize confusion matrix for all y_test and y_pred data
+#### convert y_test to pandas series
+y_test_confusionmatrix = df_results["y_test"]
+y_test_confusionmatrix = y_test_confusionmatrix.astype('category')
+label_mapping = dict(enumerate(y_test_confusionmatrix.cat.categories))
+
+#### also convert yhat to numerical labels using same mapping
+yhat_confusionmatrix = df_results["human motion prediction"]
+yhat_confusionmatrix = yhat_confusionmatrix.astype('category')
+label_mapping2 = dict(enumerate(yhat_confusionmatrix.cat.categories))
+
+#### create joint label mapping which is == confusion_matrix_order except the elements which are not in label_mapping or label_mapping2
+label_mapping_joint = list(set(label_mapping.values()) | set(label_mapping2.values()))
+label_mapping_confusion_matrix = label_classes.copy()
+for key in label_mapping_confusion_matrix:
+    if key not in label_mapping_joint:
+        # delete from list
+        label_mapping_confusion_matrix.remove(key)
+
+#### visualize confusion matrix with percentages and absolute values combined
+mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix, labels = label_mapping_confusion_matrix)
+matrix = mat.astype('float') / mat.sum(axis=1)[:, np.newaxis]
+matrix_abs = mat.astype('float')
+tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
+plt.figure(figsize=(16, 7))
+sns.set(font_scale=1.4)
+sns.heatmap(matrix, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, linewidths=0.2)
+for i, j in itertools.product(range(mat.shape[0]), range(mat.shape[1])):
+    if matrix[i, j] > 0.5:
+        text_color = 'white'
+    else:
+        text_color = 'black'
+    plt.text(j + 0.5, i + 0.75, '({0})'.format(int(matrix_abs[i, j])), ha='center', va='center', fontsize=10,
+             color=text_color)
+plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
+plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title("Confusion Matrix of Frequent Location Model")
+plt.tight_layout()
+#plt.show()
+# save figure
+plt.savefig(path_storage + "confusion_matrix.png", dpi=600, bbox_inches='tight')
+
+
+#endregion
+
+#region OUTDATED create human motion labelled dataset using naturalistic data models
+feature_segment = 30 #in seconds; define length of segments of parameters (over which duration they have been created)
+combination_sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
+min_gps_accuracy = 35
+only_active_smartphone_sessions = "yes"
+parameter_tuning = "no"
+path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/label_human motion_" + str(
+                combination_sensors) + "-merged-to-GPSFeatures_feature-segment-" + str(feature_segment) + "_min-gps-accuracy-" + str(
+                min_gps_accuracy) + "_only-active-smartphone-sessions-" + str(
+                only_active_smartphone_sessions) + "_FeaturesExtracted_Merged_Selected.csv"
+path_human_motion_models = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/best_performing_models/" + str(combination_sensors) + "-GPS_feature-segment-" + str(feature_segment) + "s/"
+drop_cols = ["Unnamed: 0"]
+df = pd.read_csv(path_dataset)
+
+#region temporary: check number of events for different sleep classes
+## how many sleep labels are there?
+label_column_name = "label_sleep"
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+df_label = pd.DataFrame.from_dict(dict_label, orient="index")
+df_label = df_label.reset_index()
+df_label[label_column_name].value_counts()
+
+#find out how much data is in sensord-data
+## getting dataset for features without selection
+df_alternative = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
+df_alternative = df_alternative.dropna(subset=["device_id"])
+df_alternative = df_alternative[(df_alternative['timestamp'] >= (df_alternative['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment / 2)))) & (
+        df_alternative['timestamp'] <= (df_alternative['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment / 2)) - pd.Timedelta(
+    seconds=feature_segment)))]
+
+df_test = labeling_sensor_df(df_alternative, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+# drop ESM_timestamp duplicates
+df_test = df_test.drop_duplicates(subset=["ESM_timestamp"], keep="first")
+df_test[label_column_name].value_counts()
+
+#endregion
+
+#some preprocessing
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+print("NaN in device_id before drop: " + str(df["device_id"].isna().sum()))
+df = df.dropna(subset=["device_id"])
+print("NaN in device_id after drop: " + str(df["device_id"].isna().sum()))
+df = Merge_Transform.merge_participantIDs(df, users)  # temporary: merge participant ids
+# select only data which are in the label_segment around ESM_event & drop columns
+df = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment / 2)))) & (
+        df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment / 2)) - pd.Timedelta(
+    seconds=feature_segment)))]
+# iterate through participants and classify data with human motion models
+df = df.reset_index(drop=True)
+df["human_motion_prediction"] = np.nan
+for participant in df["device_id"].unique():
+    print("Start with participant " + str(participant) + " ...")
+    # read the .sav model file
+    # check if model exists
+    if os.path.exists(path_human_motion_models + "label_human motion_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_test_proband-" + str(participant) + "_model.sav"):
+        model = pickle.load(open(path_human_motion_models + "label_human motion_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_test_proband-" + str(participant) + "_model.sav", 'rb'))
+    else:
+        print("No model for participant " + str(participant) + " found!")
+        continue
+    # select data of participant
+    df_participant = df[df["device_id"] == participant]
+
+    # drop columns
+    df_participant = df_participant.drop(columns=drop_cols)
+
+    # create dataframe for predictions
+    df_participant_features = df_participant.drop(columns=["device_id", "timestamp", "ESM_timestamp", "label_human motion", "human_motion_prediction"])
+
+    # add predictions to dataframe
+    df_participant["human_motion_prediction"] = model.predict(df_participant_features)
+
+    # add predictions to main dataframe df
+    df.loc[df_participant.index, "human_motion_prediction"] = df_participant["human_motion_prediction"]
+
+    # if label classes should be joint -> define in label mapping
+#drop rows with NaN in label_column_name (they exist since for some participants no model existed)
+df = df.dropna(subset=["human_motion_prediction"])
+
+# analytics: check performance of human motion model
+label_mapping = [["lying (in one hand)", "lying (hand/s)"],
+                            ["lying (in two hands)", "lying (hand/s)"],
+                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["standing (in one hand)", "standing (hand/s)"],
+                            ["standing (in two hands)", "standing (hand/s)"],
+                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                            ["sitting: at a table (in one hand)", "sitting (hand/s)"],
+                               ["sitting: at a table (in two hands)", "sitting (hand/s)"],
+                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["sitting: on the couch (in one hand)", "sitting (hand/s)"],
+                            ["sitting: on the couch (in two hands)", "sitting (hand/s)"],
+                         ["sitting: somewhere else (in one hand)", "sitting (hand/s)"],
+                            ["sitting: somewhere else (in two hands)", "sitting (hand/s)"],
+                         ["walking (in one hand)", "walking (hand/s)"],
+                            ["walking (in two hands)", "walking (hand/s)"],
+                         ["cycling (in one hand)", "cycling (hand/s)"],
+                            ["cycling (in two hands)", "cycling (hand/s)"]
+                         ]
+label_classes = ["lying (hand/s)", "sitting (hand/s)", "standing (hand/s)",
+                 "standing, sitting, or lying (on flat surface)",
+                 "walking (hand/s)" ] # which label classes should be considered
+for mapping in label_mapping:
+    df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
+balanced_accuracy = metrics.balanced_accuracy_score(df["label_human motion"], df["human_motion_prediction"])
+print("Balanced accuracy: " + str(balanced_accuracy))
+
+# temporary: where do NaN values in device_id come from?
+## get extracted features
+#df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
+## get merged timeseries
+df_test = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/_esm_timeperiod_5 min_only-active-smartphone-sessions_timeseries-merged_sensors-['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer'].csv")
+## get 5 min around ES event sensor files
+df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/gyroscope_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+#how many nan values in device_id
+df_test["2"].isna().sum()
+#endregion
+
+#region add location labels
+# add GPS locations to every record
+path_dataset_human_motion_annotated = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/human_motion_labeling/df_labels_predictions.csv"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
+gps_min_accuracy = 100 # in meters
+df_gps = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/locations_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
+df_gps = df_gps[df_gps["loc_accuracy"] <= gps_min_accuracy] ##drop rows with accuray > 100m
+df_gps["timestamp"] = pd.to_datetime(df_gps["timestamp"]) # convert timestamp to datetime
+df_gps = Merge_Transform.merge_participantIDs(df_gps, users)  # merge Participant IDs
+## add GPS location to every record
+df = pd.read_csv(path_dataset_human_motion_annotated)
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+df = df.reset_index(drop=True)
+
+for participant in df["device_id"].unique():
+    df_participant = df[df["device_id"] == participant]
+    # iterate through records of participant
+    for index, row in df_participant.iterrows():
+        # create df_record_gps with all gps records of participant that are within 30s  of current record
+        df_record_gps = df_gps[(df_gps["device_id"] == participant) & (df_gps["timestamp"] >= row["timestamp"] - pd.Timedelta(seconds=30)) & (df_gps["timestamp"] <= row["timestamp"] + pd.Timedelta(seconds=60))]
+
+        # if there are no gps records within 30s of current record, add NaN to df
+        if df_record_gps.empty:
+            df.loc[index, "latitude"] = np.nan
+            df.loc[index, "longitude"] = np.nan
+        # if there are gps records within 30s of current record, add the closest location to current record
+        else:
+            df.loc[index, "latitude"] = df_record_gps.iloc[(df_record_gps["timestamp"] - row["timestamp"]).abs().argsort()[:1]]["loc_double_latitude"].values[0]
+            df.loc[index, "longitude"] = df_record_gps.iloc[(df_record_gps["timestamp"] - row["timestamp"]).abs().argsort()[:1]]["loc_double_longitude"].values[0]
+## analytics: how many NaN in latitude
+print("For " + str(df["longitude"].isna().sum()) + " records, no GPS location could be found within 30s of the record. They will be dropped")
+df = df.dropna(subset=["latitude"])#drop NaN values in latitude
+
+# add location labels to every record
+#TODO understand why participant 19 is not in the mapping
+dict_frequentlocations_mapping = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/location/modeling/decision_forest/best_model/label_location_timeperiod_around_event-0_OnlyOneValuePerClass_mapping.pickle")
+participants_to_skip = [18, 19]
+distance_threshold = 0.1 # in km
+label_column_name = "location_prediction"
+df = GPS_computations.location_labeling_based_on_dict(df, dict_frequentlocations_mapping, distance_threshold, participants_to_skip)
+
+# delete nan values in location_prediction
+df = df.dropna(subset=["location_prediction"])
+with open(path_storage + "features_human-motion-predictions_location-predictions.pkl", 'wb') as handle:
+    pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#endregion
+
+#region add distance to long static periods
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
+df = pd.read_pickle(path_storage + "features_human-motion-predictions_location-predictions.pkl")
+
+# temporary until new long static period detection is done!:
+df_static_periods = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods_old/long_static_periods_results_all.csv")
+
+threshold_time_distance = 120000000 # in minutes; time distance allowed: allow infinite time distance
+df = Static_Periods.static_periods_distance_to_events(df, df_static_periods, threshold_time_distance)
+
+# drop NaN values in "static_period_start_distance"
+df = df.dropna(subset=["static_period_start_distance"])
+df["device_id"].nunique()
+df.to_csv(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods.csv")
+
+#endregion
+
+#region add time based features
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
+df = pd.read_csv(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods.csv")
+## add local timezone column
+# convert timestamp from datetime into unix ; timezone = UTC
+df = df.rename(columns={"timestamp": "timestamp_datetime"})
+df["timestamp_datetime"] = pd.to_datetime(df["timestamp_datetime"])
+
+df["timestamp"] = df["timestamp_datetime"].astype(np.int64) // 10 ** 6
+df = Merge_Transform.add_local_timestamp_column(df, users)
+
+# temporary
+df_test = df[["timestamp", "timestamp_datetime", "timestamp_local", "device_id"]]
+
+## create weekday column
+df["weekday"] = df["timestamp_local"].dt.weekday
+## create weekend vs. workday column
+df["weekend_weekday"] = df["weekday"].apply(lambda x: "weekend" if x in [5, 6] else "weekday")
+## create hour_of_day column
+df["hour_of_day"] = df["timestamp_local"].dt.hour
+## create time_of_day column
+df["time_of_day"] = df["hour_of_day"].apply(lambda x: "morning" if x in [6, 7, 8, 9, 10, 11] else "afternoon" if x in [12, 13, 14, 15, 16,
+                                                                               17] else "evening" if x in [18, 19, 20,
+                                                                                                           21, 22,
+                                                                                                           23] else "night" if x in [0, 1, 2, 3, 4, 5] else "unknown")
+
+df.to_csv(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods_time-features.csv")
+
+#endregion
+#endregion
+
+#region modeling for sleep
+
+#region hyperparameter tuning
+path_features= '/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/'
+df_features = pd.read_csv(path_features + "features_human-motion-predictions_location-predictions_long-static-periods_time-features.csv")
+label_column_name = "label_sleep"
+feature_columns = ["device_id", "ESM_timestamp", "timestamp", "human motion prediction", "location_prediction",
+                   "static_period_start_distance", "static_period_end_distance",
+                   "weekday", "weekend_weekday", "hour_of_day", "time_of_day", label_column_name]
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+
+label_segment = 0 # actually this is redundant here, but needed by DF as it was important in human motion classification
+label_classes = ['not lying: stationary', 'lying on the couch',
+       'lying in bed after sleeping', 'lying in bed before sleeping',
+       'lying in bed at other times', 'not lying: dynamic' ] # which label classes should be considered
+label_mapping = [['lying on the couch', 'lying at other times'],
+                 ['lying in bed at other times', 'lying at other times']
+                         ]
+label_mapping = None
+
+n_permutations = 0 # define number of permutations; better 1000
+parameter_tuning = "yes" # if yes: parameter tuning is performed; if False: default parameters are used
+feature_importance = "shap"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/modeling/decision_forest/hyperparameter_tuning/"
+
+#reset index
+df_features = df_features.reset_index(drop=True)
+
+# add label to feature set
+df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+
+# only keep feature columns
+df_features = df_features[feature_columns]
+
+# convert categorical columns to OneHot Encoding
+# initialize OneHotEncoder
+encoder = OneHotEncoder()
+features_categorical = ["human motion prediction", "location_prediction", "weekend_weekday", "time_of_day"]
+for col in features_categorical:
+    # extract the column as a series
+    col_series = df_features[col]
+
+    # reshape the series to a 2D array
+    col_2d = col_series.values.reshape(-1, 1)
+
+    # one-hot encode the column
+    col_encoded = encoder.fit_transform(col_2d)
+
+    # convert the encoded column to a dataframe
+    col_encoded_df = pd.DataFrame.sparse.from_spmatrix(col_encoded)
+
+    # retrieve the feature names for the encoded column
+    feature_names = encoder.categories_[0]
+
+    # add the column names to the encoded dataframe
+    col_encoded_df.columns = [f"{col}_{cat}" for cat in feature_names]
+
+    # append the encoded columns to the original dataframe
+    df_features = pd.concat([df_features, col_encoded_df], axis=1)
+
+    # drop the original column from the dataframe
+    df_features = df_features.drop(columns=[col])
+
+# drop any rows with NaN values
+print("Before dropping NaN " + str(df_features.shape))
+df_features = df_features.dropna()
+print("After dropping NaN " + str(df_features.shape))
+
+# set CV mode
+combine_participants = False
+#participants_test_set = [2,4,6,9]
+
+parameter_set = {
+    "n_jobs": -1,# use all cores
+    "random_state": 11 # set random state for reproducibility
+}
+
+parameter_set = {
+    "n_estimators": 800, #default
+    "criterion": "gini", #default
+    "max_depth": None, #default
+    "min_samples_split": 2,#default
+    "min_samples_leaf": 1,#default
+    "min_weight_fraction_leaf": 0.,#default
+    "max_features": None, # THIS IS CHANGED
+    "max_leaf_nodes": None,#default
+    "min_impurity_decrease": 0.0,#default
+    "bootstrap": True,#default
+    "oob_score": False,#default
+    "verbose": 0,#default
+    "warm_start": False,#default
+    "class_weight": "balanced", # THIS IS CHANGED
+    "n_jobs": -1,#default
+    "random_state": 11#default
+}
+# smaller parameter tuning set in order to have less runtime
+n_estimators = [100, 800]  # default 100
+max_depth = [15, 25, None] # default None
+min_samples_split = [2, 30, 50] # default 2
+min_samples_leaf = [1, 3] # default 1
+max_features = ["sqrt", None] # default "sqrt"
+oob_score = [False] # default False;
+class_weight = ["balanced", "balanced_subsample"] # default None
+criterion =[ "gini", "entropy"] # default "gini"
+max_samples = [None, 0.8] # default None which means that 100% of the samples are used for each tree
+bootstrap = [True]
+
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+             min_samples_leaf=min_samples_leaf, max_features=max_features, oob_score = oob_score, class_weight = class_weight,
+                            criterion = criterion, max_samples = max_samples, bootstrap = bootstrap)
+
+
+df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+# create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+df_label_counts = df_features.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+df_label_counts.to_csv(
+    path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+
+#train DF
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
+                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
+df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
+df = df_features.copy()
+
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+#drop NaN in device_id:
+#TODO: probably error that there are still NaN in device_id -> probably from Merging step -> resolve if time
+df = df.dropna(subset=["device_id"])
+
+#drop NaN in label_column_name
+df = df.dropna(subset=[label_column_name])
+
+# drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
+df = df.dropna()
+
+#combine label classes if necessary
+if label_mapping != None:
+    df = df.reset_index(drop=True)
+    for mapping in label_mapping:
+        df.loc[df[label_column_name] == mapping[0], label_column_name] = mapping[1]
+df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+# selects only features which are calculated in the label_segment around event.
+## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
+#df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+#df_decisionforest = df_decisionforest.reset_index(drop=True)
+
+#run DF
+df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df, label_segment, label_column_name,
+                                                      n_permutations, path_storage, feature_importance = feature_importance,
+                                                      confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning,
+                                                      parameter_set = parameter_set, grid_search_space = grid_search_space, combine_participants = combine_participants)
+
+df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_results.csv")
+df_labels_predictions.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_label_predictions.csv")
 
 
 
+
+#temporary
+#create dataframe iwith column names
+df_columns = df_features.columns
+# put column names in own column
+df_columns = pd.DataFrame(df_columns)
+
+
+#endregion
+
+#region hyperparameter tuning including motion feature
+#region add tsfresh features to df_features again
+
+# load and transform naturalistic dataset in right format
+label_column_name = "label_human motion"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/human_motion_labeling/"
+df_features = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
+df_sleep_features = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/features_human-motion-predictions_location-predictions_long-static-periods_time-features.csv")
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+label_segment = 90 #define the segment of data which will be considered in df_features around each ES event
+feature_segment = 30 #define the feature segment since this is necessary for the selection of data around each ES event
+#define the label maping
+label_mapping = [["lying (in one hand)", "lying (in hand/s)"],
+                            ["lying (in two hands)", "lying (in hand/s)"],
+                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["standing (in one hand)", "standing (in hand/s)"],
+                            ["standing (in two hands)", "standing (in hand/s)"],
+                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                            ["sitting: at a table (in one hand)", "sitting: at a table (in hand/s)"],
+                               ["sitting: at a table (in two hands)", "sitting: at a table (in hand/s)"],
+                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
+                         ["sitting: on the couch (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: on the couch (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["sitting: somewhere else (in one hand)", "sitting: at a table (in hand/s)"],
+                            ["sitting: somewhere else (in two hands)", "sitting: at a table (in hand/s)"],
+                         ["walking (in one hand)", "walking (in hand/s)"],
+                            ["walking (in two hands)", "walking (in hand/s)"],
+                         ["cycling (in one hand)", "cycling (in hand/s)"],
+                            ["cycling (in two hands)", "cycling (in hand/s)"]
+                         ]
+label_classes = ["lying (in hand/s)", "sitting: at a table (in hand/s)", "standing (in hand/s)",
+                 "walking (in hand/s)", "cycling (in hand/s)"]
+
+
+# some preprocessing
+##  change column names: replace in each column the "double_values_0" with "x-axis"
+df_features.columns = [col.replace('double_values_0', 'x-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_1', 'y-axis') for col in df_features.columns]
+df_features.columns = [col.replace('double_values_2', 'z-axis') for col in df_features.columns]
+
+## label df_features, transform labels and choose only the labels which are in label_classes
+df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+df_features = df_features.reset_index(drop=True)
+for mapping in label_mapping:
+    print(mapping)
+    df_features.loc[df_features[label_column_name] == mapping[0], label_column_name] = mapping[1]
+df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+df_features = df_features.dropna(subset=["device_id"])
+df_features = df_features.dropna(subset=[label_column_name])
+df_features = Merge_Transform.merge_participantIDs(df_features, users)
+
+# drop columns which would be duplicated
+df_features = df_features.drop(columns=["ESM_timestamp"])
+
+# iterate through rows in df_sleep_features and add the features to df_features based on the timestamp
+df_results = pd.DataFrame()
+counter = 1
+for index, row in df_sleep_features.iterrows():
+    print("start with row " + str(counter) + " of " + str(len(df_sleep_features)) + " rows")
+    counter = counter + 1
+
+    # find the corresponding row in df_features
+    df_features_row_index = df_features.loc[(df_features["device_id"] == row["device_id"]) & (df_features["timestamp"] == row["timestamp_datetime"])].index
+    # combine the df_sleep_features.loc[index] and df_features_row with concat along the columns
+    combined = pd.concat([df_sleep_features.loc[index], df_features.loc[df_features_row_index[0]]])
+    # check if combined is empty
+    if combined.empty:
+        print("combined is empty for row " + str(index) + " of " + str(len(df_sleep_features)) + " rows")
+
+    # delete "device_id"
+    combined = combined.drop("device_id")
+    combined = combined.drop("timestamp")
+    # inverse rows and columns
+    combined = combined.T
+    # if df_results is empty, then add the column names
+    if df_results.empty:
+        df_results = pd.DataFrame(columns=combined.index)
+    #  concatenate to df_results so that its one row and all columns
+    df_results.loc[len(df_results)] = combined
+
+# save the df_results with pickle
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/features_human-motion-predictions_location-predictions_long-static-periods_time-features_sleep-motion-features.pkl", 'wb') as f:
+    pickle.dump(df_results, f)
+#endregion
+
+
+path_features= '/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/'
+df_features = pd.read_pickle(path_features + "features_human-motion-predictions_location-predictions_long-static-periods_time-features_sleep-motion-features.pkl")
+label_column_name = "label_sleep"
+dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
+
+label_segment = 0 # actually this is redundant here, but needed by DF as it was important in human motion classification
+label_classes = ['not lying: stationary', 'lying on the couch',
+       'lying in bed after sleeping', 'lying in bed before sleeping',
+       'lying in bed at other times', 'not lying: dynamic' ] # which label classes should be considered
+label_mapping = [['lying on the couch', 'lying at other times'],
+                 ['lying in bed at other times', 'lying at other times']
+                         ]
+label_mapping = None
+
+drop_cols = ["Unnamed: 0.2", "Unnamed: 0.1", "Unnamed: 0", "timestamp_datetime", "y_test", "latitude", "longitude",
+             "label_distance_to_label", "timestamp_local", "GPS_timestamp_merged", "label_human motion"]
+
+n_permutations = 0 # define number of permutations; better 1000
+parameter_tuning = "yes" # if yes: parameter tuning is performed; if False: default parameters are used
+feature_importance = "shap"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/modeling/decision_forest/hyperparameter_tuning_including_motion_features/"
+
+#reset index
+df_features = df_features.reset_index(drop=True)
+
+#drop timestamp which is doubled
+df_features = df_features.iloc[:, [i for i in range(df_features.shape[1]) if i != 14]]
+
+## drop fourth column which is "ESM_timestamp" (doubled)
+df_features = df_features.iloc[:, [i for i in range(df_features.shape[1]) if i != 4]]
+## drop also one of the two device id columns
+df_features = df_features.iloc[:, [i for i in range(df_features.shape[1]) if i != 4]]
+
+# add label to feature set
+df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
+
+# drop unnecessary columns
+df_features = df_features.drop(columns=drop_cols)
+
+# convert categorical columns to OneHot Encoding
+# initialize OneHotEncoder
+encoder = OneHotEncoder()
+features_categorical = ["human motion prediction", "location_prediction", "weekend_weekday", "time_of_day"]
+for col in features_categorical:
+    # extract the column as a series
+    col_series = df_features[col]
+
+    # reshape the series to a 2D array
+    col_2d = col_series.values.reshape(-1, 1)
+
+    # one-hot encode the column
+    col_encoded = encoder.fit_transform(col_2d)
+
+    # convert the encoded column to a dataframe
+    col_encoded_df = pd.DataFrame.sparse.from_spmatrix(col_encoded)
+
+    # retrieve the feature names for the encoded column
+    feature_names = encoder.categories_[0]
+
+    # add the column names to the encoded dataframe
+    col_encoded_df.columns = [f"{col}_{cat}" for cat in feature_names]
+
+    # append the encoded columns to the original dataframe
+    df_features = pd.concat([df_features, col_encoded_df], axis=1)
+
+    # drop the original column from the dataframe
+    df_features = df_features.drop(columns=[col])
+
+# drop any rows with NaN values
+# convert infinity values to NaN
+df_features = df_features.replace([np.inf, -np.inf], np.nan)
+## replace NaN values by median of column
+#TODO check why there are NaN values here!
+print("Before fillin NaN with median" + str(df_features.shape))
+df_features = df_features.fillna(df_features.median())
+print("After dropping NaN " + str(df_features.shape))
+
+# drop columns which contain only one value
+df_features = df_features.loc[:, df_features.nunique() != 1]
+# drop columns which contain more than 90% NaN values
+df_features = df_features.loc[:, df_features.isnull().mean() < .9]
+
+
+# set CV mode
+combine_participants = False
+#participants_test_set = [2,4,6,9]
+
+parameter_set = {
+    "n_jobs": -1,# use all cores
+    "random_state": 11 # set random state for reproducibility
+}
+
+parameter_set = {
+    "n_estimators": 800, #default
+    "criterion": "gini", #default
+    "max_depth": None, #default
+    "min_samples_split": 2,#default
+    "min_samples_leaf": 1,#default
+    "min_weight_fraction_leaf": 0.,#default
+    "max_features": None, # THIS IS CHANGED
+    "max_leaf_nodes": None,#default
+    "min_impurity_decrease": 0.0,#default
+    "bootstrap": True,#default
+    "oob_score": False,#default
+    "verbose": 0,#default
+    "warm_start": False,#default
+    "class_weight": "balanced", # THIS IS CHANGED
+    "n_jobs": -1,#default
+    "random_state": 11#default
+}
+# smaller parameter tuning set in order to have less runtime
+n_estimators = [100, 800]  # default 100
+max_depth = [15, 25, None] # default None
+min_samples_split = [2, 30, 50] # default 2
+min_samples_leaf = [1, 3] # default 1
+max_features = ["sqrt", None] # default "sqrt"
+oob_score = [False] # default False;
+class_weight = ["balanced", "balanced_subsample"] # default None
+criterion =[ "gini", "entropy"] # default "gini"
+max_samples = [None, 0.8] # default None which means that 100% of the samples are used for each tree
+bootstrap = [True]
+
+grid_search_space = dict(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+             min_samples_leaf=min_samples_leaf, max_features=max_features, oob_score = oob_score, class_weight = class_weight,
+                            criterion = criterion, max_samples = max_samples, bootstrap = bootstrap)
+
+
+df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+# create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
+df_label_counts = df_features.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
+df_label_counts["total"] = df_label_counts.sum(axis=1)
+df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
+df_label_counts.to_csv(
+    path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
+
+#train DF
+df_decisionforest_results_all = pd.DataFrame(columns=["Label", "Seconds around Event", "Balanced Accuracy", "Accuracy", "F1",
+                                             "Precision", "Recall", "Sensor Combination", "Feature Segments"])
+df_analytics = pd.DataFrame(columns=["Sensor Combination", "Feature Segment", "Event Description", "Number Participants", "Number Events", "Number Samples", "Number Features"])
+df = df_features.copy()
+
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
+
+#drop NaN in device_id:
+#TODO: probably error that there are still NaN in device_id -> probably from Merging step -> resolve if time
+df = df.dropna(subset=["device_id"])
+
+#drop NaN in label_column_name
+df = df.dropna(subset=[label_column_name])
+
+# drop rows with NaN: will be many, as after merging of high-freq with GPS, NaN have not be dropped yet
+df = df.dropna()
+
+#combine label classes if necessary
+if label_mapping != None:
+    df = df.reset_index(drop=True)
+    for mapping in label_mapping:
+        df.loc[df[label_column_name] == mapping[0], label_column_name] = mapping[1]
+df = df[df[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
+
+# selects only features which are calculated in the label_segment around event.
+## Note: updated to code so that it actually only selects features for which the WHOLE FEATURE SEGMENT is in the label_segment around event
+#df_decisionforest = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment/2)))) & (df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment/2))- pd.Timedelta(seconds=feature_segment)))]
+#df_decisionforest = df_decisionforest.reset_index(drop=True)
+
+#run DF
+df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df, label_segment, label_column_name,
+                                                      n_permutations, path_storage, feature_importance = feature_importance,
+                                                      confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning,
+                                                      parameter_set = parameter_set, grid_search_space = grid_search_space, combine_participants = combine_participants)
+
+df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_results.csv")
+df_labels_predictions.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_label_predictions.csv")
+#endregion
+
+#endregion
 
 #region OUTDATED: first approach which resulted in 60% accuracy (4 sleep classes)
 ## task: train DF on GPS-features, frequent locations, human motion model output and time of day
@@ -5332,313 +6914,68 @@ for label_segment in label_segments:
     df_decisionforest_results.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning + "s_df_results.csv")
 
 #endregion
-#endregion
-
-#region data preparation for sleep
-label_segment = 90 #define how much data around each event will be considered
-
-#region create human motion labelled dataset
-feature_segment = 30 #in seconds; define length of segments of parameters (over which duration they have been created)
-combination_sensors = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation", "accelerometer"]
-min_gps_accuracy = 35
-only_active_smartphone_sessions = "yes"
-parameter_tuning = "no"
-path_dataset = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/data_driven_approach/label_human motion_" + str(
-                combination_sensors) + "-merged-to-GPSFeatures_feature-segment-" + str(feature_segment) + "_min-gps-accuracy-" + str(
-                min_gps_accuracy) + "_only-active-smartphone-sessions-" + str(
-                only_active_smartphone_sessions) + "_FeaturesExtracted_Merged_Selected.csv"
-path_human_motion_models = "/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_analysis/decision_forest/best_performing_models/" + str(combination_sensors) + "-GPS_feature-segment-" + str(feature_segment) + "s/"
-drop_cols = ["Unnamed: 0"]
-df = pd.read_csv(path_dataset)
-
-#some preprocessing
-df["timestamp"] = pd.to_datetime(df["timestamp"])
-df["ESM_timestamp"] = pd.to_datetime(df["ESM_timestamp"])
-print("NaN in device_id before drop: " + str(df["device_id"].isna().sum()))
-df = df.dropna(subset=["device_id"])
-print("NaN in device_id after drop: " + str(df["device_id"].isna().sum()))
-df = Merge_Transform.merge_participantIDs(df, users)  # temporary: merge participant ids
-# select only data which are in the label_segment around ESM_event & drop columns
-df = df[(df['timestamp'] >= (df['ESM_timestamp'] - pd.Timedelta(seconds=(label_segment / 2)))) & (
-        df['timestamp'] <= (df['ESM_timestamp'] + pd.Timedelta(seconds=(label_segment / 2)) - pd.Timedelta(
-    seconds=feature_segment)))]
-# iterate through participants and classify data with human motion models
-df = df.reset_index(drop=True)
-df["human_motion_prediction"] = np.nan
-for participant in df["device_id"].unique():
-    print("Start with participant " + str(participant) + " ...")
-    # read the .sav model file
-    # check if model exists
-    if os.path.exists(path_human_motion_models + "label_human motion_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_test_proband-" + str(participant) + "_model.sav"):
-        model = pickle.load(open(path_human_motion_models + "label_human motion_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-" + str(parameter_tuning) + "_test_proband-" + str(participant) + "_model.sav", 'rb'))
-    else:
-        print("No model for participant " + str(participant) + " found!")
-        continue
-    # select data of participant
-    df_participant = df[df["device_id"] == participant]
-
-    # drop columns
-    df_participant = df_participant.drop(columns=drop_cols)
-
-    # create dataframe for predictions
-    df_participant_features = df_participant.drop(columns=["device_id", "timestamp", "ESM_timestamp", "label_human motion", "human_motion_prediction"])
-
-    # add predictions to dataframe
-    df_participant["human_motion_prediction"] = model.predict(df_participant_features)
-
-    # add predictions to main dataframe df
-    df.loc[df_participant.index, "human_motion_prediction"] = df_participant["human_motion_prediction"]
-
-    # if label classes should be joint -> define in label mapping
-#drop rows with NaN in label_column_name (they exist since for some participants no model existed)
-df = df.dropna(subset=["human_motion_prediction"])
-
-# analytics: check performance of human motion model
-label_mapping = [["lying (in one hand)", "lying (hand/s)"],
-                            ["lying (in two hands)", "lying (hand/s)"],
-                            ["lying (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                         ["standing (in one hand)", "standing (hand/s)"],
-                            ["standing (in two hands)", "standing (hand/s)"],
-                               ["standing (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                            ["sitting: at a table (in one hand)", "sitting (hand/s)"],
-                               ["sitting: at a table (in two hands)", "sitting (hand/s)"],
-                            ["sitting: at a table (on flat surface)", "standing, sitting, or lying (on flat surface)"],
-                         ["sitting: on the couch (in one hand)", "sitting (hand/s)"],
-                            ["sitting: on the couch (in two hands)", "sitting (hand/s)"],
-                         ["sitting: somewhere else (in one hand)", "sitting (hand/s)"],
-                            ["sitting: somewhere else (in two hands)", "sitting (hand/s)"],
-                         ["walking (in one hand)", "walking (hand/s)"],
-                            ["walking (in two hands)", "walking (hand/s)"],
-                         ["cycling (in one hand)", "cycling (hand/s)"],
-                            ["cycling (in two hands)", "cycling (hand/s)"]
-                         ]
-label_classes = ["lying (hand/s)", "sitting (hand/s)", "standing (hand/s)",
-                 "standing, sitting, or lying (on flat surface)",
-                 "walking (hand/s)" ] # which label classes should be considered
-for mapping in label_mapping:
-    df.loc[df["label_human motion"] == mapping[0], "label_human motion"] = mapping[1]
-balanced_accuracy = metrics.balanced_accuracy_score(df["label_human motion"], df["human_motion_prediction"])
-print("Balanced accuracy: " + str(balanced_accuracy))
-
-# temporary: where do NaN values in device_id come from?
-## get extracted features
-#df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_preparation/features/['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer']-merged-to-GPSFeatures_feature-segment-30_min-gps-accuracy-35_only-active-smartphone-sessions-yes_FeaturesExtracted_Merged.pkl")
-## get merged timeseries
-df_test = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/timeseries_merged/_esm_timeperiod_5 min_only-active-smartphone-sessions_timeseries-merged_sensors-['linear_accelerometer', 'gyroscope', 'magnetometer', 'rotation', 'accelerometer'].csv")
-## get 5 min around ES event sensor files
-df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/gyroscope_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
-#how many nan values in device_id
-df_test["2"].isna().sum()
-#endregion
-
-#region add location labels
-# add GPS locations to every record
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
-gps_min_accuracy = 100 # in meters
-df_gps = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events_only_active_smartphonesessions/locations_esm_timeperiod_5 min.csv_JSONconverted_only_active_smartphone_sessions.pkl")
-df_gps = df_gps[df_gps["loc_accuracy"] <= gps_min_accuracy] ##drop rows with accuray > 100m
-df_gps["timestamp"] = pd.to_datetime(df_gps["timestamp"]) # convert timestamp to datetime
-df_gps = Merge_Transform.merge_participantIDs(df_gps, users)  # merge Participant IDs
-## add GPS location to every record
-df = df.reset_index(drop=True)
-for participant in df["device_id"].unique():
-    df_participant = df[df["device_id"] == participant]
-    # iterate through records of participant
-    for index, row in df_participant.iterrows():
-        # create df_record_gps with all gps records of participant that are within 30s  of current record
-        df_record_gps = df_gps[(df_gps["device_id"] == participant) & (df_gps["timestamp"] >= row["timestamp"] - pd.Timedelta(seconds=30)) & (df_gps["timestamp"] <= row["timestamp"] + pd.Timedelta(seconds=30))]
-
-        # if there are no gps records within 30s of current record, add NaN to df
-        if df_record_gps.empty:
-            df.loc[index, "latitude"] = np.nan
-            df.loc[index, "longitude"] = np.nan
-        # if there are gps records within 30s of current record, add the closest location to current record
-        else:
-            df.loc[index, "latitude"] = df_record_gps.iloc[(df_record_gps["timestamp"] - row["timestamp"]).abs().argsort()[:1]]["loc_double_latitude"].values[0]
-            df.loc[index, "longitude"] = df_record_gps.iloc[(df_record_gps["timestamp"] - row["timestamp"]).abs().argsort()[:1]]["loc_double_longitude"].values[0]
-## analytics: how many NaN in latitude
-print("For " + str(df["longitude"].isna().sum()) + " records, no GPS location could be found within 30s of the record. They will be dropped")
-df = df.dropna(subset=["latitude"])#drop NaN values in latitude
-
-# add location labels to every record
-#TODO understand why participant 19 is not in the mapping
-dict_frequentlocations_mapping = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/location/modeling/decision_forest/best_model/label_location_timeperiod_around_event-0_OnlyOneValuePerClass_mapping.pickle")
-participants_to_skip = [18, 19]
-distance_threshold = 0.1 # in km
-label_column_name = "location_prediction"
-df = GPS_computations.location_labeling_based_on_dict(df, dict_frequentlocations_mapping, distance_threshold, participants_to_skip)
-with open(path_storage + "features_human-motion-predictions_location-predictions.pkl", 'wb') as handle:
-    pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-#endregion
-
-#region add distance to long static periods
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
-df = pd.read_pickle(path_storage + "features_human-motion-predictions_location-predictions.pkl")
-df_static_periods = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/long_static_periods/long_static_periods_results_all.csv")
-threshold_time_distance = 120000000 # in minutes; time distance allowed between
-df = Static_Periods.static_periods_distance_to_events(df, df_static_periods, threshold_time_distance)
-with open(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods.pkl", 'wb') as handle:
-    pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-#endregion
-
-#region add time based features
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/"
-df = pd.read_pickle(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods.pkl")
-## add local timezone column
-# convert timestamp from datetime into unix ; timezone = UTC
-df = df.rename(columns={"timestamp": "timestamp_datetime"})
-df["timestamp"] = df["timestamp_datetime"].astype(np.int64) // 10 ** 6
-df = Merge_Transform.add_local_timestamp_column(df, users)
-
-# temporary
-df_test = df[["timestamp", "timestamp_datetime", "timestamp_local", "device_id"]]
-
-## create weekday column
-df["weekday"] = df["timestamp_local"].dt.weekday
-## create weekend vs. workday column
-df["weekend_weekday"] = df["weekday"].apply(lambda x: "weekend" if x in [5, 6] else "weekday")
-## create hour_of_day column
-df["hour_of_day"] = df["timestamp_local"].dt.hour
-## create time_of_day column
-df["time_of_day"] = df["hour_of_day"].apply(lambda x: "morning" if x in [6, 7, 8, 9, 10, 11] else "afternoon" if x in [12, 13, 14, 15, 16,
-                                                                               17] else "evening" if x in [18, 19, 20,
-                                                                                                           21, 22,
-                                                                                                           23] else "night" if x in [0, 1, 2, 3, 4, 5] else "unknown")
-
-with open(path_storage + "features_human-motion-predictions_location-predictions_long-static-periods_time-features.pkl", 'wb') as handle:
-    pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-#endregion
-#endregion
-
-#region modeling for sleep
-
-#region best model training
-path_features= '/Users/benediktjordan/Documents/MTS/Iteration01/sleep/data_preparation/features/'
-df_features = pd.read_pickle(path_features + "features_human-motion-predictions_location-predictions_long-static-periods_time-features.pkl")
-label_column_name = "label_sleep"
-feature_columns = ["device_id", "ESM_timestamp", "timestamp", "human_motion_prediction", "location_prediction",
-                   "static_period_start_distance", "static_period_end_distance",
-                   "weekday", "weekend_weekday", "hour_of_day", "time_of_day", label_column_name]
-dict_label = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_all_transformed_labeled_dict.pkl")
-
-label_segment = 0 # actually this is redundant here, but needed by DF as it was important in human motion classification
-label_classes = ['not lying: stationary', 'lying on the couch',
-       'lying in bed after sleeping', 'lying in bed before sleeping',
-       'lying in bed at other times', 'not lying: dynamic' ] # which label classes should be considered
-label_mapping = None
-n_permutations = 0 # define number of permutations; better 1000
-parameter_tuning = "no" # if yes: parameter tuning is performed; if False: default parameters are used
-feature_importance = "shap"
-path_storage = "/Users/benediktjordan/Documents/MTS/Iteration01/sleep/modeling/decision_forest/best_model/"
-
-#reset index
-df_features = df_features.reset_index(drop=True)
-
-# add label to feature set
-df_features = labeling_sensor_df(df_features, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
-
-# only keep feature columns
-df_features = df_features[feature_columns]
-
-# convert categorical columns to OneHot Encoding
-# initialize OneHotEncoder
-encoder = OneHotEncoder()
-features_categorical = ["human_motion_prediction", "location_prediction", "weekend_weekday", "time_of_day"]
-for col in features_categorical:
-    # extract the column as a series
-    col_series = df_features[col]
-
-    # reshape the series to a 2D array
-    col_2d = col_series.values.reshape(-1, 1)
-
-    # one-hot encode the column
-    col_encoded = encoder.fit_transform(col_2d)
-
-    # convert the encoded column to a dataframe
-    col_encoded_df = pd.DataFrame.sparse.from_spmatrix(col_encoded)
-
-    # retrieve the feature names for the encoded column
-    feature_names = encoder.categories_[0]
-
-    # add the column names to the encoded dataframe
-    col_encoded_df.columns = [f"{col}_{cat}" for cat in feature_names]
-
-    # append the encoded columns to the original dataframe
-    df_features = pd.concat([df_features, col_encoded_df], axis=1)
-
-    # drop the original column from the dataframe
-    df_features = df_features.drop(columns=[col])
-
-# drop any rows with NaN values
-#TODO check why there are NaN values here!
-print("Before dropping NaN " + str(df_features.shape))
-df_features = df_features.dropna()
-print("After dropping NaN " + str(df_features.shape))
-
-# set CV mode
-combine_participants = False
-#participants_test_set = [2,4,6,9]
-
-parameter_set = {
-    "n_jobs": -1,# use all cores
-    "random_state": 11 # set random state for reproducibility
-}
-
-parameter_set = {
-    "n_estimators": 800, #default
-    "criterion": "gini", #default
-    "max_depth": None, #default
-    "min_samples_split": 2,#default
-    "min_samples_leaf": 1,#default
-    "min_weight_fraction_leaf": 0.,#default
-    "max_features": None, # THIS IS CHANGED
-    "max_leaf_nodes": None,#default
-    "min_impurity_decrease": 0.0,#default
-    "bootstrap": True,#default
-    "oob_score": False,#default
-    "verbose": 0,#default
-    "warm_start": False,#default
-    "class_weight": "balanced", # THIS IS CHANGED
-    "n_jobs": -1,#default
-    "random_state": 11#default
-}
-
-grid_search_space = None
-
-df_features = df_features[df_features[label_column_name].isin(label_classes)]  # drop rows which don´t contain labels which are in label_classes
-
-# create dataframe which counts values of label_column_name grouped by "device_id" and save it to csv
-df_label_counts = df_features.groupby("device_id")[label_column_name].value_counts().unstack().fillna(0)
-df_label_counts["total"] = df_label_counts.sum(axis=1)
-df_label_counts.loc["total"] = df_label_counts.sum(axis=0)
-df_label_counts.to_csv(
-    path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_label_counts.csv")
-
-
-#run DF
-df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df_features, label_segment, label_column_name,
-                                                      n_permutations, path_storage, feature_importance = feature_importance,
-                                                      confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning,
-                                                      parameter_set = parameter_set, grid_search_space = grid_search_space, combine_participants = combine_participants)
-df_decisionforest_results.to_csv(path_storage + "timeperiod_around_event-" + str(label_segment) + "-GPS_parameter_tuning-" + parameter_tuning + "_results_overall.csv")
-
-
-
-#temporary
-#create dataframe iwith column names
-df_columns = df_features.columns
-# put column names in own column
-df_columns = pd.DataFrame(df_columns)
-
 
 #endregion
 
-#endregion
-
-#endregion
-
-#region on toilet
+#region lavatory use
 #region Laboratory data
+
+#region data preparation
+# region feature selection -> data-driven
+
+# creat list of labels
+label_column_name = "label_on the toilet"
+time_periods = [30, 10, 5,2,1] # second 1 is excluded as my system always crushes
+sensor_set = ["linear_accelerometer", "gyroscope", "magnetometer", "rotation"] #note: this dataset includes also
+# the GPS features which have been merged to it before (compare "path_features" construction below)
+min_gps_accuracy = 35
+apply_tsfresh_feature_selection = "yes"
+path_features_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/human_motion/data_preparation/features/"
+path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/toilet/data_preparation/features/"
+time_column_name = "timestamp"
+ESM_identifier_column="ESM_timestamp"
+with open("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes_dict.pkl",
+        'rb') as f:
+    dict_label = pickle.load(f)
+
+for seconds in time_periods:
+    print("seconds started: ", seconds)
+
+    t0 = time.time()
+    # load df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/highfrequencysensors-" + str(sensors_included) + "_timeperiod-" + str(seconds) + " s.pkl"
+    path_features = path_features_storage + str(sensor_set) + "_timeperiod-" + str(seconds) +  "_FeaturesExtracted.pkl"
+    df_features = pd.read_pickle(path_features)
+
+    #drop columns
+    #    drop_columns = ["GPS_timestamp_merged", "Unnamed: 0.21", "Unnamed: 0.20", "Unnamed: 0.19", "Unnamed: 0.18", "Unnamed: 0.17", "Unnamed: 0.16", "Unnamed: 0.15", "Unnamed: 0.14", "Unnamed: 0.13", "Unnamed: 0.12", "Unnamed: 0.11", "Unnamed: 0.10", "Unnamed: 0.9", "Unnamed: 0.8", "Unnamed: 0.7", "Unnamed: 0.6", "Unnamed: 0.5", "Unnamed: 0.4", "Unnamed: 0.3", "Unnamed: 0.2", "Unnamed: 0.1", ]
+    drop_columns = []
+    df_features.drop(drop_columns, axis=1, inplace=True)
+
+    #temporary: only select part of rows
+    #df_features = df_features.iloc[0:10000, :].copy()
+    #print("df_features loaded")
+    #temporary set first row device_id == 1
+    #df_features.at[0, "device_id"] = 1
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+    #df_features.drop(columns=["timestamp_beginning_of_feature_segment"], inplace=True)
+
+    #temporary: drop column "timestamp_beginning_of_feature_segment"
+
+    features_filtered, df_analytics = computeFeatures.feature_selection(df_features, label_column_name, apply_tsfresh_feature_selection)
+
+    # save df_features
+    #path_features = dir_sensorfiles + "data_preparation/features/activity-" + label_column_name + "_highfrequencysensors-all_timeperiod-" + str(seconds) + " s_featureselection.pkl"
+    path_features = path_storage + label_column_name + "_" + str(sensor_set) + "_timeperiod-" + str(seconds) + "_FeaturesExtracted_Selected.pkl"
+
+    with open(path_features, 'wb') as f:
+        pickle.dump(features_filtered, f, pickle.HIGHEST_PROTOCOL)
+    print("df_features saved")
+
+#endregion
+#endregion
+
 #region modeling for toilet
 ##region Decision Forest for comparing different feature segments
 # training DF
@@ -5649,7 +6986,6 @@ label_column_name = "label_on the toilet"
 n_permutations = 0 # define number of permutations; better 1000
 label_segment = 90 #define how much data around each event will be considered
 # if label classes should be joint -> define in label mapping
-label_classes = ["on the toilet", "sitting not on the toilet" ] # which label classes should be considered
 parameter_tuning = "no" # if True: parameter tuning is performed; if False: default parameters are used
 drop_cols = [] # columns that should be dropped
 feature_importance = "shap"
@@ -5657,6 +6993,13 @@ label_mapping = None
 with open("/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/esm_transformed_including-activity-classes_dict.pkl",
         'rb') as f:
     dict_label = pickle.load(f)
+
+#temporary find out label classes
+# transform dict_label into dataframe
+df_label = pd.DataFrame.from_dict(dict_label, orient='index')
+df_label["label_on the toilet"].value_counts()
+
+label_classes = ["on the toilet", "sitting not on the toilet", "other stationary", "other dynamic" ] # which label classes should be considered
 
 
 parameter_set = {
@@ -5787,13 +7130,15 @@ for combination_sensors in combinations_sensors:
             continue
 
         #run DF
-        df_decisionforest_results = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, feature_importance = feature_importance, confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning, parameter_set = parameter_set)
+        df_decisionforest_results, df_labels_predictions = DecisionForest.DF_sklearn(df_decisionforest, label_segment, label_column_name, n_permutations, path_storage, feature_importance = feature_importance, confusion_matrix_order = label_classes,  parameter_tuning = parameter_tuning, parameter_set = parameter_set)
         df_decisionforest_results["Sensor Combination"] = str(combination_sensors)
         df_decisionforest_results["Feature Segments"] = str(feature_segment)
 
         df_decisionforest_results_all = pd.concat([df_decisionforest_results_all, df_decisionforest_results], axis=0)
         df_decisionforest_results_all.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
             label_segment) + "s_parameter_tuning-" + parameter_tuning + "_results.csv")
+        df_labels_predictions.to_csv(path_storage + label_column_name + "_timeperiod_around_event-" + str(
+            label_segment) + "s_parameter_tuning-" + parameter_tuning + "_labels_predictions.csv")
         print("Finished Combination: " + str(combination_sensors) + "and timeperiod: " + str(label_segment) + " in " + str((time.time() - t0)/60) + " minutes")
 
 df_analytics.to_csv("/Users/benediktjordan/Documents/MTS/Iteration02/toilet/data_analysis/decision_forest/timeperiod_around_event-" + str(label_segment) + "s_parameter_tuning-" + parameter_tuning + "_analytics.csv")
@@ -5898,7 +7243,7 @@ plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/human_motion/data_a
 feature_segments = [30] #in seconds; define length of segments of parameters (over which duration they have been created)
 label_segment = 90 #define how much data around each event will be considered
 combinations_sensors = [["linear_accelerometer", "gyroscope", "magnetometer", "rotation"]]
-label_classes = ["on the toilet", "sitting not on the toilet" ] # which label classes should be considered
+label_classes = ["on the toilet", "sitting not on the toilet", "other stationary", "other dynamic" ] # which label classes should be considered
 label_mapping = None
 min_gps_accuracy = 35
 label_column_name = "label_on the toilet"
@@ -6158,12 +7503,4 @@ for label_segment in label_segments:
 
 #endregion
 
-#region Notes
-#region Where do I need more data?
-## Human Motion: walking, cycling, running
-## Public Transport: in public transport; in train
 #endregion
-#endregion
-
-#testregion
-df_test = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/Benedikt/linear_accelerometer_labeled_esm_timestamps.csv")

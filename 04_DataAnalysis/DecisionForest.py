@@ -620,10 +620,10 @@ class DecisionForest:
 			if combine_participants == True:
 				X_train_df = X_train_df.drop(columns=[ "device_id_traintest"])  # add sensor_timestamp later on here
 
-			X_train = np.array(X_train_df)
+			#X_train = np.array(X_train_df)
 			y_train_df = df_train[label_column_name]  # This is the outcome variable
 			y_train_df = y_train_df.reset_index(drop=True)
-			y_train = np.array(y_train_df)  # Outcome variable here
+			#y_train = np.array(y_train_df)  # Outcome variable here
 
 			# parameter tuning: only do, if parameter_tuning is set to True
 			if parameter_tuning == "yes":
@@ -650,10 +650,10 @@ class DecisionForest:
 				parameter_tuning_active = "no"
 
 			# save the model
-			pickle.dump(model, open(
-				path_storage + label_column_name + "_timeperiod_around_event-" + str(
+			with open(path_storage + label_column_name + "_timeperiod_around_event-" + str(
 					label_segment) + "_parameter_tuning-"+ parameter_tuning_active +"_test_proband-" + str(
-					i) + "_model.sav", "wb"))
+					i) + "_model.sav", 'wb') as f:
+				pickle.dump(best_model, f)
 			print("Best model: ", best_model)
 
 			# apply permutation test
