@@ -1,14 +1,9 @@
-# Note:
-# SKLEARN: upgraded sklearn on 9. February from 1.1.2. to (didnt work out!)
-# in order to do so also had to upgrade pi from  22.3.1 -> 23.0
-
+#script contains general function used in other scripts
 
 #region transform unix timestamp into datetime
-
 def convert_unix_to_datetime(df, column_name):
     df[column_name] = pd.to_datetime(df[column_name], unit='ms')
     return df
-
 #endregion
 
 # region data preparation: label sensorfiles
@@ -37,10 +32,9 @@ def labeling_sensor_df(df_sensor, dict_label, label_column_name, ESM_identifier_
     df_sensor = pd.concat([df_sensor, df_label], axis=1)
 
     return df_sensor
+#endregion
 
-
-
-#calculate figure width for matplotlib so it conforms with Latex based on this tutorial: https://jwalton.info/Embed-Publication-Matplotlib-Latex/
+#region NOT USED: calculate figure width for matplotlib so it conforms with Latex based on this tutorial: https://jwalton.info/Embed-Publication-Matplotlib-Latex/
 # Note: something doesnt quite work, figures still in Latex much smaller than page. Check current Latex settings
 def set_size(width, fraction=1):
     """Set figure dimensions to avoid scaling in LaTeX.

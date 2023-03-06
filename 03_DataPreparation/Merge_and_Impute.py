@@ -6,11 +6,11 @@ import numpy as np
 
 #endregion
 
-#region create merge object/class
+# this class creates merging and NaN deletion functions
 class Merge_and_Impute:
 
     #merge timeseries or features
-    # NOTE_
+    # NOTE:
     ## timedelta HAS TO BE a string in format "10s", otherwise it doesnt work
     ## merging is done using the setting "nearest" which means the nearest timestamp is taken (doesnt matter if before or after)
     def merge(df_base, df_tomerge, sensor_merge, timedelta, columns_to_delete, path_intermediate_files = None, add_prefix_to_merged_columns = False):
@@ -145,11 +145,8 @@ class Merge_and_Impute:
         df_final = df_final.dropna(axis=0, how='any')
         return df_final
 
-    #TODO include here imputation methods:
-    # - fill by last / next value
-    # - fill by mean
 
-
+#region OUTDATED
 #testsection
 df_test = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/linear_accelerometer/activity-label_human motion - general_sensor-linear_accelerometer_timeperiod-30 s_featureselection.pkl")
 
@@ -282,4 +279,5 @@ df_base = df_base.rename(columns={"Unnamed: 0_x": "Unnamed: 0", "0_x": "0", "1_x
                                   "ESM_aligned_time_x": "ESM_aligned_time"})
 
 # endregion temporary
+#endregion
 

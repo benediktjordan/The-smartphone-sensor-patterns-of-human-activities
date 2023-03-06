@@ -1,3 +1,5 @@
+# in this script the LSTM is implemented; as the results are not good, the LSTM is not used anymore
+
 # region import libraries
 ## visualizations
 import matplotlib.pyplot as plt
@@ -99,10 +101,6 @@ from keras.layers import LeakyReLU
 
 # endregion
 
-# added line
-
-
-
 #region old Keras model
 # build model (based on: https://towardsdatascience.com/time-series-classification-for-human-activity-recognition-with-lstms-using-tensorflow-2-and-keras-b816431afdff)
     ### check if GPU is available
@@ -135,8 +133,6 @@ yhat = model.predict(X_test)
 
 
 #endregion
-
-
 
 #region implement LOSOCV
 # initialize parameters
@@ -774,12 +770,7 @@ print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_rec
 #endregion
 
 
-
-
-
-
-
-
+#region iterate through LOSOCV rounds
 #for loop to iterate through LOSOCV "rounds"
 t0 = time.time()
 for i in IDlist:
@@ -891,15 +882,7 @@ print('Recall: %.3f (%.3f)' % (mean(outer_results_recall), std(outer_results_rec
 #os.system("shutdown /h") #hibernate
 #endregion
 
-
-
-
-
-
-
-
-
-#region: first try of creating LSTM
+#region first try of creating LSTM
 
 ##load test data
 df = pd.read_csv(
@@ -1108,5 +1091,7 @@ figure.show()  # ta-da!
 
 
 fig.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name + "/sensors_included-" + sensors_included + "_timeperiod_segments-" + timeperiod_segments + "_test_proband-' + str(i) + '_SHAPFeatureImportance.png')
+
+#endregion
 
 #endregion

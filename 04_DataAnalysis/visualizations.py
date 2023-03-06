@@ -1,7 +1,4 @@
-#region import
-
-#endregion
-
+# this class contains visualization function for confusion matrix
 class visualizations:
     def confusion_matrix(y_pred, y_test, acc_balanced, absolute_or_relative_values, title, label_mapping = None, save_path):
         # Visualize Confusion Matrix with absolute values

@@ -1,6 +1,5 @@
+# this class computes the long static periods and related functionalities
 class Static_Periods:
-
-
 
     # compute long static periods for a participant
     def compute_long_periods_of_static_updated(df_participant_all, threshold_expected, threshold_static_percentage, threshold_static, window_size_minutes, window_step_minutes, sensor_frequency):
@@ -140,8 +139,6 @@ class Static_Periods:
                     df_events.loc[index, "static_period_end_distance"] = time_distance
 
         return df_events
-
-
 
 
     #OUTDATED since based on "10 value" approach.... Updates function above. compute long static periods for a participant

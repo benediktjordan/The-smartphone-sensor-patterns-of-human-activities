@@ -14,7 +14,7 @@ import geopy.distance
 
 #endregion
 
-# class feature extraction of location data
+# this class contains methods to extract feautres for GPS data and GPS-derived data (like places)
 class FeatureExtraction_GPS:
     # calculate distance, speed & acceleration
     def calculate_distance_speed_acceleration(self, df):
@@ -407,7 +407,6 @@ class FeatureExtraction_GPS:
         return time_fraction, time_fraction_trusted, time_per_day, time_per_day_trusted
 
     ######### compute features to compare different other features ###########
-
     # compute rank ascend and descend: they put the features into relation to each other across places
     def gps_features_places_rank_ascent_descent(df_results, feature_list):
         #reset index
@@ -513,14 +512,5 @@ class FeatureExtraction_GPS:
         # reset index
         df_new = df_new.reset_index(drop=True)
         return df_new
-
-
-# calculate distance to most frequent locations (for day and nights)
-df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-df = df_locations_events.copy()
-# get most frequent locations
-df_frequent_locations_night = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-0-6_freqquent_locations_summary.csv")
-df_frequent_locations_day =pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/features/locations/hours-9-18_freqquent_locations_summary.csv")
-
 
 

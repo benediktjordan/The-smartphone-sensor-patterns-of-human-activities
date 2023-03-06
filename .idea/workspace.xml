@@ -5,12 +5,34 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="A lot of things for different contextx">
+      <change afterPath="$PROJECT_DIR$/environment.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_naturalistic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_laboratory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_DataCollection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/InitialTransforms_Iteration02.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_DataCollection/download.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/download.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_DataCollection/monitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/monitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataExploration/02_DataExploration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_merge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Merge_and_Impute.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/Merge_and_Impute.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_selection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_DataPreparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/LSTM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/visualizations.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/visualizations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +75,6 @@
     </option>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/02_DataExploration/02_DataExploration.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
@@ -82,7 +103,7 @@
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.grazie&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.project&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -316,14 +337,8 @@
       <workItem from="1677136603803" duration="10270000" />
       <workItem from="1677179558862" duration="31038000" />
       <workItem from="1677403795626" duration="13722000" />
-      <workItem from="1677597299257" duration="14688000" />
-    </task>
-    <task id="LOCAL-00011" summary="This is the first commit message">
-      <created>1664812487209</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1664812487209</updated>
+      <workItem from="1677597299257" duration="15650000" />
+      <workItem from="1677943977119" duration="5649000" />
     </task>
     <task id="LOCAL-00012" summary="This is the first commit message">
       <created>1664870041687</created>
@@ -661,7 +676,14 @@
       <option name="project" value="LOCAL" />
       <updated>1677087866975</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="A lot of things for different contextx">
+      <created>1677865444084</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1677865444085</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -756,38 +778,33 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
-          <line>2</line>
+          <line>4</line>
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_merge.py</url>
-          <line>7</line>
-          <option name="timeStamp" value="36" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
-          <line>381</line>
+          <line>377</line>
           <option name="timeStamp" value="42" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py</url>
-          <line>635</line>
+          <line>636</line>
           <option name="timeStamp" value="65" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_DataPreparation/label_transformation.py</url>
-          <line>25</line>
-          <option name="timeStamp" value="70" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/00_general/databases.py</url>
-          <line>301</line>
+          <url>file://$PROJECT_DIR$/00_general/databases_naturalistic.py</url>
+          <line>300</line>
           <option name="timeStamp" value="78" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="80" />
+          <url>file://$PROJECT_DIR$/00_general/databases_naturalistic.py</url>
+          <line>1</line>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/03_DataPreparation/label_selection.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="86" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

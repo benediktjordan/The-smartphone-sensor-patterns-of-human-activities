@@ -1,10 +1,9 @@
 #region import
 import pandas as pd
 import geopy.distance
-
-
 #endregion
 
+# this class contains functions to perform som GPS computations like labeling, selecting and deleting GPS data
 class GPS_computations:
 
     # delete accuracies above gps_min_accuracy and delete NaN in GPS values
@@ -106,11 +105,7 @@ class GPS_computations:
         return df
 
 
-
-
-
-
-    # the subsequent functions are used in the first round of classification and might be outdated
+    #OUTDATE: the subsequent methods are used in the first round of classification and might be outdated
 
     # get locations closest to events
     #TODO could not only take the closest location at time of event, but build a cluster of locations around the event and then take the cluster centroid
@@ -198,28 +193,3 @@ class GPS_computations:
             df_locations.at[index, "distance_to_second_closest_location_classification (m)"] = min(distances)
 
         return df_locations
-
-
-
-
-
-
-
-
-# get location
-df_locations = pd.read_csv()
-label_column_name =
-df_locations = labeling_sensor_df(df_locations, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
-df_locations_of_locations = GPS_computations.get_locations_for_labels(df_locations, label_column_name)
-# get for every participant a list of true locations
-
-
-#get the locations for labels for before & after sleep for every participant
-# add label column
-label_column_name = "label_before and after sleep"
-df_locations_events = labeling_sensor_df(df_locations_events, dict_label, label_column_name, ESM_identifier_column = "ESM_timestamp")
-#df for this function must contain location data and the label column
-df_locations_for_labels = get_locations_for_labels(df_locations_events, label_column_name)
-
-
-#endregion

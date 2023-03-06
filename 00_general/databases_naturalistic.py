@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 
-#region activity database: matching user answers to activity classes
+#region context database: matching user answers to context classes
 # region human motion
 
 human_motion = {
@@ -261,7 +261,6 @@ aligned = {
 
 #endregion
 
-
 #region user database matching Names to IDs to newIDs; last column is iteration number
 users = pd.DataFrame([["Simone_1","61bf23e5-0a6b-4d3c-b393-1a23d4f64e88", 1, 1, "Leipzig", "Europe/Berlin"],
                       ["Simone_2","4c4e5063-1b23-4dfc-886d-c6a202225ed6", 1, 1,"Leipzig", "Europe/Berlin"],
@@ -369,15 +368,4 @@ sensors_numeric = ["accelerometer", "barometer", "gravity", "gyroscope", "linear
                    "plugin_ambient_noise", "plugin_openweather", "plugin_studentlife_audio", "rotation"]
 #endregion
 
-
-
-
-
-# test: check for different sensors
-dir_sensorfiles = "/Users/benediktjordan/Documents/MTS/Iteration01/Data/"
-sensor = "sensor_wifi"
-df_check = pd.read_csv(dir_sensorfiles + sensor + "_esm_timeperiod_5 min.csv_JSONconverted.csv", nrows=1000)
-df_check.columns
-
-#endregion
 

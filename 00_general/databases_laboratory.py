@@ -5,7 +5,7 @@ import pandas as pd
 
 #endregion
 
-#region users
+#region user database of laboratory data collection
 users_iteration02 = pd.DataFrame([["Benedikt","ba683866-dfc3-47e0-a75a-61c07cf33505", 17, 2, "Leipzig"],
                         ["Cordula", "ed78d3a5-3431-411c-9cb4-4455db51f2af", 20, 2, "Innsbruck"],
                         ["Simone", "dfeec08e-fcf8-4bab-b5dd-8bad5f4ab3e9", 1, 2, "Leipzig"],

@@ -1,6 +1,6 @@
-# description: This script is dedicated to the correct selection of label segments around events
+#OUTDATED: This script was dedicated to the correct selection of label segments around events
 # based on, automated or manual, change point analysis
-# The label selection is based on the merged sensordata from the high-frequency sensors
+# since no efficient change point detection could be found, this script is not used anymore
 
 # import libraries
 import matplotlib.pyplot as plt

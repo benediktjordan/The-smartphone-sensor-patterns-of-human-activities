@@ -1,6 +1,4 @@
-import matplotlib.pyplot as plt
-
-
+# This class contains several methods for visualizing the ESM data
 class data_exploration_labels:
 
     def load_esm(esm_path):
@@ -8,7 +6,7 @@ class data_exploration_labels:
         df_esm = pd.read_csv(esm_path)
         return df_esm
 
-    # for all activities: barplot of classes x number of events
+    # for all contexts: barplot of classes x number of events
     def visualize_esm_activities_all(dir_results, df_esm, threshold):
 
         df_analytics = pd.DataFrame(columns=["activity", "count (not NaN)", "count above threshold", "percentage above threshold"])
@@ -59,8 +57,7 @@ class data_exploration_labels:
 
         return df_analytics
 
-
-    # for one activity: barplot of classes x number of events
+    # for one context: barplot of classes x number of events
     def visualize_esm_activity(df_esm, column_name, fig_title):
         fig = plt.figure(figsize=(15, 10))
         plt.title(fig_title)
@@ -78,7 +75,7 @@ class data_exploration_labels:
         plt.show()
         return fig
 
-    # for one activity: barplot of classes x number of minutes (ESM_timestamp * esm_segment)
+    # for one context: barplot of classes x number of minutes (ESM_timestamp * esm_segment)
     ## Note: this function is relevant only for laboratory data. It visualizes an approximation
     ## for the minutes of data recorded per activity class by multiplying the number of ESM events
     ## with the length of the ESM segments (in minutes)
@@ -168,7 +165,6 @@ class data_exploration_labels:
 
         return df_label_counts
 
-
     # create table which shows users x classes x number of minutes recorded for this class
     ## Note: relevant for laboratory data only.
     def create_table_user_classes_minutes(df_esm, label_column_name, esm_segment_length):
@@ -207,7 +203,6 @@ class data_exploration_labels:
     ## data_exploration_labels.create_table_user_activity()
     ## Merge_Transform.merge_participantIDs()
     ## data_exploration_labels.create_table_user_activity()
-
     ## databases
     ### users
     ### sensors_and_frequencies

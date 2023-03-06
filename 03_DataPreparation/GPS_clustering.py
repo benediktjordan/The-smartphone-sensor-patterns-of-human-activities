@@ -35,39 +35,7 @@ import pytz
 
 #endregion
 
-
-#region load data
-#complete data
-## only small chunk from csv file
-df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv", nrows=200000)
-#df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
-
-#dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
-#merge_locations = Merge_Transform(dir_databases, "locations")
-#df_locations = merge_locations.convert_json_to_columns(df)
-
-#data only xmin around events
-df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
-
-#load labels
-sensors_included = "all"
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl",
-        'rb') as f:
-    dict_label = pickle.load(f)
-#endregion
-
-
-#testaread
-# print value counts in chunks for every device_id
-print("start printing value counts")
-for device_id in df_locations["device_id"].unique():
-    print("participant " + str(device_id))
-    print(df_locations[df_locations["device_id"] == device_id]["chunk"].value_counts())
-    # print how many unique pairs of latitude and longitude there are
-    print("number of unique pairs of latitude and longitude: " + str(len(df_locations[df_locations["device_id"] == device_id][["latitude", "longitude"]].drop_duplicates())))
-
-#region find the most frequent location for each participant for specific timeperiod: use kmeans clustering & silhouette score to find optimal number of clusters
-## based on https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
+# class contains methods to implement the agglomerative clustering algorithm
 class GPS_clustering:
     # create haversine distance matrix based on latitude and longitude of locations
     def distance_matrix_haversine(latitude, longitude):
@@ -265,9 +233,6 @@ class GPS_clustering:
                                                                    close_cluster_label, "yes"]
 
         return df_locations, df_analytics
-
-
-
 
 
 
@@ -789,52 +754,41 @@ class GPS_clustering:
         return locations_predictions
 
 
+#region OUTDATES: first trials
+#test area
+# print value counts in chunks for every device_id
+print("start printing value counts")
+for device_id in df_locations["device_id"].unique():
+    print("participant " + str(device_id))
+    print(df_locations[df_locations["device_id"] == device_id]["chunk"].value_counts())
+    # print how many unique pairs of latitude and longitude there are
+    print("number of unique pairs of latitude and longitude: " + str(len(df_locations[df_locations["device_id"] == device_id][["latitude", "longitude"]].drop_duplicates())))
 
-#main
+#region load data
+#complete data
+## only small chunk from csv file
+df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv", nrows=200000)
+#df = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
 
+#dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
+#merge_locations = Merge_Transform(dir_databases, "locations")
+#df_locations = merge_locations.convert_json_to_columns(df)
 
+#data only xmin around events
+df_locations_events = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/xmin_around_events/locations_esm_timeperiod_5 min.csv_JSONconverted.pkl")
 
-
-
-
-
-
-
+#load labels
+sensors_included = "all"
+with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_preparation/labels/esm_" + sensors_included + "_transformed_labeled_dict.pkl",
+        'rb') as f:
+    dict_label = pickle.load(f)
+#endregion
 
 #region testsection: implement agglomerative clustering including centroid linkage and distance_threshold
-# using haversine distance
-
-import numpy as np
-import haversine
-from sklearn.cluster import AgglomerativeClustering
-
-latitude = [51.33789164632932, 51.3371901217961, 51.33661165641516, 51.33628439344723, 51.334593788165506,51.33428040578081,51.33343309949297,51.33295733241303 ]
-longitude = [12.360512, 12.360511998172617,12.362259201795089, 12.362676366389088,12.354203442831327,12.354549792864173,12.355702895198947,12.356312081338071]
-#create np array
-X = np.array(list(zip(latitude, longitude)))
-
-df_label, df_analytics, = GPS_clustering.agg_clustering_computing_centroids(df_participant, distance_threshold)
-
-
-distances = [0, 100, 190, 230]
-51.3371901217961, 12.361434653994957
-51.33789164632932, 12.360511998172617
-51.33661165641516, 12.362259201795089
-51.33628439344723, 12.362676366389088
-
-51.334593788165506, 12.354203442831327
-51.33428040578081, 12.354549792864173
-51.33343309949297, 12.355702895198947
-51.33295733241303, 12.356312081338071
-
 ## standard algorithm
 #calculate distance matrix using geodeisc distance
-
-
 agg_clustering = AgglomerativeClustering(linkage="complete",n_clusters=None, distance_threshold=0.3, metric = "precomputed").fit(dist_matrix)
 print(agg_clustering.labels_)
-
-
 
 
 # function to compute haversine distance
@@ -902,41 +856,6 @@ class CentroidLinkageAgglomerativeClustering:
         return self.labels_
 #endregion
 
-
-
-
-
-
-
-
-
-
-
-
-
-#endregion
-
-Miranda
-cf2dfa9b-596b-4a72-a4da-cb3777a31cc7  lying on the couch              11
-                                      lying in bed after sleeping      6
-                                      lying in bed at other times      6
-                                      lying in bed before sleeping     5
-Benedikt
-8206b501-20e7-4851-8b79-601af9e4485f  lying in bed after sleeping      6
-                                      lying in bed at other times      4
-                                      lying in bed before sleeping     2
-Lea
-590f0faf-d932-4a57-998d-e3da667a91dc  lying on the couch               8
-                                      lying in bed at other times      2
-                                      lying in bed before sleeping     2
-                                      lying in bed after sleeping      1
-Bella
-ad064def-9d72-44ff-96b2-f3b3d90d1079  lying in bed before sleeping     4
-                                      lying in bed after sleeping      3
-                                      lying in bed at other times      2
-                                      lying on the couch               1
-
-
 #region calculate distance between labels and most frequent locations
 def calculate_distances_between_labels_and_most_frequent_locations(df_locations_for_labels, df_most_frequent_location):
     #iterate through df_locations_for_labels
@@ -967,10 +886,6 @@ def calculate_distances_between_labels_and_most_frequent_locations(df_locations_
 
 df_locations_for_labels = calculate_distances_between_labels_and_most_frequent_locations(df_locations_for_labels, df_most_frequent_location)
 #endregion
-
-
-
-
 
 #region OUTDATED: modal approach: find the most frequent location during every night of the participants: take for every night the location with the highest frequency
 starthour = 0
@@ -1067,3 +982,4 @@ def calculate_distances_between_labels_and_most_frequent_locations(df_locations_
 df_locations_for_labels = calculate_distances_between_labels_and_most_frequent_locations(df_locations_for_labels, df_most_frequent_location)
 #endregion
 
+#endregion

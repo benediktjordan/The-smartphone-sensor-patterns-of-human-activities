@@ -12,17 +12,7 @@ from pandas import read_sql_query, read_sql_table
 
 #endregion
 
-
-
-
-#region Monitor (during data collection)
-
-# region create "Data Sanity" sheet to get an overview over data completeness and duplicates
-# region create data overview csv for every database
-#db_name = "db_iteration1_20220712"
-
-
-
+#region monitor (during data collection) to ensure correct data collection functionality
 
 def overview_sensor_perdatabase(base_path, db_name, users, sensors_and_frequencies):
 
@@ -202,6 +192,7 @@ def overview_sensors_alldatabases(df_general, df_to_add):
 
 #endregion
 
+#region iterate through databases and create data sanity overview
 #df_all = pd.read_csv (str(base_path+"DataSanityAnalysis_allDatabases.csv"))
 #db_name = "db_iteration1_20220707_2"
 #path = base_path+db_name+"/"+db_name+"_DataSanityAnalysis.csv"
@@ -246,5 +237,3 @@ for db_name in database_list:
 df_all.to_csv(base_path +"DataSanityAnalysis_allDatabases.csv")
 # endregion
 
-
-#endregion

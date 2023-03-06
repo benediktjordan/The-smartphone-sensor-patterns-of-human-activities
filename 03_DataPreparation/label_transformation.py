@@ -6,23 +6,12 @@ import pickle
 import tsfresh
 #endregion
 
-# load ESM file
-path_esm ="/Users/benediktjordan/Documents/MTS/Iteration01/Data/esm_all_transformed.csv"
-df_esm = pd.read_csv(path_esm, parse_dates=["timestamp"])
-
-df_esm["activity"].value_counts()
-df_esm["bodyposition"].value_counts().sum()
-
-
-
-#region transform labels for my activity classification
-# create dictionary which maps activities to different activity levels
-
+# in this class, the context classes are added based on the ESM answers
 class label_transformation:
 
-    # add activity classes to df_esm
-    ## Note: this works for iteration 02 data; and also for iteration 01 -> human motion data; for the other
-    ## iteration 01 classes, it doesnt work (use the next function)
+    # add context classes to df_esm (the dataframe which contains the esm data): used in next function
+    ## Note: this works for laboratory data; and also for naturalistic -> human motion data; for the other
+    ## naturalistic contexts, it doesnt work (use the next function)
     def add_activity_classes(df_esm, dict_mapping, label_column_name):
 
         df_esm[label_column_name] = np.nan
@@ -47,8 +36,7 @@ class label_transformation:
         return df_esm
 
 
-    # adds to df_esm the different activity classes based on the mappings provided
-    # OLD, CREATE BETTER NEW ONE AND INTEGRATE IN FUNCTION ABOVE
+    # add context classes to df_esm (the dataframe which contains the esm data): main function
     def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep, before_after_sleep_updated,
                                   on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
                                   location, smartphonelocation, aligned):
@@ -91,6 +79,7 @@ class label_transformation:
 
         return df_esm
 
+    # create dictionary from dataframe
     def create_activity_dictionary_from_dataframe(df_esm_including_activity_classes_dataframe):
         df_esm = df_esm_including_activity_classes_dataframe
 
@@ -109,7 +98,3 @@ class label_transformation:
 
 
 
-
-# check if there are duplicates in timestamp
-test = df_esm["timestamp"].value_counts()
-test.describe()

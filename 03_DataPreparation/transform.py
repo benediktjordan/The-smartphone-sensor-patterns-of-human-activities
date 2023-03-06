@@ -1,3 +1,6 @@
+# This script contains different functions used in the transformation of data during different
+# steps of the analysis
+
 #region import
 # pip install mysql-connector-python
 import mysql.connector
@@ -11,8 +14,6 @@ import sqlite3
 from pandas import read_sql_query, read_sql_table
 
 #endregion
-
-
 
 # region join and edit the CSVs which are downloaded from AWS S3 storage (instead of directly from MySQL database)
 ## join csv

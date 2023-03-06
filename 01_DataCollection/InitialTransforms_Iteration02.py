@@ -5,6 +5,7 @@ import pickle
 import os
 #endregion
 
+#script defines initial transformations for the laboratory dataset
 class InitialTransforms_Iteration02:
 
     # label sensorfiles
@@ -51,6 +52,8 @@ class InitialTransforms_Iteration02:
         return df_sensor
 
     # add ESM timestamps
+    # Note: this function is used in order to bring the llaboratory dataset into
+    # the same format as the naturalistic dataset
     def add_esm_timestamps(df_sensor, dict_label, length_of_esm_events):
 
         # convert timestamp to datetime

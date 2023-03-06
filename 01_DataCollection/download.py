@@ -12,9 +12,7 @@ from pandas import read_sql_query, read_sql_table
 
 #endregion
 
-
-
-#region Download
+#region download data from MySQL database
 db_name = "db_iteration1_20220723"
 path_save_database = "D:/MasterThesis @nlbb/Iteration01/I1_Data Collection/AWARE/Databases/"
 

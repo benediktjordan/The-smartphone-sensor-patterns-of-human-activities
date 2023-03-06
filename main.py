@@ -1,3 +1,10 @@
+# This is the main script implementing (nearly) the entirely pipeline for the thesis project.
+# It depends on the classes and functions created in other scripts of this project
+## In the "requirements.txt" file you can find all the packages that are necessary to run this script
+## In the "environment.yml" file you can find the conda environment that was used to run this script (load it with
+## "conda env create -f environment.yml")
+## Note: in this and the other scripts, regions are used to structure the code. These regions can be collapsed in PyCharm
+
 #region import
 import pickle
 #import tensorflow_decision_forests as tfdf
@@ -227,7 +234,7 @@ with open(
 
 #region label transformation for laboratory data
 # create df_esm csv and dictionary in which also the activity classes are included
-# (based on the mappings created in "databases_iteration02.py")
+# (based on the mappings created in "databases_laboratory.py")
 path_storage = "/Users/benediktjordan/Documents/MTS/Iteration02/data_preparation/labels/"
 dict_esm_labels_iteration02 = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration02/datasets/dicts_esmtimestamp-label-mapping.pkl")
 df_esm_labels_iteration02 = pd.DataFrame.from_dict(dict_esm_labels_iteration02, orient='index', columns=["user activity", "device_id"])
@@ -235,7 +242,7 @@ df_esm_labels_iteration02["ESM_timestamp"] = df_esm_labels_iteration02.index
 label_column_names = ["label_human motion", "label_on the toilet"]
 for label_column_name in label_column_names:
     if label_column_name == "label_human motion":
-        dict_mapping = human_motion  # is created in the script "databases_iteration02.py"
+        dict_mapping = human_motion  # is created in the script "databases_laboratory.py"
     elif label_column_name == "label_on the toilet":
         dict_mapping = on_the_toilet
     df_esm_including_activity_classes = label_transformation.add_activity_classes(df_esm_labels_iteration02, dict_mapping, label_column_name)

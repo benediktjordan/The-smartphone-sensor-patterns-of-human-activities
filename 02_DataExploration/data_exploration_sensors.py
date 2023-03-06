@@ -10,6 +10,7 @@ import os
 #rc('text', usetex=True)
 #endregion
 
+#this class contains methods for data exploration of sensor data
 class data_exploration_sensors:
 
     # load sensor data
@@ -893,6 +894,7 @@ class data_exploration_sensors:
         #plt.show()
         return fig
 
+#region OUTDATED
 #region Iteration 01
 #load data & initialize
 label_column_name = "label_human motion - general"
@@ -1001,8 +1003,6 @@ fig.savefig(
     path_to_save + activity_name + "/" + activity_name + "_EventTime-" + str(event_time) + "_Segment-" + str(
         time_period) + "_Sensors-" + sensor_names + ".png")
 plt.show()
-#endregion
-
 #endregion
 
 #region Iteration 02
@@ -1677,3 +1677,4 @@ for sensor in sensors:
 
 # endregion
 
+#endregion

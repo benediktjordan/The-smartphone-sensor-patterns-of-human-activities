@@ -1,32 +1,3 @@
-# Explanation: this class should contain the following methods:
-# 1. __init__(): this method should contain the following attributes:
-
-# 2. delete_duplicates(): this method should delete duplicates
-## drop duplicates
-# check for duplicates
-# drop columns "Unnahmed: 0" and "0"
-df = df.drop(columns=["Unnamed: 0", "0"])
-df.df().sum()
-# drop duplicate rows
-df = df.drop_duplicates()
-
-
-# 3. merge(): this method should contain the following steps:
-#     a. merge the high-frequency features with the low-frequency features
-#     b. return the merged dataframe
-#
-
-# 4. merge_unaligned_timeseries(): this method should contain the following attributes:
-#   - self.df_base: the dataframe that should be merged with the other dataframe
-#   - self.df_tomerge: the dataframe that should be merged with the base dataframe
-#   - self.merge_sensor: the sensor that should be merged with the base dataframe
-#   - self.sensor: the sensor that should be merged with the base dataframe
-
-# 5. merge_sensors(): this method should contain the following attributes:
-#   - self.dir_folders: the directory where the folders of different databased are stored
-#   - self.list_sensors: the list of sensors that should be used
-
-# 6. merge_participantIDs(): this method merges the ID´s of participants
 
 #region import
 import pandas as pd
@@ -43,7 +14,7 @@ import pyarrow.feather as feather
 #endregion
 
 
-# create class
+# class contains some methods for transforming and merging
 class Merge_Transform:
 
     # join sensorfiles from different databases
@@ -179,7 +150,6 @@ class Merge_Transform:
 
 
     # add beginning, end, and duration of smartphone session around each ESM event
-
     def add_smartphone_session_start_end_to_esm(df_esm, df_screen):
         df_esm["session_start"] = None
         df_esm["session_end"] = None
@@ -297,60 +267,9 @@ class Merge_Transform:
             counter += 1
         return df_sensor
 
-    # label sensor data with ESM data
-
-test = df_frequentlocations_day.copy()
-df = test.copy()
     # endregion
 
-
-# merge all locations files & seperate JSON column
-dir_databases = "/Volumes/INTENSO/In Usage new/Databases"
-
-merge_locations = Merge_Transform(dir_databases, "locations")
-df_locations = merge_locations.join_sensor_files()
-df_locations = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
-df_locations = merge_locations.convert_json_to_columns(df_locations)
-df_locations.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
-
-# merge all ESM files
-merge_esm = Merge(dir_databases, "esm")
-df_esm = merge_esm.join_sensor_files()
-df_esm.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
-
-
-# compare saving time
-df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
-start = time.time()
-df_locations_pandas.to_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all2.pkl")
-end = time.time()
-print("saving time to_pickle: " + str(end - start))
-
-start = time.time()
-# save wiht pickle.dump
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all3.pkl", "wb") as f:
-    pickle.dump(df_locations_pandas, f)
-end = time.time()
-print("saving time pickle_dump: " + str(end - start))
-
-
-#compare loading time
-start = time.time()
-df_locations_pandas = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl")
-end = time.time()
-print("loading time pd.read_pickle: " + str(end - start))
-
-start = time.time()
-# load with pickle.load
-with open("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.pkl", "rb") as f:
-    df_locations_pickle = pickle.load(f)
-end = time.time()
-print("loading time pickle_load: " + str(end - start))
-
-
-
-
-#experimenting with Feather
+#region experimenting with Feather
 df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/locations_all.csv")
 
 #compare saving times
@@ -418,4 +337,4 @@ loading time pickle_load: 529.042601108551
 
 saving time to_csv: 273.6814148426056
 loading time pd.read_csv: 85.18825125694275
-
+#endregion

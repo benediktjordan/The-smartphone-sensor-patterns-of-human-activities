@@ -15,6 +15,7 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
 #endregion
 
+# this class contains the method to generate a generic map with GPS points
 class GPS_visualization:
 
     # visualize GPS points on generic map (include scale bar)
@@ -99,15 +100,13 @@ class GPS_visualization:
 
 
 
-#endregion
 
 
 
 
+#region OUTDATED: first tries to visualize GPS data in generic maps
 
-
-
-# get complete locations dataset of all participants
+##get complete locations dataset of all participants
 df_locations = pd.read_pickle("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/locations_all.pkl")
 df_locations = pd.read_csv("/Users/benediktjordan/Documents/MTS/Iteration01/Data/datasets/locations_all.csv")
 
@@ -129,10 +128,6 @@ print("Number of participants with events: ", len(df_locations_events["loc_devic
 df_locations_events_vis = df_locations_events.drop_duplicates(subset=["ESM_timestamp"])
 print(df_locations_events_vis[label_column_name].value_counts())
 print("Number of labels per participant: ", df_locations_events_vis.groupby("loc_device_id")[label_column_name].value_counts())
-
-
-
-
 
 
 # only fist 1000 rows
@@ -235,9 +230,9 @@ for root, dirs, files in os.walk("/Users/benediktjordan/Documents/MTS/Iteration0
         print("file saved: ", file)
 #endregion
 
+#endregion
 
-
-
+#endregion
 
 
 
