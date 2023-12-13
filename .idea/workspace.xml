@@ -4,20 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="test">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="UPdated all files">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases_naturalistic.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_naturalistic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/I1_YarasCollection_Preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/I1_YarasCollection_Preprocessing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Intro_check for Tensorflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Intro_check for Tensorflow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SmartphoneActivity_Tina&amp;LeaData.py" beforeDir="false" afterPath="$PROJECT_DIR$/SmartphoneActivity_Tina&amp;LeaData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mixpanel.py" beforeDir="false" afterPath="$PROJECT_DIR$/mixpanel.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,6 +52,11 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;GitIgnore&quot;
+    ]
   }
 }</component>
   <component name="RecentsManager">
@@ -143,12 +136,33 @@
       <workItem from="1702463777832" duration="20000" />
       <workItem from="1702463798992" duration="150000" />
       <workItem from="1702463980737" duration="293000" />
-      <workItem from="1702464289950" duration="310000" />
+      <workItem from="1702464289950" duration="737000" />
     </task>
+    <task id="LOCAL-00001" summary="UPdated all files">
+      <option name="closed" value="true" />
+      <created>1702464787251</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1702464787251</updated>
+    </task>
+    <task id="LOCAL-00002" summary="UPdated all files">
+      <option name="closed" value="true" />
+      <created>1702464889732</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1702464889732</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="UPdated all files" />
+    <option name="LAST_COMMIT_MESSAGE" value="UPdated all files" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
