@@ -130,7 +130,29 @@ humanmotion_specific = {
 # region public transport
 #activity_list = df_esm["bodyposition"].value_counts()
 #location_list = df_esm["location"].value_counts()
+public_transport = {
+    "stationary": pd.DataFrame(
+        data={"bodyposition": ["sitting: at a table"]}),
+    "walking": pd.DataFrame(
+        data={"bodyposition": ["walking"],
+              "location": ["on the way: walking\/cycling"]}),
+    "running": pd.DataFrame(
+        data={"bodyposition": ["running"]}),
+    "cycling": pd.DataFrame(
+        data={"bodyposition": ["cycling"]}),
 
+    "public transport": pd.DataFrame(
+        data={"location": ["on the way: in public transport", "on the way: in train"]}),
+    "car": pd.DataFrame(
+        data={"location": ["on the way: in a car"]}),
+
+    np.nan: pd.DataFrame(
+        data={"location": [ "on the way: other means of transport",
+                            "on the way: in car\/bus\/train\/tram"]})
+
+}
+
+#outdated
 publictransport_non_motorized = {
     "sitting: at a table": ["stationary"],
 
@@ -143,6 +165,7 @@ publictransport_non_motorized = {
 
 }
 
+#outdated
 publictransport = {
     "on the way: in public transport": ["public transport"],
 

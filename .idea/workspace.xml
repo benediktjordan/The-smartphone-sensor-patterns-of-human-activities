@@ -4,48 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="A lot of things for different contextx">
-      <change afterPath="$PROJECT_DIR$/environment.yml" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="test">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_naturalistic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/databases_iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_laboratory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/general_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/InitialTransforms_Iteration02.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/InitialTransforms_Iteration02.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/download.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/download.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/monitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_DataCollection/monitor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/02_DataExploration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/00_general/databases_naturalistic.py" beforeDir="false" afterPath="$PROJECT_DIR$/00_general/databases_naturalistic.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_merge.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Merge_and_Impute.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/Merge_and_Impute.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_selection.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/transform.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_DataPreparation/transform.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/LSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/LSTM.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/visualizations.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_DataAnalysis/visualizations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/I1_YarasCollection_Preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/I1_YarasCollection_Preprocessing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Intro_check for Tensorflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Intro_check for Tensorflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SmartphoneActivity_Tina&amp;LeaData.py" beforeDir="false" afterPath="$PROJECT_DIR$/SmartphoneActivity_Tina&amp;LeaData.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mixpanel.py" beforeDir="false" afterPath="$PROJECT_DIR$/mixpanel.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Jupyter Notebook" />
-        <option value="Python Script" />
-      </list>
-    </option>
   </component>
   <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
     <envs>
@@ -59,36 +36,15 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_BRANCH_BY_REPOSITORY">
-      <map>
-        <entry key="$PROJECT_DIR$" value="main" />
-      </map>
-    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="GithubPullRequestsUISettings">
-    <option name="recentNewPullRequestHead">
-      <RepoCoordinatesHolder>
-        <option name="owner" value="benejo123" />
-        <option name="repository" value="context_detection" />
-      </RepoCoordinatesHolder>
-    </option>
-  </component>
-  <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AGENDER2.0/01_LoadingData.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AGENDER2.0/04_Transform.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AGENDER2.0/Classification_LSTM.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AGENDER2.0/Classification_Stacking.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AGENDER2.0/main_changed.py" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/mixpanel.py" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="2EXNm0tHAVGHulen1mD2uk7YFyR" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -98,49 +54,27 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Location&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/bened/PycharmProjects/MasterThesis_Iteration01&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.project&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/03_Data Preparation" />
-      <recent name="$PROJECT_DIR$/00_Data Collection" />
-      <recent name="$PROJECT_DIR$/AGENDER2.0" />
-      <recent name="$PROJECT_DIR$/Data Exploration" />
-      <recent name="$PROJECT_DIR$/Data Preparation" />
+      <recent name="$USER_HOME$/Documents/MTS/Iteration01/pythonProject" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
-    <configuration name="MasterThesis_Iteration01" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="MasterThesis_Iteration01" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="MasterThesis_Iteration01" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -161,8 +95,9 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="MasterThesis_Iteration01" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -170,24 +105,26 @@
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.main" />
-      </list>
-    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-67fca87a943a-c986f194a52a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.11799.259" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -200,538 +137,18 @@
       <workItem from="1662738125050" duration="792000" />
       <workItem from="1663047606799" duration="784000" />
       <workItem from="1663050435695" duration="598000" />
-      <workItem from="1663059803092" duration="9255000" />
-      <workItem from="1663229845249" duration="2062000" />
-      <workItem from="1663233921553" duration="3776000" />
-      <workItem from="1663245320743" duration="21900000" />
-      <workItem from="1663492324953" duration="1588000" />
-      <workItem from="1663494575410" duration="2226000" />
-      <workItem from="1663497785318" duration="12098000" />
-      <workItem from="1663515422977" duration="5201000" />
-      <workItem from="1663524286639" duration="9248000" />
-      <workItem from="1663534289714" duration="5040000" />
-      <workItem from="1663539411507" duration="12300000" />
-      <workItem from="1663621501340" duration="4143000" />
-      <workItem from="1663675479738" duration="1850000" />
-      <workItem from="1663694414602" duration="3157000" />
-      <workItem from="1663745178779" duration="881000" />
-      <workItem from="1663746079440" duration="2304000" />
-      <workItem from="1663748495564" duration="5878000" />
-      <workItem from="1663755341321" duration="20000" />
-      <workItem from="1663755386408" duration="2153000" />
-      <workItem from="1663759655389" duration="5839000" />
-      <workItem from="1663767636169" duration="6298000" />
-      <workItem from="1663854180624" duration="13998000" />
-      <workItem from="1663938046641" duration="54000" />
-      <workItem from="1663938114928" duration="1128000" />
-      <workItem from="1663939250116" duration="818000" />
-      <workItem from="1663940172987" duration="4277000" />
-      <workItem from="1663956468960" duration="1626000" />
-      <workItem from="1664525105071" duration="3799000" />
-      <workItem from="1664548068662" duration="69000" />
-      <workItem from="1664548161470" duration="902000" />
-      <workItem from="1664549112380" duration="15960000" />
-      <workItem from="1664655000695" duration="7659000" />
-      <workItem from="1664748840166" duration="24171000" />
-      <workItem from="1664856286650" duration="1913000" />
-      <workItem from="1664868324898" duration="9100000" />
-      <workItem from="1664958075898" duration="2278000" />
-      <workItem from="1664963874459" duration="796000" />
-      <workItem from="1664972852308" duration="612000" />
-      <workItem from="1664973623682" duration="265000" />
-      <workItem from="1664973892771" duration="5100000" />
-      <workItem from="1665318685626" duration="329000" />
-      <workItem from="1665319707887" duration="34655000" />
-      <workItem from="1665441397496" duration="166000" />
-      <workItem from="1665441575327" duration="2116000" />
-      <workItem from="1665443848267" duration="1960000" />
-      <workItem from="1665446079728" duration="22000" />
-      <workItem from="1665446110951" duration="30000" />
-      <workItem from="1665446152642" duration="48000" />
-      <workItem from="1665466618083" duration="80000" />
-      <workItem from="1665466702342" duration="1978000" />
-      <workItem from="1665468699306" duration="55000" />
-      <workItem from="1665468766415" duration="3441000" />
-      <workItem from="1665472242777" duration="11000" />
-      <workItem from="1665472297311" duration="6903000" />
-      <workItem from="1665577115543" duration="11387000" />
-      <workItem from="1665638746090" duration="669000" />
-      <workItem from="1665639445263" duration="3681000" />
-      <workItem from="1665762861615" duration="4366000" />
-      <workItem from="1666099410991" duration="611000" />
-      <workItem from="1666157714662" duration="10000" />
-      <workItem from="1666157731875" duration="620000" />
-      <workItem from="1666204814999" duration="19870000" />
-      <workItem from="1666267116951" duration="598000" />
-      <workItem from="1666267982138" duration="6193000" />
-      <workItem from="1666348241875" duration="463000" />
-      <workItem from="1666353808503" duration="89000" />
-      <workItem from="1666353930672" duration="78000" />
-      <workItem from="1666354181350" duration="2000" />
-      <workItem from="1666354197389" duration="5000" />
-      <workItem from="1666354210601" duration="14000" />
-      <workItem from="1666354256331" duration="2991000" />
-      <workItem from="1666627264847" duration="2788000" />
-      <workItem from="1666692724579" duration="444000" />
-      <workItem from="1666693294078" duration="27709000" />
-      <workItem from="1666795001980" duration="326000" />
-      <workItem from="1666798135412" duration="23423000" />
-      <workItem from="1666905497431" duration="1262000" />
-      <workItem from="1666959365278" duration="444000" />
-      <workItem from="1666959866986" duration="15509000" />
-      <workItem from="1667830188578" duration="4628000" />
-      <workItem from="1667903671136" duration="8484000" />
-      <workItem from="1667921295558" duration="450000" />
-      <workItem from="1667921764112" duration="6327000" />
-      <workItem from="1667986955093" duration="20086000" />
-      <workItem from="1668034814953" duration="16094000" />
-      <workItem from="1668064179440" duration="26760000" />
-      <workItem from="1668428116015" duration="7098000" />
-      <workItem from="1668496026777" duration="15185000" />
-      <workItem from="1668514898574" duration="10167000" />
-      <workItem from="1668536849110" duration="6071000" />
-      <workItem from="1668613653239" duration="1290000" />
-      <workItem from="1668615422062" duration="16724000" />
-      <workItem from="1668871102469" duration="49431000" />
-      <workItem from="1669193415423" duration="598000" />
-      <workItem from="1669198376815" duration="4702000" />
-      <workItem from="1669232454923" duration="95000" />
-      <workItem from="1669232587710" duration="14915000" />
-      <workItem from="1669248831955" duration="12855000" />
-      <workItem from="1669720147998" duration="14215000" />
-      <workItem from="1669811937380" duration="10396000" />
-      <workItem from="1669979494615" duration="47575000" />
-      <workItem from="1671034597423" duration="8337000" />
-      <workItem from="1671793357747" duration="417000" />
-      <workItem from="1672742421796" duration="9826000" />
-      <workItem from="1672778185855" duration="21590000" />
-      <workItem from="1673008796918" duration="409000" />
-      <workItem from="1673009279484" duration="7406000" />
-      <workItem from="1673075071491" duration="23340000" />
-      <workItem from="1673168218066" duration="43470000" />
-      <workItem from="1673349277808" duration="45825000" />
-      <workItem from="1673732856605" duration="92399000" />
-      <workItem from="1674244708638" duration="32781000" />
-      <workItem from="1674395923912" duration="4656000" />
-      <workItem from="1674400761527" duration="28000" />
-      <workItem from="1674401400424" duration="83916000" />
-      <workItem from="1674810982892" duration="3820000" />
-      <workItem from="1674819281259" duration="39555000" />
-      <workItem from="1675029536698" duration="22390000" />
-      <workItem from="1675206489846" duration="5382000" />
-      <workItem from="1675350335651" duration="9459000" />
-      <workItem from="1675939194720" duration="3223000" />
-      <workItem from="1675942559635" duration="2899000" />
-      <workItem from="1675945652704" duration="8823000" />
-      <workItem from="1675957947907" duration="1670000" />
-      <workItem from="1675959848217" duration="19638000" />
-      <workItem from="1676036493628" duration="13336000" />
-      <workItem from="1676206337785" duration="64560000" />
-      <workItem from="1676387485221" duration="9330000" />
-      <workItem from="1676398267823" duration="60000" />
-      <workItem from="1676398339447" duration="14373000" />
-      <workItem from="1676468109884" duration="33617000" />
-      <workItem from="1676562933908" duration="5154000" />
-      <workItem from="1676571600771" duration="132046000" />
-      <workItem from="1677083597783" duration="9007000" />
-      <workItem from="1677136603803" duration="10270000" />
-      <workItem from="1677179558862" duration="31038000" />
-      <workItem from="1677403795626" duration="13722000" />
-      <workItem from="1677597299257" duration="15650000" />
-      <workItem from="1677943977119" duration="5649000" />
+      <workItem from="1663059803092" duration="1656000" />
+      <workItem from="1702389354495" duration="45000" />
+      <workItem from="1702463099750" duration="660000" />
+      <workItem from="1702463777832" duration="20000" />
+      <workItem from="1702463798992" duration="150000" />
+      <workItem from="1702463980737" duration="293000" />
+      <workItem from="1702464289950" duration="310000" />
     </task>
-    <task id="LOCAL-00012" summary="This is the first commit message">
-      <created>1664870041687</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1664870041687</updated>
-    </task>
-    <task id="LOCAL-00013" summary="This is the first commit message">
-      <created>1664897999976</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1664897999976</updated>
-    </task>
-    <task id="LOCAL-00014" summary="This is the first commit message">
-      <created>1665327708847</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1665327708847</updated>
-    </task>
-    <task id="LOCAL-00015" summary="This is the first commit message">
-      <created>1665399027794</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1665399027794</updated>
-    </task>
-    <task id="LOCAL-00016" summary="This is the first commit message">
-      <created>1665441503153</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1665441503153</updated>
-    </task>
-    <task id="LOCAL-00017" summary="This is the first commit message">
-      <created>1665481012050</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1665481012050</updated>
-    </task>
-    <task id="LOCAL-00018" summary="This is the first commit message">
-      <created>1665576569753</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1665576569753</updated>
-    </task>
-    <task id="LOCAL-00019" summary="restructured the folder &amp; files">
-      <created>1665577090942</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1665577090942</updated>
-    </task>
-    <task id="LOCAL-00020" summary="restructured the folder &amp; files">
-      <created>1665585876447</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1665585876447</updated>
-    </task>
-    <task id="LOCAL-00021" summary="restructured the folder &amp; files">
-      <created>1666206182254</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1666206182254</updated>
-    </task>
-    <task id="LOCAL-00022" summary="restructured the folder &amp; files">
-      <created>1666215571791</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1666215571791</updated>
-    </task>
-    <task id="LOCAL-00023" summary="restructured the folder &amp; files">
-      <created>1666709886873</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1666709886873</updated>
-    </task>
-    <task id="LOCAL-00024" summary="restructured the folder &amp; files; created new branch">
-      <created>1666768488969</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1666768488969</updated>
-    </task>
-    <task id="LOCAL-00025" summary="restructured the folder &amp; files; created new branch">
-      <created>1666768649598</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1666768649598</updated>
-    </task>
-    <task id="LOCAL-00026" summary="added requirements.txt">
-      <created>1666769032425</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1666769032425</updated>
-    </task>
-    <task id="LOCAL-00027" summary="added requirements.txt">
-      <created>1666769181972</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1666769181972</updated>
-    </task>
-    <task id="LOCAL-00028" summary="added requirements.txt">
-      <created>1667574971976</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1667574971976</updated>
-    </task>
-    <task id="LOCAL-00029" summary="added requirements.txt">
-      <created>1667829865400</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1667829865400</updated>
-    </task>
-    <task id="LOCAL-00030" summary="added requirements.txt">
-      <created>1667986926171</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1667986926171</updated>
-    </task>
-    <task id="LOCAL-00031" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
-      <created>1668089750419</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1668089750419</updated>
-    </task>
-    <task id="LOCAL-00032" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
-      <created>1668496281734</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1668496281734</updated>
-    </task>
-    <task id="LOCAL-00033" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
-      <created>1668615040033</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1668615040033</updated>
-    </task>
-    <task id="LOCAL-00034" summary="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering">
-      <created>1668954656205</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1668954656205</updated>
-    </task>
-    <task id="LOCAL-00035" summary="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion">
-      <created>1668960124084</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1668960124084</updated>
-    </task>
-    <task id="LOCAL-00036" summary="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy">
-      <created>1669046597340</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1669046597340</updated>
-    </task>
-    <task id="LOCAL-00037" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
-      <created>1669061522706</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1669061522706</updated>
-    </task>
-    <task id="LOCAL-00038" summary="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%">
-      <created>1669829705814</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1669829705814</updated>
-    </task>
-    <task id="LOCAL-00039" summary="nothing">
-      <created>1671101758571</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1671101758571</updated>
-    </task>
-    <task id="LOCAL-00040" summary="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user">
-      <created>1672913157324</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1672913157325</updated>
-    </task>
-    <task id="LOCAL-00041" summary="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(">
-      <created>1672915660765</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1672915660765</updated>
-    </task>
-    <task id="LOCAL-00042" summary="Three Tasks accomplished: &#10;1. merge sensordata of same participant &#10;--&gt; this was necessary for sensordata of Benedikt as he had several times saved his sensordata &#10;&#10;2. Add ESM_timestamps&#10;--&gt; the labeled sensordata was segmented into &quot;ESM events&quot; of 90 seconds length (= ESM_timestamp column added) &#10;--&gt; this is necessary to be able to easily reuse all functions from the iteration 01 code &#10;&#10;3. Merge sensordata of different participants of same sensors &#10;--&gt; after this step we now have for every sensor one sensorfile include all the labeled and ESM_timestamped sensordata from all participants">
-      <created>1672931139442</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1672931139442</updated>
-    </task>
-    <task id="LOCAL-00043" summary="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors">
-      <created>1672993498751</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1672993498751</updated>
-    </task>
-    <task id="LOCAL-00044" summary="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!">
-      <created>1672996851714</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1672996851714</updated>
-    </task>
-    <task id="LOCAL-00045" summary="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected...">
-      <created>1673004515762</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1673004515762</updated>
-    </task>
-    <task id="LOCAL-00046" summary="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit">
-      <created>1673007372570</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1673007372570</updated>
-    </task>
-    <task id="LOCAL-00047" summary="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)">
-      <created>1673010964265</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1673010964265</updated>
-    </task>
-    <task id="LOCAL-00048" summary="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what">
-      <created>1673355945757</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1673355945757</updated>
-    </task>
-    <task id="LOCAL-00049" summary="test">
-      <created>1673692220022</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1673692220022</updated>
-    </task>
-    <task id="LOCAL-00050" summary="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data">
-      <created>1673730725257</created>
-      <option name="number" value="00050" />
-      <option name="presentableId" value="LOCAL-00050" />
-      <option name="project" value="LOCAL" />
-      <updated>1673730725258</updated>
-    </task>
-    <task id="LOCAL-00051" summary="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula">
-      <created>1673794743928</created>
-      <option name="number" value="00051" />
-      <option name="presentableId" value="LOCAL-00051" />
-      <option name="project" value="LOCAL" />
-      <updated>1673794743929</updated>
-    </task>
-    <task id="LOCAL-00052" summary="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember">
-      <created>1674149790099</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1674149790099</updated>
-    </task>
-    <task id="LOCAL-00053" summary="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user">
-      <created>1675761337789</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1675761337789</updated>
-    </task>
-    <task id="LOCAL-00054" summary="Data Preparation&#10;-&gt; A lot of things, nearly everything">
-      <created>1676385647873</created>
-      <option name="number" value="00054" />
-      <option name="presentableId" value="LOCAL-00054" />
-      <option name="project" value="LOCAL" />
-      <updated>1676385647874</updated>
-    </task>
-    <task id="LOCAL-00055" summary="Data Preparation&#10;-&gt; A lot of things, nearly everything">
-      <created>1676385881804</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1676385881805</updated>
-    </task>
-    <task id="LOCAL-00056" summary="Data Preparation&#10;-&gt; Finished data preparation for GPS data">
-      <created>1676396842819</created>
-      <option name="number" value="00056" />
-      <option name="presentableId" value="LOCAL-00056" />
-      <option name="project" value="LOCAL" />
-      <updated>1676396842819</updated>
-    </task>
-    <task id="LOCAL-00057" summary="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done">
-      <created>1676621773075</created>
-      <option name="number" value="00057" />
-      <option name="presentableId" value="LOCAL-00057" />
-      <option name="project" value="LOCAL" />
-      <updated>1676621773075</updated>
-    </task>
-    <task id="LOCAL-00058" summary="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done">
-      <created>1676658352927</created>
-      <option name="number" value="00058" />
-      <option name="presentableId" value="LOCAL-00058" />
-      <option name="project" value="LOCAL" />
-      <updated>1676658352927</updated>
-    </task>
-    <task id="LOCAL-00059" summary="A lot of things for different contextx">
-      <created>1677087866974</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1677087866975</updated>
-    </task>
-    <task id="LOCAL-00060" summary="A lot of things for different contextx">
-      <created>1677865444084</created>
-      <option name="number" value="00060" />
-      <option name="presentableId" value="LOCAL-00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1677865444085</updated>
-    </task>
-    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <ignored-roots>
-      <path value="$USER_HOME$/Documents/MTS" />
-      <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
-      <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
-    </ignored-roots>
-    <MESSAGE value="added requirements.txt" />
-    <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
-    <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
-    <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
-    <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
-    <MESSAGE value="nothing" />
-    <MESSAGE value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
-    <MESSAGE value="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(" />
-    <MESSAGE value="Three Tasks accomplished: &#10;1. merge sensordata of same participant &#10;--&gt; this was necessary for sensordata of Benedikt as he had several times saved his sensordata &#10;&#10;2. Add ESM_timestamps&#10;--&gt; the labeled sensordata was segmented into &quot;ESM events&quot; of 90 seconds length (= ESM_timestamp column added) &#10;--&gt; this is necessary to be able to easily reuse all functions from the iteration 01 code &#10;&#10;3. Merge sensordata of different participants of same sensors &#10;--&gt; after this step we now have for every sensor one sensorfile include all the labeled and ESM_timestamped sensordata from all participants" />
-    <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh&#10;--&gt; feature extraction code adapted so that feature segments are calculated based on timestamps (and not based on sampling rate anymore)&#10;--&gt; features extracted for every sensor separately in chunks: the sensordata of every sensor is taken from the merged sensorfile which contains data of all highfrequency sensors (Note: no data was lost while merging due to improved code). Calculating features this way for every sensor separately is better than calculating it for all highfrequency sensors together as no data is lost (when calculating it for all sensors together, only rows with no missing values are considered, therefore losing any entry where in any sensor there is a missing value)&#10;--&gt; chunks have been combined per sensor &#10;&#10;Left to do: combining the features extracted from different sensors" />
-    <MESSAGE value="Implement feature extraction for high-frequency sensors using tsfresh - Part 2 &#10;--&gt; remaining part of combining the features extracted from different sensors into one file (so there is one file for each sensor_segment of 1,2,5,10, and 30 seconds now) implemented. &#10;Note: it is important to merge the different sensor-feature-files based on timestamp AND device_id, as for two users there are the same timestamps (and also ESM_timestamps)!" />
-    <MESSAGE value="Adaptions: create dict_esmtimestamp-label which maps the ESM_timestamps to the label_human motion - general labels. This is needed in order to be able to use the feature selection function from iteration 01. &#10;&#10;ADDITIONALLY, discovered and solved an error in the labeling of the sensor data: the initial label information was stored in dictionary (one for every participant) with the keys being the activities. If one participant collected two times the same activiy, the first activity information was overriten. This problem is now solved.&#10;&#10;Note: it took SOO much longer than expected..." />
-    <MESSAGE value="Data-driven feature selection (using, unter anderem, tsfresh feature selection algorithms) for high-frequency features implemented &#10;--&gt; in order to implement, needed to create dictionary which maps ESM_timestamp to labels (in order to be able to label the features-extracted before feature selection) -&gt; this was done in previous commit" />
-    <MESSAGE value="Modeling: create Decision Forest based on all features from high-frequency sensors (features selected in data driven way)" />
-    <MESSAGE value="Transportation Mode -&gt; Data Exploration&#10;-&gt; did a lot of things, don´t remember exactly what" />
-    <MESSAGE value="test" />
-    <MESSAGE value="Active Smartphone Session: Create Sensor Data which only contains sensor data for the active smartphone session around each event &#10;- did that&#10;- calculated the GPS features speed and acceleration based on this new sensor data &#10;- calculated the summary statistics based on this new sensor data" />
-    <MESSAGE value="General Data Preparation -&gt; GPS Speed &amp; Acceleration Calculation &#10;-- adapted the algorithm for calculating acceleration so that it calculates now km/h per second. The algorithm before claimed to calculate m/s^2, but actually something was wrong in the formula" />
-    <MESSAGE value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
-    <MESSAGE value="Data Exploration &#10;- GPS: create generic maps for all GPS data and each users&#10;- GPS: create generic maps for event-GPS data (one record per event) and each user. Colour based on location classes &#10;- WiFi: create histogram for BSSIDs for all WiFi data and each user&#10;- WiFi: create histogram for BSSIDs for event WiFi data (one record per event) and each user" />
-    <MESSAGE value="Data Preparation&#10;-&gt; A lot of things, nearly everything" />
-    <MESSAGE value="Data Preparation&#10;-&gt; Finished data preparation for GPS data" />
-    <MESSAGE value="Sleep -&gt; Data Exploration&#10;-&gt; much stuff done" />
-    <MESSAGE value="Sleep -&gt; Data Exploration &amp; Data Preparation&#10;-&gt; many things done" />
-    <MESSAGE value="A lot of things for different contextx" />
-    <option name="LAST_COMMIT_MESSAGE" value="A lot of things for different contextx" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -741,75 +158,10 @@
           <line>8</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>663</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>603</line>
-          <option name="timeStamp" value="11" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>854</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>2</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01/02_DataExploration.py</url>
-          <line>43</line>
-          <option name="timeStamp" value="14" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_DataCollection/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>386</line>
-          <option name="timeStamp" value="17" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/01_DataCollection/00_downloadDB_and_transform_uniform_format.py</url>
-          <line>387</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
-          <line>4</line>
-          <option name="timeStamp" value="32" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/04_DataAnalysis/LSTM.py</url>
-          <line>377</line>
-          <option name="timeStamp" value="42" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py</url>
-          <line>636</line>
-          <option name="timeStamp" value="65" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/00_general/databases_naturalistic.py</url>
-          <line>300</line>
-          <option name="timeStamp" value="78" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/00_general/databases_naturalistic.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="81" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/03_DataPreparation/label_selection.py</url>
-          <line>36</line>
-          <option name="timeStamp" value="86" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/MasterThesis_Iteration01$main.coverage" NAME="main Coverage Results" MODIFIED="1663233905406" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/MasterThesis_Iteration01$main.coverage" NAME="main Coverage Results" MODIFIED="1662738319731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

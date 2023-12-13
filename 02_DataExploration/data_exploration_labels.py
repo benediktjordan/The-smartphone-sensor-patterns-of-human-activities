@@ -60,7 +60,7 @@ class data_exploration_labels:
     # for one context: barplot of classes x number of events
     def visualize_esm_activity(df_esm, column_name, fig_title):
         fig = plt.figure(figsize=(15, 10))
-        plt.title(fig_title)
+        plt.title(fig_title, fontsize=16)
         sns.barplot(x=df_esm[column_name].value_counts()[0:20].index,
                     y=df_esm[column_name].value_counts()[0:20].values,
                     palette="Blues_d")
@@ -82,7 +82,7 @@ class data_exploration_labels:
     def visualize_esm_activity_minutes(df_esm, column_name, esm_segment_length, fig_title):
         esm_segment_length_in_minutes = esm_segment_length / 60
         fig = plt.figure(figsize=(15, 10))
-        plt.title(fig_title)
+        plt.title(fig_title, fontsize=16)
         sns.barplot(x=df_esm[column_name].value_counts()[0:20].index,
                     y=(df_esm[column_name].value_counts()[0:20].values * esm_segment_length_in_minutes),
                     palette="Blues_d")

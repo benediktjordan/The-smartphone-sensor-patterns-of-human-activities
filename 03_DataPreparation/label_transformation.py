@@ -38,13 +38,14 @@ class label_transformation:
 
     # add context classes to df_esm (the dataframe which contains the esm data): main function
     def create_activity_dataframe(df_esm, human_motion, humanmotion_general, humanmotion_specific, before_after_sleep, before_after_sleep_updated,
-                                  on_the_toilet_sittingsomewhereelse, on_the_toilet, publictransport_non_motorized, publictransport,
+                                  on_the_toilet_sittingsomewhereelse, on_the_toilet, public_transport,
                                   location, smartphonelocation, aligned):
 
-        # special case for "human_motion" and "before_after_sleep_updated", since more than one column in df_esm have to be evaluated to create each label
+        # special case for "human_motion", "before_after_sleep_updated", and "public_transport" since more than one column in df_esm have to be evaluated to create each label
         #iterate through dictionary human_motion and dictionary before_after_sleep_updated
         df_esm = label_transformation.add_activity_classes(df_esm, human_motion, "label_human motion")
         df_esm = label_transformation.add_activity_classes(df_esm, before_after_sleep_updated, "label_sleep")
+        df_esm = label_transformation.add_activity_classes(df_esm, public_transport, "label_public transport")
 
         # create dataframe with details of new columns
         new_columns = [["label_human motion - general", "humanmotion_general", "bodyposition"],
@@ -52,8 +53,6 @@ class label_transformation:
                        ["label_before and after sleep", "before_after_sleep", "activity"],
                        ["label_on the toilet", "on_the_toilet_sittingsomewhereelse", "bodyposition"],
                        ["label_on the toilet", "on_the_toilet", "activity"],
-                       ["label_public transport", "publictransport_non_motorized", "bodyposition"],
-                       ["label_public transport", "publictransport", "location"],
                        ["label_location", "location", "location"],
                        ["label_smartphone location", "smartphonelocation", "smartphonelocation"],
                        ["label_aligned", "aligned", "aligned"]]

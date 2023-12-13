@@ -71,7 +71,9 @@ class DecisionForest:
 
 	#DF including LOSOCV, hyperparameter tuning, permutation test, etc
 	#Note: since 20.02., the index of the df needs to be reset before using this function
-	def DF_sklearn(df, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning, confusion_matrix_order, grid_search_space = None, feature_importance = None, parameter_set = "default", combine_participants = False):
+	def DF_sklearn(df, label_segment, label_column_name, n_permutations, path_storage, parameter_tuning,
+				   confusion_matrix_order, title_confusion_matrix, title_feature_importance_grid, grid_search_space = None, feature_importance = None,
+				   parameter_set = "default", combine_participants = False):
 		"""
 		Builds a decision forest using the sklearn library
 		:param df:
@@ -356,7 +358,7 @@ class DecisionForest:
 			mat = confusion_matrix(y_test_confusionmatrix, yhat_confusionmatrix, labels = label_mapping_confusion_matrix)
 			sns.heatmap(mat, annot=True, annot_kws={'size': 10}, cmap=plt.cm.Greens, fmt='d', cbar=False, linewidths=0.2)
 			plt.title('Confusion Matrix Absolute Values with Test-Proband ' + str(i) )
-			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=16)
 			# add xticks and yticks from label_mapping (which is a dictionary)
 			tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
 			plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
@@ -381,7 +383,7 @@ class DecisionForest:
 			plt.xlabel('Predicted Label')
 			plt.ylabel('True Label')
 			plt.title('Confusion Matrix Relative Values with Test-Proband ' + str(i) )
-			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=10)
+			plt.suptitle('Balanced Accuracy: {0:.3f}'.format(acc_balanced), fontsize=16)
 			plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(label_segment) + "_parameter_tuning-"+ parameter_tuning_active + "_test_proband-" + str(
 					i) + "_ConfusionMatrix_percentages.png", bbox_inches="tight")
 			#plt.show()
@@ -533,7 +535,7 @@ class DecisionForest:
 					linewidths=0.2)
 
 		plt.title("Confusion Matrix Absolute Values for All Participants")
-		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
+		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=16)
 		# add xticks and yticks from label_mapping (which is a dictionary)
 		tick_marks = np.arange(len(label_mapping_confusion_matrix)) + 0.5
 		plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
@@ -558,7 +560,7 @@ class DecisionForest:
 		plt.xlabel('Predicted Label')
 		plt.ylabel('True Label')
 		plt.title("Confusion Matrix Relative Values for All Participants")
-		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
+		plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=16)
 		plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
 			label_segment) + "_parameter_tuning-" + parameter_tuning_active +
 					"_ConfusionMatrix_percentages.png", bbox_inches="tight")
@@ -575,13 +577,13 @@ class DecisionForest:
 				text_color = 'white'
 			else:
 				text_color = 'black'
-			plt.text(j + 0.5, i + 0.75, '({0})'.format(int(matrix_abs[i, j])), ha='center', va='center', fontsize=10,
+			plt.text(j + 0.5, i + 0.75, '({0})'.format(int(matrix_abs[i, j])), ha='center', va='center', fontsize=16,
 					 color=text_color)
 		plt.xticks(tick_marks, label_mapping_confusion_matrix, rotation=45)
 		plt.yticks(tick_marks, label_mapping_confusion_matrix, rotation=0)
 		plt.xlabel('Predicted Label')
 		plt.ylabel('True Label')
-		plt.title("Confusion Matrix with Relative & Absolute Values")
+		plt.title(title_confusion_matrix, fontsize=16)
 		#plt.suptitle('Balanced Accuracy: {0:.3f}'.format(balanced_accuracy_overall), fontsize=10)
 		#plt.show()
 		plt.savefig(path_storage + label_column_name + "_timeperiod_around_event-" + str(
@@ -636,7 +638,7 @@ class DecisionForest:
 		plt.subplots_adjust(left=0.1, bottom=0.1, right=10000.9, top=0.9, wspace=0.5, hspace=0.5)
 
 		# create title for whole figure
-		fig.suptitle("Feature Importance for LOSOCV Combined For Different Classes ", fontsize=18)
+		fig.suptitle(title_feature_importance_grid, fontsize=16)
 
 		# iterate over the classes and plot the SHAP summary plot on the appropriate subplot
 		for i, single_class in enumerate(confusion_matrix_order):
@@ -964,7 +966,7 @@ for timeperiod in timeperiods:
 			ax.axvline(score_model, ls='--', color='r')
 			score_label = (f"Score on original\ndata: {score_model:.2f}\n"
 						   f"(p-value: {pvalue_model:.3f})")
-			ax.text(0.14, 125, score_label, fontsize=12)
+			ax.text(0.14, 125, score_label, fontsize=16)
 			ax.set_xlabel("Accuracy score")
 			ax.set_ylabel("Probability")
 			plt.savefig("/Users/benediktjordan/Documents/MTS/Iteration01/Data/data_analysis/decision_forest/" + label_column_name +"/sensors_included-" + sensors_included + "_feature_timeperiod-" + str(timeperiod) + "_timeperiod_around_event-" + str(label_segment) + "_test_proband-" + str(i) + "_Permutation.png")

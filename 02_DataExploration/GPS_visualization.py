@@ -92,7 +92,7 @@ class GPS_visualization:
         ax.add_artist(scalebar)
 
         #add title
-        plt.title(figure_title, fontsize=18)
+        plt.title(figure_title, fontsize=16)
         plt.tight_layout()
         plt.show()
         return fig
