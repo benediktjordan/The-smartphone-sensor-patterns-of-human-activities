@@ -5,7 +5,24 @@
 ## "conda env create -f environment.yml")
 ## Note: in this and the other scripts, regions are used to structure the code. These regions can be collapsed in PyCharm
 
-#region import
+#install GPU support (specific for GTX 1050 on a Windows 11 machine)
+## Step 1: follow this tutorial: https://medium.com/@abhig0303/setting-up-tensorflow-with-cuda-for-gpu-on-windows-11-a157db4dae3e
+## Step 2: install numpy version 1.19.2 "pip install numpy==1.19.2"
+## Step 3: install pandas version 1.3.3 (since its only compatible with numpy 1.19.2) "pip install pandas==1.3.3"
+## Step 4: install scipy version 1.9.2 (since its only compatible with numpy 1.19.2) "pip install scipy==1.9.2"
+## Step 5: install matplotlib version 3.6 (since its only compatible with numpy 1.19.2) "pip install matplotlib==3.6"
+## Step 6: install shap version 0.37.0 (since its only compatible with numpy 1.19.2) "pip install shap==0.37.0"
+## Step 7: install numba version 0.53.0 (since its only compatible with numpy 1.19.2) "pip install numba==0.53.0"
+## Step 8: since stupiditly, the installation of shap will have led to an upgrade of numpy, have to reinstall numpy 1.19.2 "pip install numpy==1.19.2"
+## Step 9: install seaborn version 0.11.1 (since its only compatible with numpy 1.19.2) "pip install seaborn==0.11.1"
+# install tsfresh version 0.18.0 (since its only compatible with numpy 1.19.2) "pip install tsfresh==0.18.0"
+# install protobuf 3.20.3: "pip install protobuf==3.20.3"
+# install statsmodels 0.12.2 "pip install statsmodels==0.12.2"
+# install keras_tuner version 1.0.3 "pip install keras_tuner==1.0.3"
+
+#
+
+
 import pickle
 #import tensorflow_decision_forests as tfdf
 import datetime
@@ -97,7 +114,7 @@ except:
   from colabtools.googlelog import CaptureLog as sys_pipes
 #endregion
 
-#region check versions
+#region check versions and GPU usage
 # #What version of Python do you have?
 import sys
 
@@ -116,6 +133,11 @@ print(f"Pandas {pd.__version__}")
 print(f"Scikit-Learn {sk.__version__}")
 gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
+available_gpus = tf.config.list_physical_devices('GPU') # List of available GPUs
+num_gpus = len(available_gpus) # Number of available GPUs
+print("Number of GPUs Available:", num_gpus)
+print("Available GPUs:", available_gpus)
+
 
 #endregion
 
