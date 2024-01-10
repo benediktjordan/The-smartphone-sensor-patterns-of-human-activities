@@ -4,47 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Fixed the requirements file&#10;-&gt; massive work in dependencies&#10;Included GPU support &#10;Deleted unnecessary files">
-      <change afterPath="$PROJECT_DIR$/dataExploration/GPS_visualization.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dataExploration/data_exploration_labels.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dataExploration/data_exploration_sensors.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initialTransformations/InitialTransforms_Iteration02.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initialTransformations/Merge_Transform.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initialTransformations/general_functions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initialTransformations/monitor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modeling/DecisionForest.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modeling/LSTM.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/modeling/visualizations.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/FeatureExtraction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/FeatureExtraction_GPS.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/GPS_clustering.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/GPS_computations.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/Merge_and_Impute.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/Static_Periods.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/label_selection.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/label_transformation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/preprocessing/transform.py" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Changed project structure">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/00_general/general_functions.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/InitialTransforms_Iteration02.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/Merge_Transform.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_DataCollection/monitor.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/GPS_visualization.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_labels.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/02_DataExploration/data_exploration_sensors.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/FeatureExtraction_GPS.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_clustering.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/GPS_computations.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Merge_and_Impute.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/Static_Periods.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_selection.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/label_transformation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_DataPreparation/transform.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/DecisionForest.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/LSTM.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/04_DataAnalysis/visualizations.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -368,7 +329,8 @@
       <workItem from="1702474971373" duration="423000" />
       <workItem from="1702475467115" duration="1424000" />
       <workItem from="1702477062997" duration="883000" />
-      <workItem from="1704898687999" duration="3233000" />
+      <workItem from="1704898687999" duration="3296000" />
+      <workItem from="1704902138869" duration="82000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
@@ -713,7 +675,7 @@
       <option name="project" value="LOCAL" />
       <updated>1674149790099</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -760,7 +722,8 @@
     <MESSAGE value="Human MOtion -&gt; Data Preparation &#10;-- create merge-features section to merge high-frequency feature sets with SpeedAcc feature set&#10;-- define which features should be used for hypothesis-driven approach WIP &#10;&#10;-- did probably more which I dont remember" />
     <MESSAGE value="different things" />
     <MESSAGE value="Fixed the requirements file&#10;-&gt; massive work in dependencies&#10;Included GPU support &#10;Deleted unnecessary files" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed the requirements file&#10;-&gt; massive work in dependencies&#10;Included GPU support &#10;Deleted unnecessary files" />
+    <MESSAGE value="Changed project structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed project structure" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
