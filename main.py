@@ -20,9 +20,7 @@
 # install statsmodels 0.12.2 "pip install statsmodels==0.12.2"
 # install keras_tuner version 1.0.3 "pip install keras_tuner==1.0.3"
 
-#
-
-
+#region import
 import pickle
 #import tensorflow_decision_forests as tfdf
 import datetime

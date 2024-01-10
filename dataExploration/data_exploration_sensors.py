@@ -635,7 +635,6 @@ class data_exploration_sensors:
     # visualize scatterplot: mean & std of sensor in scatterplot for specific sensor and list of classes
     def vis_summary_stats(df_summary_stats, sensor_name, label_column_name, list_activities,
                           figure_title, visualize_participants=False, set_axes_limits = "yes"):
-
         summary_stats = df_summary_stats.copy()
 
         # create dataframe including only the relevant activities

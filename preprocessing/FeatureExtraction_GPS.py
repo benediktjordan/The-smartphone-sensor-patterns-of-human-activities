@@ -14,7 +14,7 @@ import geopy.distance
 
 #endregion
 
-# this class contains methods to extract feautres for GPS data and GPS-derived data (like places)
+# this class contains methods to extract features for GPS data and GPS-derived data (like places)
 class FeatureExtraction_GPS:
     # calculate distance, speed & acceleration
     def calculate_distance_speed_acceleration(self, df):
