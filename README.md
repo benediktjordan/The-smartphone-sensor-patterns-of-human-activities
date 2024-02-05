@@ -8,7 +8,7 @@ The project was created during the master thesis in the master´s program "Compu
 
 ## Repository Content
 
-This repository contains the Python code developed for the project. The codebase includes various modules for data loading, preprocessing, peak detection, noise detection, transformation, and machine learning classification. The key components are:
+This repository contains the Python code developed for the project. The codebase includes all modules of the data science project. The key components are:
 
 - data loading and exploration
 - initial label and sensor transformations
@@ -17,7 +17,7 @@ This repository contains the Python code developed for the project. The codebase
 - modeling: creation, training and evaluation of machine learning models
 
 ## Project Results
-The project aimed at identifying in real time four different user contexts based on smartphone sensor data. Subsequently, the main results are presented: 
+The project aimed fat identifying in real time four different user contexts based on smartphone sensor data. Subsequently, the main results are presented: 
 
 ### Human Motion 
 

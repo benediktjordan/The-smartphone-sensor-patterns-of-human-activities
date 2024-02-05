@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Changed project structure">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +86,7 @@
     &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/bened/PycharmProjects/MasterThesis_Iteration01&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/bened/Downloads/main.py&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -331,6 +332,11 @@
       <workItem from="1702477062997" duration="883000" />
       <workItem from="1704898687999" duration="3296000" />
       <workItem from="1704902138869" duration="82000" />
+      <workItem from="1704907449912" duration="330000" />
+      <workItem from="1706105938486" duration="11714000" />
+      <workItem from="1706165102167" duration="3189000" />
+      <workItem from="1706863718282" duration="1090000" />
+      <workItem from="1707116659047" duration="613000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
