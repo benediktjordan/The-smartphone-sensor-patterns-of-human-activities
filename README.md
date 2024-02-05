@@ -190,23 +190,14 @@ doesn´t contain much differentiative value for differentiating between these cl
 Data collected included smartphone sensor data (like GPS, accelerometer) and self-reported information through experience sampling (ES). This data was used to analyze various contexts like human motion, important locations, and periods of lying in bed before and after sleep.
 Installation
 
-Dataset Availability 
+## Dataset Availability 
+Please note that the dataset utilized in this project is not publicly available. This is due to privacy considerations 
+of the participants as well as due to agreements with Wellspent. The data includes sensitive and personal information 
+that necessitates strict confidentiality. As such, in adherence to privacy laws and further guidelines, 
+the dataset is retained exclusively for the purposes of this research project and is not accessible for external 
+use or review.
 
-## Data Preprocessing 
-
-## Modeling 
-
-## Installation 
-
-## Usage 
-
-## Contributing 
-
-## Acknowledgments
-
-  
-## Methodology
-
+## Methodology 
 The project follows the Cross-Industry Standard Process for Data Mining (CRISP-DM) model, involving:
 
     Data Collection: Data was gathered from 18 participants over an average of 12 days in naturalistic settings.
@@ -214,27 +205,41 @@ The project follows the Cross-Industry Standard Process for Data Mining (CRISP-D
     Data Preparation: Techniques included ES answers transformation, feature creation, and data-driven feature selection.
     Modeling: Machine learning models and other necessary methods were applied for analysis.
 
-Key Findings
-
-    Human Motion: Detected four human motion activities with a balanced accuracy of 64%.
-    Important Locations: Identified "home" and "office" locations with recalls of 85% and 80%, respectively, using only GPS data.
-    Lying in Bed Before and After Sleep: Detected with recalls of 72% and 50%.
-    The models show potential in real-life applications for mitigating smartphone overuse.
 
 
-[Installation instructions for the project.]
-Usage
+## Data Preprocessing
 
-[How to use this project, including necessary commands or scripts.]
-Code Structure
+## Modeling 
 
-[Details about the structure of the code and its main components.]
-Contributing
+## Installation 
+To run the AGENDER 2.0 project, you need to have Python 3.7 installed on your machine. Additionally, certain libraries and 
+dependencies are required, which can be installed via the following command:
 
-[Guidelines for contributing to the project.]
-License
+`pip install -r requirements.txt
+`
 
-[License details of the project.]
-Acknowledgments
+## Usage 
+To use this project, first clone the repository to your local machine:
 
-Acknowledgments to those who contributed to the thesis and project.
+`git clone [repository-link]`
+
+Navigate to the project directory and execute the main script:
+
+`cd context_detection
+python main.py`
+
+
+## Contributing 
+Contributions to the AGENDER 2.0 project are welcome. Please ensure to follow the standard procedures for contributing 
+to open-source projects, including using pull requests for proposing changes.
+
+License: this project is licensed under the MIT License.
+
+## Acknowledgments
+This project wouldn´t have been possible without the stellar continuous supervision of Lennart Schaepermeier (main 
+university supervisor) and Marius Rackwitz (company supervisor) - thank you for this! Furthermore, thanks to Prof. Kerschke 
+and Prof. Kiebel for agreeing to take the lead supervision roles. 
+Additionally, my gratitude goes to the entire team of Wellspent for
+their continuous support and the participants for their time and effort. 
+  
+
