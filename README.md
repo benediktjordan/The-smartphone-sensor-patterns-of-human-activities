@@ -20,15 +20,35 @@ This repository contains the Python code developed for the project. The codebase
 The project aimed fat identifying in real time four different user contexts based on smartphone sensor data. Subsequently, the main results are presented: 
 
 ### Human Motion 
+Six human motions were in focus in this analysis: lying, sitting at a table, standing, walking, running, and cycling. 
+Two different datasets were used to perform two analyses: the "laboratory dataset", in which the participants were asked 
+to perform the activities in a controlled environment, and the "naturalistic dataset", in which the participants 
+performed the activities in their daily life (compare the section about "data structure").
 
-- Human Motion: Detected four human motion activities with a balanced accuracy of 64%.
+#### Laboratory Dataset based results
+The best performing machine learning model trained on the laboratory dataset reached a balanced accuracy of 80.8% and a
+F1 score of 81.7 on average over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
 
  ![alt text]()
-    
-    
+
+#### Naturalistic Dataset based results
+As the main aim of this project was to develop machine learning models which can be used in real life, a model was also 
+trained on the data collected in naturalistic settings. In the process of choosing and hyperparameter-optimising machine learning models, 
+768 models have been compared. The best performing model reached a balanced accuracy of 71.3%
+over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
+
+ ![alt text]()
+
+### Transportation Mode
+
+### Important Locations
+
+
     Important Locations: Identified "home" and "office" locations with recalls of 85% and 80%, respectively, using only GPS data.
     Lying in Bed Before and After Sleep: Detected with recalls of 72% and 50%.
     The models show potential in real-life applications for mitigating smartphone overuse.
+
+### Lying in Bed Before and After Sleep
     
 ## Data Structure 
 
