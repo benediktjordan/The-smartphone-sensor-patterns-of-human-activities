@@ -137,7 +137,7 @@ The two main classes of interest, "lying in bed before sleep" and "lying in bed 
 ![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Sleep_Modeling_HyperparameterTuning_ConfusionMatrix.png)
 
 #### Detailled analysis and Important Features
-- **Lying in bed before sleep:** The class of "lying in bed before sleep" is classiﬁed with a precision
+- **lying in bed before sleep:** The class of "lying in bed before sleep" is classiﬁed with a precision
 of 43% and a recall of 72%. This implies that less than half of the as "lying in bed before sleep"
 classiﬁed samples really belong to that class, and that nearly three-quarters of all "lying in bed
 before sleep" events are detected as such. A possible reason for this imbalance in precision
@@ -152,7 +152,7 @@ sleep" are mostly with the "not lying: stationary" events, which include, for ex
 or "sitting" events. The reason could be that only these events are also present at late times,
 while participants were "lying in bed at other times" or "lying on the couch" at other times of
 the day.
-- Lying in bed after sleep: The class of "lying in bed after sleep" is classiﬁed with a precision
+- **lying in bed after sleep:** The class of "lying in bed after sleep" is classiﬁed with a precision
 of 56% and a recall of 50%. This implies that around half of all samples which are classiﬁed as
 "lying in bed after sleep" are actually belonging to this class and exactly one-half of all "lying
 in bed after sleep" events are detected as such. The low level of precision is surprising since
