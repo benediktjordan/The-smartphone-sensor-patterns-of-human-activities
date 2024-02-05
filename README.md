@@ -29,7 +29,7 @@ performed the activities in their daily life (compare the section about "data st
 The best performing machine learning model trained on the laboratory dataset reached a balanced accuracy of 80.8% and a
 F1 score of 81.7 on average over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
 
- ![alt text]()
+ ![alt text](https://github.com/benediktjordan/context_detection/blob/7028bd944b49b79eac9c42d91aef4b49f576e41f/img/humanMotion_laboratory_confusionMatrix.png)
 
 #### Naturalistic Dataset based results
 As the main aim of this project was to develop machine learning models which can be used in real life, a model was also 
@@ -37,7 +37,7 @@ trained on the data collected in naturalistic settings. In the process of choosi
 768 models have been compared. The best performing model reached a balanced accuracy of 71.3%
 over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
 
- ![alt text]()
+ ![alt text](https://github.com/benediktjordan/context_detection/blob/7028bd944b49b79eac9c42d91aef4b49f576e41f/img/humanMotion_naturalistic_confusionMatrix.png)
 
 ### Transportation Mode
 
