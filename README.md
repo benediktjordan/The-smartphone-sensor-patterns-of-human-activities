@@ -206,10 +206,71 @@ The project follows the Cross-Industry Standard Process for Data Mining (CRISP-D
     Modeling: Machine learning models and other necessary methods were applied for analysis.
 
 
+### Data Collection
+The methodology employed for data collection in this study involved naturalistic and laboratory settings, utilizing 
+smartphone sensors and experience sampling (ES) to capture real-world contexts. Participants from the author's 
+network contributed sensor data, including motion and environmental information, alongside contextual self-reports 
+through ES questionnaires. This approach allowed for a rich dataset conducive to modeling user contexts, balancing 
+detailed data capture with considerations for battery life and data storage, showcasing the practical application of 
+sensor data in understanding human behavior and interaction with technology.
 
-## Data Preprocessing
+### Data Preprocessing
+This chapter outlines the multifaceted process of data preparation, crucial for transforming both laboratory and 
+naturalistic data into a format suitable for modeling. The complexity arises from differing preparation steps for 
+various types of data  and context-specific 
+techniques for data manipulation. A specific subset of the following techniques has been used for the different 
+contexts. 
 
-## Modeling 
+Initially, the ES answer transformation is applied to transform ES events into class 
+labels for context, contingent on the relevancy and completeness of responses. Initial data selection focuses on managing 
+the voluminous sensor data by narrowing down to segments around ES events, enhancing computational feasibility. 
+Active smartphone sessions are identified through unlocked screen status as a proxy for user engagement, ensuring 
+relevance to the context under investigation. To maintain data reliability, the duration of answers to ES questionnaires
+is limited, excluding data points where participants took excessively long to respond.
+
+In the realm of sensor data, merging raw time series addresses the challenge of inconsistent sampling times across 
+sensors, using a method that aligns data points based on temporal proximity. Feature creation is meticulously undertaken
+across various domains—motion sensors undergo a detailed process to generate features from time, frequency, and
+time-frequency domains, utilizing a comprehensive suite of algorithms to capture the dynamics and characteristics 
+of human motion. Similarly, GPS data is enriched by deriving speed and acceleration features, subsequently augmented 
+by higher-level features to capture movement patterns. Place features are crafted to identify significant locations 
+through GPS data, incorporating time-based categorizations and frequency of visits to enhance contextual understanding. 
+Time features are derived to inform models about temporal patterns, while the identification of long static periods, 
+particularly from accelerometer data, assists in inferring periods of minimal movement, potentially indicative of sleep.
+
+The process also involves merging feature time series from different sensors to construct a cohesive dataset, ready 
+for modeling. A data-driven feature selection strategy is employed to refine the feature set, reducing dimensionality
+while preserving the most informative attributes for modeling. This approach meticulously eliminates features with
+excessive missing values, non-variability, and weak correlation to the target variable, employing statistical tests 
+to ensure the relevance of retained features. This comprehensive preparation underscores the importance of meticulous
+data handling and feature engineering in developing robust, context-aware models.
+
+### Modeling 
+This section provides an overview of the machine learning models and methodologies employed in the project, aimed at 
+addressing specific classification challenges through data-driven approaches. Central to our modeling strategy are 
+Decision Forests (DF), which serve as the primary machine learning model for classifying sensor data across various 
+contexts due to their robustness and efficiency in handling large, high-dimensional datasets. DFs are complemented by 
+a rule-based one-value class selection procedure, specifically designed to ensure that certain classes, such as "home" 
+or "office," are uniquely assigned to locations, addressing the unique requirements of identifying important places.
+
+Additionally, hierarchical clustering, utilizing agglomerative methods with complete linkage, is applied to GPS data 
+for extracting frequently visited locations, ensuring meaningful spatial grouping. This approach is particularly 
+effective in managing and interpreting geospatial data, where the calculation of distances between clusters plays a 
+crucial role in identifying significant locations.
+
+The project also incorporates several critical methods and concepts to enhance the modeling process:
+
+- Label Segment Selection: A data-driven methodology to determine the optimal time frame around event-specific sensor data, ensuring the relevance and accuracy of the data used for model training and prediction.
+- Leave One Subject Out Cross-Validation (LOSOCV): A validation technique that enhances the model's generalizability by training and testing on data from different individuals, ensuring the model's robust performance across new, unseen data.
+- Hyperparameter Tuning: Employing nested cross-validation, this process fine-tunes the model's hyperparameters to optimize performance, addressing the challenge of selecting the most effective model configuration.
+- Evaluation Metrics: The use of balanced accuracy, F1 score, and other metrics allows for a fair assessment of model performance, especially crucial in imbalanced datasets. These metrics provide a quantitative measure of the model's accuracy and effectiveness.
+- Machine Learning Model Interpretation: Leveraging SHapley Additive exPlanations (SHAP) values to interpret the model's predictions, this approach offers insights into the importance of different features, enhancing the transparency and understandability of the model.
+
+Together, these models and methodologies form a comprehensive machine learning strategy that addresses the nuanced 
+demands of classifying sensor data in various contexts. The project's approach is characterized by a meticulous 
+selection of modeling techniques, validation procedures, and interpretive tools to ensure that the models are not 
+only performant but also interpretable and generalizable across different datasets and contexts.
+
 
 ## Installation 
 To run the AGENDER 2.0 project, you need to have Python 3.7 installed on your machine. Additionally, certain libraries and 
