@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adapted README: included Results -&gt; Human Motion">
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Laboratory_Modeling_BestModel_FeatureImportances.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Laboratory_Modeling_ModelComparison_Performances.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Naturalistic_Modeling_BestModel_FeatureImportances.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Naturalistic_Modeling_LabelSegmentTesting_Results.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Naturalistic_Modeling_ModelComparison_DataDriven_Performances.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/HumanMotion_Naturalistic_Modeling_ModelComparison_TheoryDriven_Performances.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/Location_Modeling_BestModel_ConfusionMatrix.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/Location_Modeling_BestModel_FeatureImportance.png" afterDir="false" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adapted README: included Results -&gt; Important Locations. And adapted Human Motion Results (included important features)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
@@ -344,7 +336,7 @@
       <workItem from="1706105938486" duration="11714000" />
       <workItem from="1706165102167" duration="3189000" />
       <workItem from="1706863718282" duration="1090000" />
-      <workItem from="1707116659047" duration="5223000" />
+      <workItem from="1707116659047" duration="6076000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
@@ -689,7 +681,7 @@
       <option name="project" value="LOCAL" />
       <updated>1674149790099</updated>
     </task>
-    <option name="localTasksCounter" value="59" />
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -712,7 +704,6 @@
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
     </ignored-roots>
-    <MESSAGE value="restructured the folder &amp; files; created new branch" />
     <MESSAGE value="added requirements.txt" />
     <MESSAGE value="worked on GPS_clustering: updated the functions regarding the identification of most frequent locations via clustering" />
     <MESSAGE value="- initial_transofrms_class &#10;--&gt; created method to merge participant IDs &#10;&#10;- main &#10;--&gt; human motion: created summary of the label classes per participant &#10;--&gt; adapted analysis to focus on stationary human motion" />
@@ -737,7 +728,8 @@
     <MESSAGE value="Changed project structure" />
     <MESSAGE value="Adapted README" />
     <MESSAGE value="Adapted README: included Results -&gt; Human Motion" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adapted README: included Results -&gt; Human Motion" />
+    <MESSAGE value="Adapted README: included Results -&gt; Important Locations. And adapted Human Motion Results (included important features)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adapted README: included Results -&gt; Important Locations. And adapted Human Motion Results (included important features)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

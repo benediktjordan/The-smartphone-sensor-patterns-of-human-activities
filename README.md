@@ -62,7 +62,7 @@ tant to differentiate between different dynamic motions makes intuitively sense,
 insights gained in the data exploration and also conﬁrms the similar ﬁnding when analysing
 the important features of the naturalistic data-based human motion model.
 
-![alt text]()
+![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/HumanMotion_Laboratory_Modeling_BestModel_FeatureImportances.png)
 
 
 #### Naturalistic Dataset based results
@@ -106,7 +106,7 @@ have increased from 67% to 80%.
 Therefore, in summary, the model identified "home" and "office" locations with recalls of 
 84% and 80%, respectively, using only GPS data.
 
-![alt text]()
+![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Location_Modeling_BestModel_ConfusionMatrix.png)
 
 
 #### Important Features 
@@ -123,12 +123,67 @@ and the fraction of time- as well as the trusted fraction of time spent at a pla
 people are at the oﬃce, in case they are there, around the noon and afternoon time.
 
 
-![alt text]()
+![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Location_Modeling_BestModel_FeatureImportance.png)
 
 ### Lying in Bed Before and After Sleep
-Lying in Bed Before and After Sleep: Detected with recalls of 72% and 50%.
+The aim of this analysis was to identify whenever a person is lying in bed directly before or after sleep. 
 
-![alt text]()
+#### Results 
+The best model 
+reached an average balanced accuracy of 57.7% over all LOSOCV iterations. This is much above the baseline performance of
+16.7% accuracy (since the model was trained on classifying six classes; compare confusion matrix below). 
+The two main classes of interest, "lying in bed before sleep" and "lying in bed after sleep", were classified with recalls of 72% and 50%, respectively.
+
+![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Sleep_Modeling_HyperparameterTuning_ConfusionMatrix.png)
+
+#### Detailled analysis and Important Features
+- **Lying in bed before sleep:** The class of "lying in bed before sleep" is classiﬁed with a precision
+of 43% and a recall of 72%. This implies that less than half of the as "lying in bed before sleep"
+classiﬁed samples really belong to that class, and that nearly three-quarters of all "lying in bed
+before sleep" events are detected as such. A possible reason for this imbalance in precision
+and recall can be found when comparing the important features in the middle-right subplot
+of the subsequent figure: The most important feature for classifying an event as "lying in bed before sleep"
+is, with much distance to the second most important, the "hour of the day" (hour_of_day). This
+could imply that many events at a certain timeperiod of the day (i.e. between 21:00 - 0:00) are
+classiﬁed as "lying in bed before sleep". This would capture most of the "lying in bed before
+sleep" events accurately, but generate also many FP, which would result
+in the low precision - high recall imbalance observed above. The FP for "lying in bed before
+sleep" are mostly with the "not lying: stationary" events, which include, for example, "standing"
+or "sitting" events. The reason could be that only these events are also present at late times,
+while participants were "lying in bed at other times" or "lying on the couch" at other times of
+the day.
+- Lying in bed after sleep: The class of "lying in bed after sleep" is classiﬁed with a precision
+of 56% and a recall of 50%. This implies that around half of all samples which are classiﬁed as
+"lying in bed after sleep" are actually belonging to this class and exactly one-half of all "lying
+in bed after sleep" events are detected as such. The low level of precision is surprising since
+the feature "static period end distance" (which is the time-distance to the end of the last long
+static period) seemed to provide quite speciﬁc information about the appearance of a "lying
+in bed after sleep" event. But also in this case looking at the important
+features for predicting this class, which are visualized in the middle-left subplot in the subsequent
+figure , provides some possible explanatory clues: the feature describing the time-distance to the
+end of the last long static period is only the fourth most important feature, after the hour of the
+day and two classiﬁcations of the human motion model. The reason for choosing this feature-
+ranking, instead of using the "static_period_end_distance" as the most important feature, is
+found somewhere within the gini impurity-optimization during the DF training process. Most
+probably, other events, besides "lying in bed after sleep", were similarly close to the end of the
+closest long static period, and therefore the impurity optimization needed to be done using
+another feature like "hour of the day". 
+
+
+For both the "lying in bed before sleep" and "lying in bed after sleep" classes, as well as
+the other two classes associated with lying ("lying on the couch" and "lying in bed at other
+times") the human motion model prediction feature of "lying (in hand/s)" played an important
+role. Interestingly, for the two main classes, this feature was only ranked second or third most
+important. This could be a factor for the high rate of misclassiﬁcation between the two main
+classes and the "not lying: stationary" class.
+
+One other interesting insights from the SHAP feature importance ranking is that the pre-
+dictions of important locations are not listed among the most important features for any of
+six classes, except for "lying on the couch" but there also at ﬁfth place. This indicates that
+the information if a participant is at "home", another "home 2", the "oﬃce", or "another place"
+doesn´t contain much differentiative value for differentiating between these classes.
+
+![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Sleep_Modeling_HyperparameterTuning_SHAPFeatureImportances.png)
 
 ## Data Structure 
 
