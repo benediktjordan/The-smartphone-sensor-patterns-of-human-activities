@@ -2,7 +2,7 @@
 
 ## Project Description
 
-This project develops machine learning models to identify user contexts linked with smartphone overuse based on smartphone sensor data. Four user contexts have been in focus: human motion, transportation mode, important locations, and lying in bed before or after sleep. The aim was to identify these contexts based on data from 14 different smartphone sensors, namely motion-, location-, phone-related-, and environmental sensors.  The project's goal is to aid in understanding and reducing smartphone overuse. The data was collected in a naturalistic setting. 
+This project develops machine learning models to identify user contexts linked with smartphone overuse based on smartphone sensor data. Four user contexts have been in focus: human motion, transportation mode, important locations, and lying in bed before or after sleep. The aim was to identify these contexts based on data from 14 different smartphone sensors, namely motion-, location-, phone-related-, and environmental sensors.  The project's goal is to aid in understanding and reducing smartphone overuse. The data was collected mainly in a naturalistic setting and for some contexts additionally in a controlled laboratory setting. Unfortunately, for the context of transportation modes, not enough data to perform any meaningful analysis could be collected. Therefore, this context was excluded in the further analysis. 
 
 The project was created during the master thesis in the master´s program "Computational Modeling and Simulation" with a major in "Computational Life Sciences" at the TU Dresden (Germany) by Benedikt Jordan. The thesis was supervised by Lennart Schaepermeier and Prof. Kerschke from the chair of Big Data Analytics in Transportation. 
 
@@ -27,29 +27,109 @@ performed the activities in their daily life (compare the section about "data st
 
 #### Laboratory Dataset based results
 The best performing machine learning model trained on the laboratory dataset reached a balanced accuracy of 80.8% and a
-F1 score of 81.7 on average over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
+F1 score of 81.7 on average over all LOSOCV iterations. This is way above the 16.7% baseline performance (the accuracy 
+one would reach with randomly guessing classes; this can be calculated by dividing 100 by the number of classes), but 
+still not perfect. The resulting confusion matrix is shown in the following figure.
 
  ![alt text](https://github.com/benediktjordan/context_detection/blob/7028bd944b49b79eac9c42d91aef4b49f576e41f/img/humanMotion_laboratory_confusionMatrix.png)
 
+##### Important Features
+In this subsection, the important features found for the different human motion classes in the laboratory dataset-based analysis,
+when analysing the final model using the SHAP analysis, are presented: 
+- **lying:** Looking at the feature importances of "lying" in the upper-left subplot of the subsequent figure, it is
+interesting to notice that all of the ﬁve most important features are derived from the rotation
+sensor. This is in contrast to the important features of the naturalistic data-based human mo-
+tion model for which 3/5 most important features were derived from accelerometer or linear
+accelerometer sensors. This difference could indicate that the "lying" patterns in the natu-
+ralistic data are more differentiated from other classes by identifying the movement while for
+identifying "lying" in the laboratory data the absolute rotation of the phone played a bigger role.
+Interestingly, all ﬁve rotation features are derived from the y-axis of rotation which indicates
+the tilt of the smartphone in the right-left direction. One way how the difference in the y-axis
+of rotation between "lying" and other stationary classes could have been created is if people
+are lying on the side holding their smartphone tilted to the side while in the other classes the
+smartphone is usually not tilted to the side.
+- **sitting at a table and standing:** Looking at the most important features, it is interesting to note that for "lying", "sitting at a
+table", and "standing", 4/5 most important features are identical. They are all derived from the
+rotation sensors y-axis and describe either absolute rotation values (ranges) or one frequency
+of the rotation signal time series. These features point to the conclusion that the absolute ro-
+tation, the rotation range, and the frequency in the rotation movement of the smartphone in
+left-right direction play a role in differentiating between "lying", "sitting at a table", and "stand-
+ing".
+- **walking, running, and cycling:** Interestingly, 3/5 most relevant features are shared by all three dynamic human motion
+classes. All these features are derived from the axes of the linear accelerometer and they all
+describe changes in the time series. The ﬁnding that changes in motion sensors are impor-
+tant to differentiate between different dynamic motions makes intuitively sense, conﬁrms the
+insights gained in the data exploration and also conﬁrms the similar ﬁnding when analysing
+the important features of the naturalistic data-based human motion model.
+
+![alt text]()
+
+
 #### Naturalistic Dataset based results
 As the main aim of this project was to develop machine learning models which can be used in real life, a model was also 
-trained on the data collected in naturalistic settings. In the process of choosing and hyperparameter-optimising machine learning models, 
+trained on the data collected in naturalistic settings. As not enough data was collected for the classes of running and 
+cycling, these classes were excluded. Additionally, there was data collected for the case when the phone was used while 
+sitting, lying, or standing while the phone was lying on a flat surface. As in this case the micro-movements of the phone 
+are presumably very different compared to when being held in a hand, this case was created as a new class. Therefore,
+five different human motion classes were included into this analysis: lying, sitting, standing, lying or sitting or standing
+while the phone is on a flat surface, and walking. 
+In the process of choosing and hyperparameter-optimising machine learning models, 
 768 models have been compared. The best performing model reached a balanced accuracy of 71.3%
-over all LOSOCV iterations. The resulting confusion matrix is shown in the following figure.
+over all LOSOCV iterations. This is much above the baseline performance of 20% accuracy, but still not perfect. The resulting confusion matrix is shown in the following figure.
 
  ![alt text](https://github.com/benediktjordan/context_detection/blob/7028bd944b49b79eac9c42d91aef4b49f576e41f/img/humanMotion_naturalistic_confusionMatrix.png)
 
-### Transportation Mode
 
 ### Important Locations
+#### Results 
+The aim in this section was to identify the semantic locations of "home" and "office" of the participants solely based
+on GPS data. To achieve this, a multi-step feature creation process was applied (compare the section about "data preprocessing")
+and subsequently different machine learning models were trained and optimized. 
+The best performing model classifies home location with a precision of 94% and a recall of 84%. This implies if 
+the model classiﬁes a place as "home", this classiﬁcation can be very much trusted, while 16%
+of all home locations are not classiﬁed as such. 
+Office was initially classified by the best performing model with a precision of 36% and a recall of 67% (compare confusion 
+matrix below). An interesting discovery was made when investigating the seven participants, for whom the
+model detected an "office" but the participants didn´t report in any ES questionnaire to be at
+the oﬃce (six participants) or the algorithm detected the "office" incorrectly (one participant;
+these seven cases are the reason for the low precision of "oﬃce" detection): in 5/7 cases, it
+was possible to ask the participants about the semantic meaning of the place, which the model
+labeled for them as "oﬃce". Amazingly, in four of these ﬁve cases, the participants reported 
+that the place actually represented a workplace. This is amazing as the algorithm
+managed to correctly identify the workplace of these four participants although these places
+were incorrectly labeled as "other" and therefore a potential source of incorrectness in model
+training and although the models were trained on so little data regarding the "office" class. If
+these four participants would have correctly labeled their "office" place, the precision of the
+classiﬁcation model would have more than doubled from 36% to 89% and the recall would
+have increased from 67% to 80%.
+
+Therefore, in summary, the model identified "home" and "office" locations with recalls of 
+84% and 80%, respectively, using only GPS data.
+
+![alt text]()
 
 
-    Important Locations: Identified "home" and "office" locations with recalls of 85% and 80%, respectively, using only GPS data.
-    Lying in Bed Before and After Sleep: Detected with recalls of 72% and 50%.
-    The models show potential in real-life applications for mitigating smartphone overuse.
+#### Important Features 
+- **Home:** The three most inﬂuential features in classifying home, identified by the SHAP analysis, are the rank ascent of the time
+per day spent at the place between 3:00 - 4:00 and between 6:00 - 7:00 as well as the fraction
+of time spent at this place compared to the time spent at all places. These features could be
+relevant because, on average, people spent most of their nights at home, and for many people
+"home" is the place where they spent most time of all of their most frequent places they go.
+
+- **Office:** The three most inﬂuential features for classifying "office", identified by the SHAP analysis, 
+are the time spent 
+at a place in the afternoon
+and the fraction of time- as well as the trusted fraction of time spent at a place between 11:00-12:00. These features also are associated with an intuitive interpretation, since in most jobs
+people are at the oﬃce, in case they are there, around the noon and afternoon time.
+
+
+![alt text]()
 
 ### Lying in Bed Before and After Sleep
-    
+Lying in Bed Before and After Sleep: Detected with recalls of 72% and 50%.
+
+![alt text]()
+
 ## Data Structure 
 
 Data collected included smartphone sensor data (like GPS, accelerometer) and self-reported information through experience sampling (ES). This data was used to analyze various contexts like human motion, important locations, and periods of lying in bed before and after sleep.
