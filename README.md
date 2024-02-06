@@ -186,9 +186,45 @@ doesn´t contain much differentiative value for differentiating between these cl
 ![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Sleep_Modeling_HyperparameterTuning_SHAPFeatureImportances.png)
 
 ## Data Structure 
+The data collection occurred 
+in two phases: naturalistic and laboratory settings, each addressing specific needs for model development.
 
-Data collected included smartphone sensor data (like GPS, accelerometer) and self-reported information through experience sampling (ES). This data was used to analyze various contexts like human motion, important locations, and periods of lying in bed before and after sleep.
-Installation
+**Naturalistic Data Collection**
+
+In the naturalistic setting, data were collected from participants in their everyday environments. 
+Ultimately, 18 participants from nine cities across five 
+countries contributed, with a diverse range of occupations and an average age of 29.5 years. Participants were 
+instructed on how to answer Experience Sampling (ES) questionnaires and set up the technical system for data collection.
+
+**Data Overview:** Data collection comprised ES and smartphone sensor data. The ES method was employed to unobtrusively 
+gather contextual information from participants, while sensor data collection aimed at capturing information relevant 
+to context detection. A total of 1,113 ES events were recorded. Sensor data from 14 smartphone sensors 
+across four categories — motion, location, phone-related, and environmental — were collected, hypothesized to be predictive 
+of various contexts such as human motion, transportation mode, and lying in bed before/after sleep. Despite the aim to 
+utilize a comprehensive set of sensors, practical constraints led to the exclusion of certain sensors like gravity, 
+Bluetooth, WiFi, battery, and environmental data from the analysis.
+
+**Naturalistic Data Distribution:** The table below illustrates the distribution of collected data among participants, 
+highlighting the variability in the number of ES events and the duration of sensor data collection. On average, 
+each participant contributed to 285 hours (approximately 11.9 days) of sensor data, though this varied significantly 
+among participants. The table also denotes the cities where participants resided, offering a glimpse into the geographic 
+diversity of the data collection effort.
+
+![alt text]()
+
+**Laboratory Data Collection**
+
+The laboratory phase was initiated to supplement the naturalistic data with information from specific contexts 
+that were underrepresented or absent in the initial collection. This controlled environment allowed for precise data 
+collection on a set of predetermined activities. Six participants were involved in this phase, performing activities 
+like standing, sitting, lying, walking, running, cycling, and using the lavatory. The variability in activities 
+performed by each participant was due to external factors such as weather conditions.
+
+**Laboratory Data Overview:** Sensor data were collected for six sensors, although issues with accelerometer and GPS sensor 
+configuration led to their exclusion from further analysis. The activities and the duration of data collection are 
+summarized in the table below, indicating the total minutes of activity performed and sensor data collected per participant.
+
+![alt text]()
 
 ## Dataset Availability 
 Please note that the dataset utilized in this project is not publicly available. This is due to privacy considerations 
@@ -198,52 +234,84 @@ the dataset is retained exclusively for the purposes of this research project an
 use or review.
 
 ## Methodology 
-The project follows the Cross-Industry Standard Process for Data Mining (CRISP-DM) model, involving:
-
-    Data Collection: Data was gathered from 18 participants over an average of 12 days in naturalistic settings.
-    Data Exploration: Involved creating generic maps from GPS data and exploring sensor data.
-    Data Preparation: Techniques included ES answers transformation, feature creation, and data-driven feature selection.
-    Modeling: Machine learning models and other necessary methods were applied for analysis.
+The project follows the Cross-Industry Standard Process for Data Mining (CRISP-DM) model. Subsequently, the methodology 
+of data collection, data preprocessing, and modeling is presented.
 
 
 ### Data Collection
-The methodology employed for data collection in this study involved naturalistic and laboratory settings, utilizing 
-smartphone sensors and experience sampling (ES) to capture real-world contexts. Participants from the author's 
-network contributed sensor data, including motion and environmental information, alongside contextual self-reports 
-through ES questionnaires. This approach allowed for a rich dataset conducive to modeling user contexts, balancing 
-detailed data capture with considerations for battery life and data storage, showcasing the practical application of 
-sensor data in understanding human behavior and interaction with technology.
+The data collection process for this study was conducted in two distinct phases: naturalistic and laboratory settings, 
+each with its unique experimental setup aimed at gathering comprehensive sensor and Experience Sampling (ES) data 
+from participants.
+
+**Naturalistic Data Collection**
+
+In the naturalistic phase, participants from the author's social circle
+who owned and used an iPhone 8 or newer, were recruited to collect data during their daily activities. 
+This phase utilized ES, a technique where participants report their experiences, thoughts, or behaviors at 
+multiple times throughout the day via smartphone notifications. Participants received notifications every 
+full hour from 06:00 to 23:00, prompting them to answer a questionnaire designed to capture their current 
+context across five areas: location, body motion, activity, evaluation of phone use, and phone location.
+
+Sensor data from the participants' smartphones were collected passively and continuously alongside the ES responses. 
+The sensors were grouped into four categories: motion (including accelerometer, linear accelerometer, gravity sensor, gyroscope, 
+magnetometer, rotation sensor), 
+location (GPS, Bluetooth, WiFi, and timezone sensors), phone-related (screen and battery status), and environmental
+(barometer and weather conditions). These sensors were selected based on their potential relevance to detecting various 
+contexts such as human motion, transportation mode, and lying in bed before or after sleep. The technical implementation of the data collection was facilitated through the Aware Framework, a system comprising the Aware Micro Server, the Aware App, and a cloud-based database, ensuring the efficient collection and management of both sensor and ES data.
+
+**Laboratory Data Collection**
+
+The laboratory phase was designed to collect data in a controlled environment, focusing on specific activities 
+that were either underrepresented or absent during the naturalistic data collection. Participants were asked to perform 
+a series of predefined activities, including dynamic human motions (walking, running, cycling) and static motions 
+(standing, sitting, lying), as well as using the lavatory, each for a minimum of five minutes. The aim was to collect 
+sensor data from smartphones while participants engaged in these activities, using iPhones owned by the participants. 
+The data collection covered various sensors, similar to the naturalistic phase, but with a specific focus on motion 
+sensors such as the accelerometer and gyroscope, recorded at specified sampling rates to ensure the capture of relevant 
+activity data.
+
+**Technical and Methodological Considerations**
+
+Both phases of data collection were meticulously planned to balance the need for detailed, context-rich data against 
+the constraints of smartphone battery life, data storage, and participant convenience. The choice of sensors and their 
+sampling rates was influenced by literature reviews and the practical considerations of real-world application feasibility. 
+The laboratory phase, in particular, allowed for the precise labeling of sensor data according to specific activities,
+enhancing the dataset's utility for developing accurate classification models.
+
+Overall, the data collection methodology outlined combines the breadth of real-life context capture through naturalistic 
+data collection with the depth of specific context identification afforded by laboratory settings. This dual approach 
+enriches the dataset, providing a robust foundation for developing and testing classification models that can 
+accurately interpret and predict contexts based on smartphone sensor data.
 
 ### Data Preprocessing
-This chapter outlines the multifaceted process of data preparation, crucial for transforming both laboratory and 
+This section outlines the multifaceted process of data preparation, crucial for transforming both laboratory and 
 naturalistic data into a format suitable for modeling. The complexity arises from differing preparation steps for 
 various types of data  and context-specific 
-techniques for data manipulation. A specific subset of the following techniques has been used for the different 
+techniques for data manipulation. A specific subset of the following techniques has been used for each context 
 contexts. 
 
-Initially, the ES answer transformation is applied to transform ES events into class 
-labels for context, contingent on the relevancy and completeness of responses. Initial data selection focuses on managing 
+Initially, the ***ES answer transformation*** is applied to transform ES events into class 
+labels for context, contingent on the relevancy and completeness of responses. ***Initial data selection*** focuses on managing 
 the voluminous sensor data by narrowing down to segments around ES events, enhancing computational feasibility. 
-Active smartphone sessions are identified through unlocked screen status as a proxy for user engagement, ensuring 
-relevance to the context under investigation. To maintain data reliability, the duration of answers to ES questionnaires
+***Active smartphone sessions*** are identified through unlocked screen status as a proxy for user engagement, ensuring 
+relevance to the context under investigation. To maintain data reliability, the ***duration of answers*** to ES questionnaires
 is limited, excluding data points where participants took excessively long to respond.
 
-In the realm of sensor data, merging raw time series addresses the challenge of inconsistent sampling times across 
-sensors, using a method that aligns data points based on temporal proximity. Feature creation is meticulously undertaken
-across various domains—motion sensors undergo a detailed process to generate features from time, frequency, and
+In the realm of sensor data, ***merging raw time series*** addresses the challenge of inconsistent sampling times across 
+sensors, using a method that aligns data points based on temporal proximity. ***Feature creation*** is meticulously undertaken
+across various domains: motion sensors undergo a detailed process to generate features from time, frequency, and
 time-frequency domains, utilizing a comprehensive suite of algorithms to capture the dynamics and characteristics 
 of human motion. Similarly, GPS data is enriched by deriving speed and acceleration features, subsequently augmented 
-by higher-level features to capture movement patterns. Place features are crafted to identify significant locations 
+by higher-level features to capture movement patterns like "places". Place features are crafted to identify significant locations 
 through GPS data, incorporating time-based categorizations and frequency of visits to enhance contextual understanding. 
 Time features are derived to inform models about temporal patterns, while the identification of long static periods, 
 particularly from accelerometer data, assists in inferring periods of minimal movement, potentially indicative of sleep.
 
-The process also involves merging feature time series from different sensors to construct a cohesive dataset, ready 
-for modeling. A data-driven feature selection strategy is employed to refine the feature set, reducing dimensionality
+The process also involves ***merging feature time series*** from different sensors to construct a cohesive dataset, ready 
+for modeling. A ***data-driven feature selection*** strategy is employed to refine the feature set, reducing dimensionality
 while preserving the most informative attributes for modeling. This approach meticulously eliminates features with
 excessive missing values, non-variability, and weak correlation to the target variable, employing statistical tests 
-to ensure the relevance of retained features. This comprehensive preparation underscores the importance of meticulous
-data handling and feature engineering in developing robust, context-aware models.
+to ensure the relevance of retained features. 
 
 ### Modeling 
 This section provides an overview of the machine learning models and methodologies employed in the project, aimed at 
@@ -260,16 +328,19 @@ crucial role in identifying significant locations.
 
 The project also incorporates several critical methods and concepts to enhance the modeling process:
 
-- Label Segment Selection: A data-driven methodology to determine the optimal time frame around event-specific sensor data, ensuring the relevance and accuracy of the data used for model training and prediction.
-- Leave One Subject Out Cross-Validation (LOSOCV): A validation technique that enhances the model's generalizability by training and testing on data from different individuals, ensuring the model's robust performance across new, unseen data.
-- Hyperparameter Tuning: Employing nested cross-validation, this process fine-tunes the model's hyperparameters to optimize performance, addressing the challenge of selecting the most effective model configuration.
-- Evaluation Metrics: The use of balanced accuracy, F1 score, and other metrics allows for a fair assessment of model performance, especially crucial in imbalanced datasets. These metrics provide a quantitative measure of the model's accuracy and effectiveness.
-- Machine Learning Model Interpretation: Leveraging SHapley Additive exPlanations (SHAP) values to interpret the model's predictions, this approach offers insights into the importance of different features, enhancing the transparency and understandability of the model.
-
-Together, these models and methodologies form a comprehensive machine learning strategy that addresses the nuanced 
-demands of classifying sensor data in various contexts. The project's approach is characterized by a meticulous 
-selection of modeling techniques, validation procedures, and interpretive tools to ensure that the models are not 
-only performant but also interpretable and generalizable across different datasets and contexts.
+- **Label Segment Selection:** A data-driven methodology to determine the optimal time frame around event-specific 
+sensor data, ensuring the relevance and accuracy of the data used for model training and prediction.
+- **Leave One Subject Out Cross-Validation (LOSOCV):** A validation technique that enhances the model's 
+generalizability by training and testing on data from different individuals, ensuring the model's robust 
+performance across new, unseen data.
+- **Hyperparameter Tuning:** Employing nested cross-validation, this process fine-tunes the model's hyperparameters 
+to optimize performance, addressing the challenge of selecting the most effective model configuration.
+- **Evaluation Metrics:** The use of balanced accuracy, F1 score, and other metrics allows for a fair assessment of 
+model performance, especially crucial in imbalanced datasets. These metrics provide a quantitative measure of 
+the model's accuracy and effectiveness.
+- **Machine Learning Model Interpretation:** Leveraging SHapley Additive exPlanations (SHAP) values to interpret the 
+model's predictions, this approach offers insights into the importance of different features, enhancing the transparency 
+and understandability of the model.
 
 
 ## Installation 

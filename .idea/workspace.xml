@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adapted README: Results -&gt; Sleep">
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adapted README: included first draft of methodology">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
@@ -337,7 +337,7 @@
       <workItem from="1706165102167" duration="3189000" />
       <workItem from="1706863718282" duration="1090000" />
       <workItem from="1707116659047" duration="7285000" />
-      <workItem from="1707134745786" duration="1654000" />
+      <workItem from="1707134745786" duration="3479000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
@@ -682,7 +682,7 @@
       <option name="project" value="LOCAL" />
       <updated>1674149790099</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -705,7 +705,6 @@
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
     </ignored-roots>
-    <MESSAGE value="location model &#10;- merged participant IDs&#10;- transformed location labels so they conform with the classified ones (from the frequent locations) &#10;- selected for every event one location&#10;- computed classifications for these locations (and also second-best classification; both including distance to the event location) &#10;- computed classification accuracy" />
     <MESSAGE value="public transport model &#10;- create DF for public transport based on the GPS features &#10;--&gt; output: balanced accuracy: around 54% &#10;&#10;before and after sleep model &#10;- created specific features for this model &#10;--&gt; GPS features&#10;--&gt; times: hour of day and day of week&#10;--&gt; human motion model output &#10;--&gt; locations model output &#10;- trained decision forest on it&#10;--&gt; balanced accuracy: 54%" />
     <MESSAGE value="nothing" />
     <MESSAGE value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
@@ -730,7 +729,8 @@
     <MESSAGE value="Adapted README: included&#10;- Results: Important Locations update&#10;- Results -&gt; Sleep" />
     <MESSAGE value="Adapted README: Contributing, Aknowledgements, Installation, Usage, Dataset Availability" />
     <MESSAGE value="Adapted README: Results -&gt; Sleep" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adapted README: Results -&gt; Sleep" />
+    <MESSAGE value="Adapted README: included first draft of methodology" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adapted README: included first draft of methodology" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
