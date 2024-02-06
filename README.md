@@ -210,7 +210,7 @@ each participant contributed to 285 hours (approximately 11.9 days) of sensor da
 among participants. The table also denotes the cities where participants resided, offering a glimpse into the geographic 
 diversity of the data collection effort.
 
-![alt text]()
+![alt text](https://github.com/benediktjordan/context_detection/blob/fc07ad0e791e89c4ba68710afbdc167631d5d891/img/dataCollection_naturalistic_table.png)
 
 **Laboratory Data Collection**
 
@@ -224,7 +224,7 @@ performed by each participant was due to external factors such as weather condit
 configuration led to their exclusion from further analysis. The activities and the duration of data collection are 
 summarized in the table below, indicating the total minutes of activity performed and sensor data collected per participant.
 
-![alt text]()
+![alt text](https://github.com/benediktjordan/context_detection/blob/fc07ad0e791e89c4ba68710afbdc167631d5d891/img/dataCollection_laboratory_table.png)
 
 ## Dataset Availability 
 Please note that the dataset utilized in this project is not publicly available. This is due to privacy considerations 
