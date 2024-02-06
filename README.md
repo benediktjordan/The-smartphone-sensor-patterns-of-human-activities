@@ -17,7 +17,9 @@ This repository contains the Python code developed for the project. The codebase
 - modeling: creation, training and evaluation of machine learning models
 
 ## Project Results
-The project aimed fat identifying in real time four different user contexts based on smartphone sensor data. Subsequently, the main results are presented: 
+The project aimed fat identifying in real time three different user contexts based on smartphone sensor data. 
+Subsequently, the main results for the contexts of Human Motion, Important Locations, and
+Lying in Bed Before and After Sleep are presented.
 
 ### Human Motion 
 Six human motions were in focus in this analysis: lying, sitting at a table, standing, walking, running, and cycling. 
@@ -25,7 +27,7 @@ Two different datasets were used to perform two analyses: the "laboratory datase
 to perform the activities in a controlled environment, and the "naturalistic dataset", in which the participants 
 performed the activities in their daily life (compare the section about "data structure").
 
-#### Laboratory Dataset based results
+#### Laboratory-Dataset-Based Results
 The best performing machine learning model trained on the laboratory dataset reached a balanced accuracy of 80.8% and a
 F1 score of 81.7 on average over all LOSOCV iterations. This is way above the 16.7% baseline performance (the accuracy 
 one would reach with randomly guessing classes; this can be calculated by dividing 100 by the number of classes), but 
@@ -65,7 +67,7 @@ the important features of the naturalistic data-based human motion model.
 ![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/HumanMotion_Laboratory_Modeling_BestModel_FeatureImportances.png)
 
 
-#### Naturalistic Dataset based results
+#### Naturalistic-Dataset-Based Results
 As the main aim of this project was to develop machine learning models which can be used in real life, a model was also 
 trained on the data collected in naturalistic settings. As not enough data was collected for the classes of running and 
 cycling, these classes were excluded. Additionally, there was data collected for the case when the phone was used while 
@@ -136,7 +138,7 @@ The two main classes of interest, "lying in bed before sleep" and "lying in bed 
 
 ![alt text](https://github.com/benediktjordan/context_detection/blob/fa1d7c038ddb96811cc19f0af5d79c7cf7a16493/img/Sleep_Modeling_HyperparameterTuning_ConfusionMatrix.png)
 
-#### Detailled analysis and Important Features
+#### Detailed Analysis and Important Features
 - **lying in bed before sleep:** The class of "lying in bed before sleep" is classiﬁed with a precision
 of 43% and a recall of 72%. This implies that less than half of the as "lying in bed before sleep"
 classiﬁed samples really belong to that class, and that nearly three-quarters of all "lying in bed

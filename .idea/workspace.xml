@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Adapted README: updated methodology section; included data structure section" />
+    <list default="true" id="15d6d17e-21ff-4d1c-badb-072b7c316d17" name="Changes" comment="Add two tables">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -181,7 +184,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-67fca87a943a-c986f194a52a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.11799.259" />
+        <option value="bundled-python-sdk-5a2391486177-2887949eec09-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.13763.11" />
       </set>
     </attachedChunks>
   </component>
@@ -335,6 +338,7 @@
       <workItem from="1706863718282" duration="1090000" />
       <workItem from="1707116659047" duration="7285000" />
       <workItem from="1707134745786" duration="3716000" />
+      <workItem from="1707205536885" duration="929000" />
     </task>
     <task id="LOCAL-00004" summary="This is the first commit message">
       <created>1664549928317</created>
@@ -679,7 +683,7 @@
       <option name="project" value="LOCAL" />
       <updated>1674149790099</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -702,7 +706,6 @@
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/MasterThesis_Iteration01" />
       <path value="$USER_HOME$/Documents/MTS/Iteration01/pythonProject/Git" />
     </ignored-roots>
-    <MESSAGE value="nothing" />
     <MESSAGE value="Include iteration 02 label information &#10;-&gt; create user database: user names &amp; user IDs (not yet included) and new user IDs&#10;-&gt; create label dictionaries with information of the activity times for every user" />
     <MESSAGE value="Label Iteration 02 SensorData &#10;--&gt; label all sensordata from iteration 02 &#10;--&gt; delete sensordata which has no labels &#10;&#10;Interesting Insight: a lot of location (=GPS) data is missing unfortunately :(" />
     <MESSAGE value="Three Tasks accomplished: &#10;1. merge sensordata of same participant &#10;--&gt; this was necessary for sensordata of Benedikt as he had several times saved his sensordata &#10;&#10;2. Add ESM_timestamps&#10;--&gt; the labeled sensordata was segmented into &quot;ESM events&quot; of 90 seconds length (= ESM_timestamp column added) &#10;--&gt; this is necessary to be able to easily reuse all functions from the iteration 01 code &#10;&#10;3. Merge sensordata of different participants of same sensors &#10;--&gt; after this step we now have for every sensor one sensorfile include all the labeled and ESM_timestamped sensordata from all participants" />
@@ -727,7 +730,8 @@
     <MESSAGE value="Adapted README: Results -&gt; Sleep" />
     <MESSAGE value="Adapted README: included first draft of methodology" />
     <MESSAGE value="Adapted README: updated methodology section; included data structure section" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adapted README: updated methodology section; included data structure section" />
+    <MESSAGE value="Add two tables" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add two tables" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
